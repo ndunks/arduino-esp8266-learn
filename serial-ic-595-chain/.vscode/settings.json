@@ -1,0 +1,19 @@
+{
+    "files.exclude": {
+        "**/.pio": true,
+        "node_modules/": true
+    },
+    "search.exclude": {
+        "**/.pio": true,
+        "build/": true
+    },
+    "files.watcherExclude": {
+        "**/.pio": true,
+        "build/": true
+    },
+    "files.associations": {
+        "functional": "cpp",
+        "*.tcc": "cpp",
+        "istream": "cpp"
+    }
+}

@@ -8,9 +8,9 @@
  NodeMCU ->  4051
  ---------------
 // LSBFIRST, GPIO Must be insequence, for bitshift operation and short code!
- GPIO14 D6   ->   S0 (A)
+ GPIO12 D6   ->   S0 (A)
  GPIO13 D7   ->   S1 (B)
- GPIO12 D5   ->   S2 (C)
+ GPIO14 D5   ->   S2 (C)
        A0    ->   Common
        3.3v  ->   VCC
        G     ->   GND
@@ -35,6 +35,8 @@ void setup()
   pinMode(D6, OUTPUT);
   pinMode(D7, OUTPUT);
   pinMode(D5, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
+  
 }
 
 int ICACHE_RAM_ATTR analogReadX(int no)
@@ -53,5 +55,8 @@ void loop()
     Serial.printf("%d\t", analogReadX(i));
   }
   Serial.println();
-  delay(1000);
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(300);
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(300);
 }

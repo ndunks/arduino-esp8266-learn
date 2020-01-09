@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.watcherExclude": {
+			"**/.pio/**": true,
+			"/scratch/": true
+		},
+		"search.exclude": {
+			"**/.pio/**": true,
+			"/scratch/": true
+		}
+	}
+}

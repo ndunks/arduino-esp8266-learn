@@ -1,0 +1,3 @@
+[submodule "webfrontend-vuetify"]
+	path = webfrontend-vuetify
+	url = https://github.com/ndunks/nodemcu-vuejs

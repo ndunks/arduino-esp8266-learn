@@ -19,7 +19,7 @@ void setup()
   // Autodetect is not working reliable, don't use the following line
   // dht.setup(17);
   // use this instead: 
-  dht.setup(14, DHTesp::DHT22); // Connect DHT sensor to GPIO 17
+  dht.setup(D2, DHTesp::DHT22); // Connect DHT sensor to GPIO 17
 }
 
 void loop()

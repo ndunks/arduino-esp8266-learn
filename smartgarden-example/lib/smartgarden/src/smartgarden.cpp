@@ -12,9 +12,23 @@ float TEMPERATURE = 0.0f;
 // Cek setiap sensor setiap:
 unsigned long smartgarden_delay = 1000;
 
+// Berapa valve yg on?
+STATUS_t checkPompaStatus()
+{
+    for (int no = VALVE_START; no < (VALVE_START + VALVE_COUNT); no++)
+    {
+        // Jika salah satu valve ada yang on, maka pompa harus ON
+        if (REG[no])
+            return ON;
+    }
+    return OFF;
+}
+
 /** Apply REG value to 2 chained IC 595 */
 void smartgarden_apply()
 {
+    REG[POMPA_NO] = checkPompaStatus();
+
     digitalWrite(SERIAL_LOAD, LOW);
     for (int i = 15; i >= 0; i--)
     {
@@ -52,7 +66,7 @@ void _readAllAnalog()
     }
 }
 
-void setOutput(uint8 no, uint8 value)
+void setOutput(uint8 no, STATUS_t value)
 {
     REG[no] = value;
     smartgarden_apply();
@@ -63,12 +77,31 @@ void smartgarden_setup()
     pinMode(SERIAL_DATA, OUTPUT);
     pinMode(SERIAL_LOAD, OUTPUT);
     pinMode(SERIAL_CLOCK, OUTPUT);
+    pinMode(SENSOR_SUHU_PIN, INPUT);
     //reset
 }
+
+/**
+ * Call smartgarden_apply() to see changes
+ */
+/* void smartgarden_setValve(int no, STATUS_t status)
+{
+    if (no < 0 || no > VALVE_COUNT)
+    {
+        Serial.printf("Nomor katup salah %d\n", no);
+        return;
+    }
+    setOutput(VALVE_START + no, status);
+}
+
+void smartgarden_setPengembunan(STATUS_t status)
+{
+    setOutput(SPRAYER_NO, status);
+}
+ */
 
 void smartgarden_loop()
 {
     _readAllAnalog();
-    smartgarden_apply();
     sensorsuhu_read();
 }

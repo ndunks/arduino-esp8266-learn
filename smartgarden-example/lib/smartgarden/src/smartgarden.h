@@ -54,29 +54,29 @@ void smartgarden_loop();
 // Apply REG to Serial Pararel Chained IC 595
 void smartgarden_apply();
 
-typedef enum
+enum STATUS_t
 {
     OFF = LOW,
     ON = HIGH
-} STATUS_t;
+};
 
 // Activate analog selector
 void smartgarden_set_analog(int no);
 int smartgarden_read_analog(int no);
 
 /*  sensorsuhu.h */
-typedef enum
+enum DHT_MODEL_t
 {
     DHT11,
     DHT22
-} DHT_MODEL_t;
+};
 
-typedef enum
+enum DHT_ERROR_t
 {
     ERROR_NONE = 0,
     ERROR_TIMEOUT,
     ERROR_CHECKSUM
-} DHT_ERROR_t;
+};
 
 extern DHT_MODEL_t sensorsuhu_model;
 extern DHT_ERROR_t sensorsuhu_error;

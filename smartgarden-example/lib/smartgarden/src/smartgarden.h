@@ -27,9 +27,11 @@
 
 // OUTUT/LED PIN
 #define VALVE_START 8
-#define VALVE_COUNT 6
+#define VALVE_COUNT 7 // 6 penyiraman, 1 pengembunan
+#define VALVE_STACK_MAX 20
 #define POMPA_NO 3
-#define SPRAYER_NO 7
+#define SPRAYER_NO 6 //  harus dibawah VALVE_COUNT
+
 // GPIO
 #define SENSOR_SUHU_PIN 4 // D2
 
@@ -44,8 +46,26 @@ extern unsigned long smartgarden_delay;
 
 // Current analogs signal state
 extern uint8 ANALOG_SENSOR[];
-extern float HUMIDITY;
-extern float TEMPERATURE;
+extern uint8 HUMIDITY;
+// in celcius
+extern int8 TEMPERATURE;
+
+struct SmartGardenConfig
+{
+    // Delay valve in second
+    uint8 valve_delay[VALVE_COUNT];
+    // Default valve delay in second
+    uint8 valve_delay_default;
+    // minimal kelembaban utk men trigger valve
+    uint8 humidity_minimal[VALVE_COUNT];
+    // Default valve delay in percent
+    uint8 humidity_minimal_default;
+    // max temperatur to trigger sprayer in celcius
+    uint8 temperature_max;
+};
+
+// Default config will set on smartgarden_setup()
+extern SmartGardenConfig *smartgarden_config;
 
 // Setup pin and start ticker
 void smartgarden_setup();

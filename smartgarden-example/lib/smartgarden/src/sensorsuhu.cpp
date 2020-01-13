@@ -114,18 +114,18 @@ void sensorsuhu_read()
 
     if (sensorsuhu_model == DHT11)
     {
-        HUMIDITY = (rawHumidity >> 8) + ((rawHumidity & 0x00FF) * 0.1);
-        TEMPERATURE = (rawTemperature >> 8) + ((rawTemperature & 0x00FF) * 0.1);
+        HUMIDITY = byte((rawHumidity >> 8) + ((rawHumidity & 0x00FF) * 0.1));
+        TEMPERATURE = byte((rawTemperature >> 8) + ((rawTemperature & 0x00FF) * 0.1));
     }
     else
     {
-        HUMIDITY = rawHumidity * 0.1;
+        HUMIDITY = byte(rawHumidity * 0.1);
 
         if (rawTemperature & 0x8000)
         {
             rawTemperature = -(int16_t)(rawTemperature & 0x7FFF);
         }
-        TEMPERATURE = ((int16_t)rawTemperature) * 0.1;
+        TEMPERATURE = byte(((int16_t)rawTemperature) * 0.1);
     }
 
     sensorsuhu_error = ERROR_NONE;

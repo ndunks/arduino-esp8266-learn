@@ -1,14 +1,14 @@
 #include "smartgarden.h"
 
 // Serial registers
-uint8 REG[16] = {LOW};
+uint8_t SERIAL_REG[16] = {};
 
 // Analog 0 - 5    Sensor Kelembaban Tanah, tanpa DHT22
-uint8 ANALOG_SENSOR[VALVE_COUNT - 1] = {};
+uint8_t ANALOG_SENSOR[VALVE_COUNT - 1] = {};
 
 // Analog 6
-uint8 HUMIDITY = 0;
-int8 TEMPERATURE = 0;
+uint8_t HUMIDITY = 0;
+int8_t TEMPERATURE = 0;
 
 // Valve yg saat ini sedang on
 int VALVE_CURRENT = -1;
@@ -27,9 +27,8 @@ void smartgarden_setup()
 {
     std::fill_n(VALVE_STACK, VALVE_STACK_MAX, -1);
 
-#ifdef DEBUG_ESP_CORE
-    delay(800);
-    P("smartgarden start\n");
+#ifdef SMARTGARDEN_DEBUG
+    delay(1000);
 #endif
 
     if (!smartgarden_config)
@@ -44,12 +43,19 @@ void smartgarden_setup()
         {
             smartgarden_config->valve_delay[no] = smartgarden_config->valve_delay_default;
             smartgarden_config->humidity_minimal[no] = smartgarden_config->humidity_minimal_default;
+
+#ifdef SMARTGARDEN_DEBUG
+            for (int no = 0; no < VALVE_COUNT; no++)
+            {
+                P("valve_delay  %d: %d\n", no, smartgarden_config->valve_delay[no]);
+                P("humidity_min %d: %d\n", no, smartgarden_config->humidity_minimal[no]);
+            }
+#endif
         }
 
         // spesial untuk humdity dari sensor DHT22
         smartgarden_config->humidity_minimal[SPRAYER_NO] = 30;
     }
-
     pinMode(SERIAL_DATA, OUTPUT);
     pinMode(SERIAL_LOAD, OUTPUT);
     pinMode(SERIAL_CLOCK, OUTPUT);
@@ -60,28 +66,28 @@ void smartgarden_setup()
 void smartgarden_apply(bool debug = false)
 {
     // Jika ada salah satu valve yg on, maka pompa juga harus on
-    REG[POMPA_NO] = VALVE_INDEX >= 0;
+    SERIAL_REG[PinSerial.Pompa] = VALVE_INDEX >= 0;
     digitalWrite(SERIAL_LOAD, LOW);
     for (int i = 15; i >= 0; i--)
     {
 
-        digitalWrite(SERIAL_DATA, REG[i] & B1);
+        digitalWrite(SERIAL_DATA, SERIAL_REG[i] & B1);
         digitalWrite(SERIAL_CLOCK, HIGH);
         digitalWrite(SERIAL_CLOCK, LOW);
         if (!debug)
             continue;
 
-        if (i == POMPA_NO)
+        if (i == PinSerial.Pompa)
         {
-            P(" > Pompa   : %s\n", ONOFF(REG[i]));
+            P(" > Pompa   : %s\n", ONOFF(SERIAL_REG[i]));
         }
-        else if (i == VALVE_START + SPRAYER_NO)
+        else if (i == PinSerial.Sprayer)
         {
-            P(" > Sprayer : %s\n", ONOFF(REG[i]));
+            P(" > Sprayer : %s\n", ONOFF(SERIAL_REG[i]));
         }
-        else if (i >= VALVE_START && i <= VALVE_START + VALVE_COUNT)
+        else if (i >= PinSerial.Valve_0 && i <= PinSerial.Valve_5)
         {
-            P(" > Valve  %d: %s\n", i - VALVE_START, ONOFF(REG[i]));
+            P(" > Valve  %d: %s\n", i - VALVE_START, ONOFF(SERIAL_REG[i]));
         }
     }
     digitalWrite(SERIAL_LOAD, HIGH);
@@ -91,9 +97,9 @@ void smartgarden_apply(bool debug = false)
 void smartgarden_set_analog(int no)
 {
     // Set bit switches on IC 4051
-    REG[SC] = (no >> 2) & B1;
-    REG[SB] = (no >> 1) & B1;
-    REG[SA] = (no >> 0) & B1;
+    SERIAL_REG[PinSerial.IC4051_SA] = (no >> 2) & B1;
+    SERIAL_REG[PinSerial.IC4051_SB] = (no >> 1) & B1;
+    SERIAL_REG[PinSerial.IC4051_SA] = (no >> 0) & B1;
     smartgarden_apply(false);
 }
 
@@ -110,8 +116,31 @@ void _readAllAnalog()
     {
         ANALOG_SENSOR[i] = smartgarden_read_analog(i);
     }
-}
+} /* 
+String valveName(int no)
+{
+    switch (no)
+    {
+    case POMPA_NO:
+        return "Pompa";
+        break;
 
+    default:
+        break;
+    }
+    if (i == POMPA_NO)
+    {
+        P(" > Pompa   : %s\n", ONOFF(SERIAL_REG[i]));
+    }
+    else if (i == VALVE_START + SPRAYER_NO)
+    {
+        P(" > Sprayer : %s\n", ONOFF(SERIAL_REG[i]));
+    }
+    else if (i >= VALVE_START && i <= VALVE_START + VALVE_COUNT)
+    {
+        P(" > Valve  %d: %s\n", i - VALVE_START, ONOFF(SERIAL_REG[i]));
+    }
+} */
 // Add valve to on when applied
 bool valvePush(int no)
 {
@@ -168,6 +197,7 @@ void valveSwitcher()
     if (VALVE_INDEX < 0)
     {
         P("valveSwitcher: no valve in stack\n");
+        return;
     }
 
     if (valve_next_switch > millis())
@@ -175,16 +205,26 @@ void valveSwitcher()
         P("valveSwitcher: not yet\n");
         return;
     }
-    int no = valvePop();
-    REG[VALVE_START + no] = OFF;
-    P("Turn Off %d\n", no);
+    int no;
+    if (VALVE_CURRENT >= 0)
+    {
+        no = valvePop();
+        SERIAL_REG[VALVE_START + no] = OFF;
+        P("Turn Off %d\n", no);
+    }
     // Stillhave in stack?
     if (VALVE_INDEX >= 0)
     {
         no = VALVE_STACK[VALVE_INDEX];
-        REG[VALVE_START + no] = ON;
-        valve_next_switch = millis() + smartgarden_config->valve_delay[no];
-        P("Turn On %d for %d second\n", no, smartgarden_config->valve_delay[no] / 1000);
+        SERIAL_REG[VALVE_START + no] = ON;
+        VALVE_CURRENT = no;
+        valve_next_switch = millis() + smartgarden_config->valve_delay[no] * 1000L;
+        P("Turn On %d for %d second\n", no, smartgarden_config->valve_delay[no]);
+    }
+    else
+    {
+        valve_next_switch = 0;
+        VALVE_CURRENT = -1;
     }
 }
 

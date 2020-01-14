@@ -1,7 +1,7 @@
 #pragma once
 
-const unsigned char VALVE_COUNT = 7; // 6 penyiraman, 1 pengembunan
-const unsigned char VALVE_STACK_MAX = 20;
+const uint8_t VALVE_COUNT = 7; // 6 penyiraman, 1 pengembunan
+const uint8_t VALVE_STACK_MAX = 20;
 
 static const char *const PinSerialNames[]= {
     "IC4051_SA",

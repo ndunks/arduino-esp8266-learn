@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include <user_interface.h>
+#include "constant.h"
 
 // Serial to Pararel
 #define SERIAL_DATA D7  //D7 --> DS Outputs the byte to transfer
@@ -46,16 +47,10 @@ const struct _Pins4051
     // uint8_t Unused_7 = 7;
 } PinAnalog;
 
-// OUTUT/LED PIN
-static const uint8_t VALVE_START = PinSerial.Valve_0;
-static const uint8_t VALVE_COUNT = 7; // 6 penyiraman, 1 pengembunan
-static const uint8_t VALVE_STACK_MAX = 20;
-
-#define SPRAYER_NO 6 //  harus dibawah VALVE_COUNT
-
 // Delay for checking input sensors, call set it before smartgarden_setup()
 extern uint8 SERIAL_REG[];
 extern unsigned long smartgarden_delay;
+
 
 // Current analogs signal state
 extern uint8 ANALOG_SENSOR[];
@@ -96,7 +91,6 @@ enum STATUS_t
 // Activate analog selector
 void smartgarden_set_analog(int no);
 int smartgarden_read_analog(int no);
-
 
 #define COLOR_BLACK 30
 #define COLOR_RED 31
@@ -139,9 +133,9 @@ int smartgarden_read_analog(int no);
 #define CYAN(str) P()
 #endif
 
-
-
-/*  sensorsuhu.h */
+/*********************************
+ *  sensorsuhu.cpp
+ *********************************/
 enum DHT_MODEL_t
 {
     DHT11,

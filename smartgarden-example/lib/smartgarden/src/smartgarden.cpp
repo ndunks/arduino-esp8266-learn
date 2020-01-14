@@ -1,5 +1,10 @@
 #include "smartgarden.h"
 
+// OUTUT/LED PIN
+const uint8_t VALVE_START = PinSerial.Valve_0;
+
+const uint8_t SPRAYER_NO = PinSerial.Sprayer - VALVE_START;
+
 // Serial registers
 uint8_t SERIAL_REG[16] = {};
 
@@ -54,7 +59,7 @@ void smartgarden_setup()
         }
 
         // spesial untuk humdity dari sensor DHT22
-        smartgarden_config->humidity_minimal[SPRAYER_NO] = 30;
+        smartgarden_config->humidity_minimal[ PinSerial.Sprayer - VALVE_START ] = 30;
     }
     pinMode(SERIAL_DATA, OUTPUT);
     pinMode(SERIAL_LOAD, OUTPUT);
@@ -79,15 +84,11 @@ void smartgarden_apply(bool debug = false)
 
         if (i == PinSerial.Pompa)
         {
-            P(" > Pompa   : %s\n", ONOFF(SERIAL_REG[i]));
+            P(" > %s : %s\n", PinSerialNames[i], ONOFF(SERIAL_REG[i]));
         }
-        else if (i == PinSerial.Sprayer)
+        else if (i >= PinSerial.Valve_0 && i <= PinSerial.Sprayer)
         {
-            P(" > Sprayer : %s\n", ONOFF(SERIAL_REG[i]));
-        }
-        else if (i >= PinSerial.Valve_0 && i <= PinSerial.Valve_5)
-        {
-            P(" > Valve  %d: %s\n", i - VALVE_START, ONOFF(SERIAL_REG[i]));
+            P(" > %s : %s\n", PinSerialNames[i], ONOFF(SERIAL_REG[i]));
         }
     }
     digitalWrite(SERIAL_LOAD, HIGH);
@@ -116,31 +117,8 @@ void _readAllAnalog()
     {
         ANALOG_SENSOR[i] = smartgarden_read_analog(i);
     }
-} /* 
-String valveName(int no)
-{
-    switch (no)
-    {
-    case POMPA_NO:
-        return "Pompa";
-        break;
+}
 
-    default:
-        break;
-    }
-    if (i == POMPA_NO)
-    {
-        P(" > Pompa   : %s\n", ONOFF(SERIAL_REG[i]));
-    }
-    else if (i == VALVE_START + SPRAYER_NO)
-    {
-        P(" > Sprayer : %s\n", ONOFF(SERIAL_REG[i]));
-    }
-    else if (i >= VALVE_START && i <= VALVE_START + VALVE_COUNT)
-    {
-        P(" > Valve  %d: %s\n", i - VALVE_START, ONOFF(SERIAL_REG[i]));
-    }
-} */
 // Add valve to on when applied
 bool valvePush(int no)
 {

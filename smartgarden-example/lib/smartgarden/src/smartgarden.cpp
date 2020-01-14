@@ -89,9 +89,9 @@ void smartgarden_apply()
 void setAnalog(int no)
 {
     // Set bit switches on IC 4051
-    SERIAL_REG[PinSerial.IC4051_SA] = (no >> 2) & 0x1;
+    SERIAL_REG[PinSerial.IC4051_SC] = (no >> 2) & 0x1;
     SERIAL_REG[PinSerial.IC4051_SB] = (no >> 1) & 0x1;
-    SERIAL_REG[PinSerial.IC4051_SC] = (no >> 0) & 0x1;
+    SERIAL_REG[PinSerial.IC4051_SA] = (no >> 0) & 0x1;
     smartgarden_apply();
     dumpSerial(PinSerial.IC4051_SA, PinSerial.IC4051_SC);
 }

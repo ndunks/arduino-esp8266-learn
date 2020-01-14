@@ -1,6 +1,46 @@
 #pragma once
 #include <Arduino.h>
 #include <user_interface.h>
+#define COLOR_BLACK 30
+#define COLOR_RED 31
+#define COLOR_GREEN 32
+#define COLOR_YELLOW 33
+#define COLOR_BLUE 34
+#define COLOR_MAGENTA 35
+#define COLOR_CYAN 36
+
+#ifdef SMARTGARDEN_DEBUG
+#define P(fmt, ...) ::printf(fmt, ##__VA_ARGS__)
+
+#define ONOFF(val) (String("\x1b[") +                       \
+                    (val ? COLOR_GREEN : COLOR_RED) +       \
+                    "m" + (val ? "ON" : "OFF") + "\x1b[0m") \
+                       .c_str()
+#define BLACK(str) (String("\x1b[") + COLOR_BLACK + "m" + str + "\x1b[0m").c_str()
+#define RED(str) (String("\x1b[") + COLOR_RED + "m" + str + "\x1b[0m").c_str()
+#define GREEN(str) (String("\x1b[") + COLOR_GREEN + "m" + str + "\x1b[0m").c_str()
+#define YELLOW(str) (String("\x1b[") + COLOR_YELLOW + "m" + str + "\x1b[0m").c_str()
+#define BLUE(str) (String("\x1b[") + COLOR_BLUE + "m" + str + "\x1b[0m").c_str()
+#define MAGENTA(str) (String("\x1b[") + COLOR_MAGENTA + "m" + str + "\x1b[0m").c_str()
+#define CYAN(str) (String("\x1b[") + COLOR_CYAN + "m" + str + "\x1b[0m").c_str()
+
+#endif
+#ifndef SMARTGARDEN_DEBUG
+#define P(...)   \
+    do           \
+    {            \
+        (void)0; \
+    } while (0)
+
+#define ONOFF(...) P()
+#define BLACK(str) P()
+#define RED(str) P()
+#define GREEN(str) P()
+#define YELLOW(str) P()
+#define BLUE(str) P()
+#define MAGENTA(str) P()
+#define CYAN(str) P()
+#endif
 
 /**
  * 8 Input Analog/Digital
@@ -21,9 +61,13 @@
  * 7        DHT22 (digital)
  */
 
+// Serial to Pararel
 #define SERIAL_DATA 13  //D7 --> DS Outputs the byte to transfer
 #define SERIAL_LOAD 15  //D8 --> RCLK Controls the internal transference of data in SN74HC595 internal registers
 #define SERIAL_CLOCK 14 //D5 --> SRCLK Generates the clock signal to control the transference of data
+
+// SENSOR SUHU
+#define SENSOR_SUHU_PIN 4 // D2
 
 // OUTUT/LED PIN
 #define VALVE_START 8
@@ -31,9 +75,6 @@
 #define VALVE_STACK_MAX 20
 #define POMPA_NO 3
 #define SPRAYER_NO 6 //  harus dibawah VALVE_COUNT
-
-// GPIO
-#define SENSOR_SUHU_PIN 4 // D2
 
 // IC595 -> IC4051
 #define SA 0

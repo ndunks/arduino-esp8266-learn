@@ -10,6 +10,7 @@ void setup()
   while (!Serial)
   {
   }
+  smartgarden_loop();
 }
 
 void loop()

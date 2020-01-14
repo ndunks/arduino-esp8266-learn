@@ -109,7 +109,6 @@ void readAllAnalog()
     {
         ANALOG_SENSOR[i] = readAnalog(i);
     }
-    yield();
 }
 
 // Add valve to on when applied
@@ -154,7 +153,7 @@ int valvePop()
 
 void valveDump(const char *prefix)
 {
-    Serial.printf("%s [%d]: ", prefix, VALVE_INDEX+1);
+    Serial.printf("%s [%d]: ", prefix, VALVE_INDEX + 1);
     int i = 0;
     while (i < VALVE_COUNT && VALVE_STACK[i] >= 0)
     {
@@ -209,7 +208,7 @@ void valveChecker()
             continue;
 
         shouldOn = ANALOG_SENSOR[i] <= smartgarden_config->humidity_minimal[i];
-        P("Sensor_%d: %d = %d\n", i, ANALOG_SENSOR[i], shouldOn);
+        P(YELLOW("Sensor_%d: %d = %d\n"), i, ANALOG_SENSOR[i], shouldOn);
         if (shouldOn)
         {
             valvePush(i);
@@ -245,4 +244,5 @@ void smartgarden_loop()
     SERIAL_REG[PinSerial.Pompa] = VALVE_INDEX >= 0;
     smartgarden_apply();
     dumpSerial(PinSerial.Valve_0, PinSerial.Sprayer);
+    P(BLUE("--------------------------\n"));
 }

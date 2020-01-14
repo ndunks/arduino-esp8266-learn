@@ -38,9 +38,25 @@ void arrayStack()
     int *stackPointer = nullptr;
     printAllStack(stack, stackLen);
 }
+void constStruct()
+{
+    static const uint8_t S00 = 0;
+    static const uint8_t S01 = 1;
+    static const uint8_t S02 = 2;
+    const struct PINS
+    {
+        uint8_t LED_1 = 0;
+        uint8_t LED_2 = 12;
+        uint16_t LED_3 = 12;
+    } Pins;
+
+    printf("PIN %d %d %d\n", sizeof(PINS), sizeof(Pins), Pins.LED_2);
+}
+
 int main(int argc, char const *argv[])
 {
     printf("MAIN RUN\n\n");
-    arrayStack();
+    constStruct();
+    //arrayStack();
     return 0;
 }

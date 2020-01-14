@@ -20,8 +20,8 @@ int VALVE_CURRENT = -1;
 
 // List antrean valve, karena hanya 1 valve yg open dalam satu waktu
 int VALVE_STACK[VALVE_STACK_MAX] = {};
-int VALVE_INDEX = -1;
-unsigned long valve_next_switch = 0;
+
+unsigned long valve_next_check = 0;
 // Cek setiap sensor setiap:
 unsigned long smartgarden_delay = 1000; // 1 second
 
@@ -42,7 +42,8 @@ void smartgarden_setup()
         smartgarden_config = new SmartGardenConfig();
         smartgarden_config->valve_delay_default = 5;
         smartgarden_config->humidity_minimal_default = 50;
-        smartgarden_config->temperature_max = 32;
+        // Default DHT sensor max heat
+        smartgarden_config->temperature_max = 30;
 
         for (int no = 0; no < VALVE_COUNT; no++)
         {
@@ -93,7 +94,6 @@ void setAnalog(int no)
     SERIAL_REG[PinSerial.IC4051_SB] = (no >> 1) & 0x1;
     SERIAL_REG[PinSerial.IC4051_SA] = (no >> 0) & 0x1;
     smartgarden_apply();
-    dumpSerial(PinSerial.IC4051_SA, PinSerial.IC4051_SC);
 }
 
 int readAnalog(int no)
@@ -110,50 +110,9 @@ void readAllAnalog()
         ANALOG_SENSOR[i] = readAnalog(i);
     }
 }
-
-// Add valve to on when applied
-bool valvePush(int no)
-{
-    if (VALVE_INDEX == VALVE_STACK_MAX - 1)
-    {
-        Serial.println("[!] Valve stack is full");
-        return false;
-    }
-    else
-    {
-        int i = 0;
-        while (i < VALVE_COUNT && VALVE_STACK[i] >= 0)
-        {
-            if (VALVE_STACK[i++] == no)
-            {
-                P(YELLOW("valvePush exists %d\n"), no);
-                return false;
-            };
-        }
-        VALVE_STACK[++VALVE_INDEX] = no;
-        P("valvePush %d\n", no);
-        return true;
-    }
-}
-
-int valvePop()
-{
-    if (VALVE_INDEX < 0)
-    {
-        P("valvePop: No valve in stack\n");
-        return -1;
-    }
-    else
-    {
-        P("valvePop: %d\n", VALVE_STACK[VALVE_INDEX]);
-        VALVE_STACK[VALVE_INDEX] = -1;
-        return VALVE_INDEX--;
-    }
-}
-
 void valveDump(const char *prefix)
 {
-    Serial.printf("%s [%d]: ", prefix, VALVE_INDEX + 1);
+    Serial.printf("%s: ", prefix);
     int i = 0;
     while (i < VALVE_COUNT && VALVE_STACK[i] >= 0)
     {
@@ -161,40 +120,89 @@ void valveDump(const char *prefix)
     }
     Serial.print('\n');
 }
+// Add valve to on when applied
+bool valvePush(int no)
+{
+
+    // JIka hanya satu valve yg on dan masih perlu on, maka perpanjang timer
+    // if (VALVE_STACK[0] == no && VALVE_STACK[1] < 0)
+    // {
+    //     valve_next_check = millis() + smartgarden_config->valve_delay[no] * 1000;
+    //     P("%s %s\n", GREEN("valvePush RENEW"), GREEN(no));
+    //     return true;
+    // }
+    int i = -1;
+    while (VALVE_STACK[++i] >= 0 && i <= VALVE_STACK_MAX)
+    {
+        if (VALVE_STACK[i] == no)
+        {
+            P("%s %s\n", RED("valvePush Exists"), RED(no));
+            return false;
+        }
+    }
+    if (i == VALVE_STACK_MAX)
+    {
+
+        Serial.println("[!] Valve stack is full");
+        return false;
+    }
+    VALVE_STACK[i] = no;
+    P("valvePush %d\n", no);
+    return true;
+}
+
+void valvePop()
+{
+    if (VALVE_STACK[0] < 0)
+    {
+        P("valvePop: No valve in stack\n");
+    }
+    else
+    {
+        for (int i = 1; i < VALVE_STACK_MAX; i++)
+        {
+            if (0 > (VALVE_STACK[i - 1] = VALVE_STACK[i]))
+                break;
+            else
+                VALVE_STACK[i] = -1;
+        }
+
+        valveDump("popped");
+    }
+}
 
 void valveSwitcher()
 {
-    if (VALVE_INDEX < 0)
+    //  Dont switch if not the time, maybe renewed on valvePush!
+    if (VALVE_STACK[0] < 0)
     {
         P("valveSwitcher: no valve in stack\n");
         return;
     }
 
-    if (valve_next_switch > millis())
+    if (valve_next_check > millis())
     {
-        P("valveSwitcher: not yet\n");
+        P("valveSwitcher: May renewed\n");
         return;
     }
+
     int no;
-    if (VALVE_CURRENT >= 0)
+    if (VALVE_CURRENT >= 0 && VALVE_CURRENT != VALVE_STACK[0])
     {
-        no = valvePop();
-        SERIAL_REG[VALVE_START + no] = OFF;
-        P("Turn Off %d\n", no);
+        SERIAL_REG[VALVE_START + VALVE_CURRENT] = OFF;
+        P("Turn Off %d\n", VALVE_CURRENT);
+        valve_next_check = millis() + 100;
+        VALVE_CURRENT = -1;
     }
     // Stillhave in stack?
-    if (VALVE_INDEX >= 0)
+    if (VALVE_STACK[0] >= 0)
     {
-        no = VALVE_STACK[VALVE_INDEX];
+        no = VALVE_STACK[0];
         SERIAL_REG[VALVE_START + no] = ON;
         VALVE_CURRENT = no;
-        valve_next_switch = millis() + smartgarden_config->valve_delay[no] * 1000L;
+        valvePop();
+        valve_next_check = millis() + smartgarden_config->valve_delay[no] * 1000L;
         P("Turn On %d for %d second\n", no, smartgarden_config->valve_delay[no]);
-    }
-    else
-    {
-        valve_next_switch = 0;
-        VALVE_CURRENT = -1;
     }
 }
 
@@ -208,7 +216,7 @@ void valveChecker()
             continue;
 
         shouldOn = ANALOG_SENSOR[i] <= smartgarden_config->humidity_minimal[i];
-        P(YELLOW("Sensor_%d: %d = %d\n"), i, ANALOG_SENSOR[i], shouldOn);
+        P("Sensor_%d: %d = %d\n", i, ANALOG_SENSOR[i], shouldOn);
         if (shouldOn)
         {
             valvePush(i);
@@ -229,20 +237,26 @@ void valveChecker()
 
 void smartgarden_loop()
 {
+    ulong now = millis();
+    if (nextrun < now)
+    {
+        nextrun = now + smartgarden_delay;
+        sensorsuhu_read();
+        readAllAnalog();
+    }
 
-    // if (nextrun > millis())
-    // {
-    //     return;
-    // }
-    nextrun = millis() + smartgarden_delay;
-    sensorsuhu_read();
-    readAllAnalog();
-    valveChecker();
-    valveSwitcher();
-    valveDump("Valve ");
-    // Jika ada salah satu valve yg on, maka pompa juga harus on
-    SERIAL_REG[PinSerial.Pompa] = VALVE_INDEX >= 0;
-    smartgarden_apply();
-    dumpSerial(PinSerial.Valve_0, PinSerial.Sprayer);
-    P(BLUE("--------------------------\n"));
+    if (valve_next_check < now)
+    {
+
+        valveChecker();
+        valveSwitcher();
+        valveDump("Valve ");
+        // Jika ada salah satu valve yg on, maka pompa juga harus on
+        SERIAL_REG[PinSerial.Pompa] = VALVE_STACK[0] >= 0;
+        smartgarden_apply();
+        dumpSerial(PinSerial.Valve_0, PinSerial.Sprayer);
+        P("%dC %d%%\n%s", TEMPERATURE, HUMIDITY, BLUE("--------------------------\n"));
+    } /* else{
+        P("valveSwitcher: not yet\n");P("valveSwitcher: not yet\n");
+    } */
 }

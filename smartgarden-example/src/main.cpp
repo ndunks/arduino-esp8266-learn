@@ -13,7 +13,7 @@ void setup()
   smartgarden_loop();
 }
 
-void loop()
+void smartgarden_loop_wait()
 {
   if (Serial.available())
   {
@@ -23,4 +23,10 @@ void loop()
     }
     smartgarden_loop();
   }
+}
+
+void loop()
+{
+  delay(100);
+  smartgarden_loop();
 }

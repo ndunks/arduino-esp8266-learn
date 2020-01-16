@@ -3,8 +3,6 @@
 
 LiquidCrystal_I2C lcd;
 
-int value = 0;
-
 void setup()
 {
   Serial.begin(115200);
@@ -32,8 +30,8 @@ void setup()
               "3:    6:            "
               "2:    5:    32c  93%"));
 }
-void displaySetNo(uint8 no, uint8 value){
-
+void displaySetNo(uint8 no, uint8 value)
+{
 }
 void smartgarden_loop_wait()
 {
@@ -46,9 +44,11 @@ void smartgarden_loop_wait()
     smartgarden_loop();
   }
 }
-void display_loop(){
-  for(int i = 0; i < (VALVE_COUNT -1);i++ ){
-    lcd.setCursor(2 + ((i / 3 ) * 6), i % 3);
+void display_loop()
+{
+  for (int i = 0; i < (VALVE_COUNT - 1); i++)
+  {
+    lcd.setCursor(2 + ((i / 3) * 6), i % 3);
     lcd.printf("%-3d", ANALOG_SENSOR[i]);
   }
   // Suhu & kelemebaban
@@ -56,8 +56,21 @@ void display_loop(){
   lcd.printf("%2dc", TEMPERATURE);
   lcd.setCursor(16, 1);
   lcd.printf("%3d%%", HUMIDITY);
-
 }
+
+// Write status text
+void displayStatus(const char *txt)
+{
+  lcd.setCursor(0, 3);
+  lcd.print(txt);
+}
+
+void clearStatus()
+{
+  lcd.setCursor(0, 3);
+  lcd.print("                    ");
+}
+
 void waitSerialInput(void callback(void))
 {
   if (Serial.available())
@@ -71,8 +84,8 @@ void waitSerialInput(void callback(void))
 }
 void loop()
 {
-  //delay(100);
+  delay(100);
   display_loop();
-  waitSerialInput(smartgarden_loop);
-  //smartgarden_loop();
+  //waitSerialInput(smartgarden_loop);
+  smartgarden_loop();
 }

@@ -6,10 +6,11 @@
 
 extern LiquidCrystal_I2C lcd;
 
+void displayStatus(const char *txt);
+void clearStatus();
 // Delay for checking input sensors, call set it before smartgarden_setup()
 extern uint8 SERIAL_REG[];
 extern unsigned long smartgarden_delay;
-
 
 // Current analogs signal state
 extern uint8 ANALOG_SENSOR[];
@@ -29,6 +30,10 @@ struct SmartGardenConfig
     uint8 humidity_minimal_default;
     // max temperatur to trigger sprayer in celcius
     uint8 temperature_max;
+    // Maksimal pompa menyala (detik)
+    uint8 maksimal_pompa_hidup;
+    // Maksimal pompa mati/istirahat (detik)
+    uint8 maksimal_pompa_mati;
 };
 
 // Default config will set on smartgarden_setup()

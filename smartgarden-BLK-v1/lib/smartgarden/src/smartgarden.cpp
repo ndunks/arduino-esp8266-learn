@@ -243,7 +243,7 @@ void smartgarden_loop()
         valveSwitcher();
         valveDump("Valve ");
         // Jika ada salah satu valve yg on, maka pompa juga harus on
-        SERIAL_REG[PinSerial.Pompa] = VALVE_STACK[0] >= 0;
+        SERIAL_REG[PinSerial.Pompa] = VALVE_CURRENT >= 0;
         smartgarden_apply();
         dumpSerial(PinSerial.Valve_0, PinSerial.Sprayer);
         P("%dC %d%%\n%s", TEMPERATURE, HUMIDITY, BLUE("--------------------------\n"));

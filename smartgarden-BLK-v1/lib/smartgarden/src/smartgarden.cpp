@@ -123,14 +123,6 @@ void valveDump(const char *prefix)
 // Add valve to on when applied
 bool valvePush(int no)
 {
-
-    // JIka hanya satu valve yg on dan masih perlu on, maka perpanjang timer
-    // if (VALVE_STACK[0] == no && VALVE_STACK[1] < 0)
-    // {
-    //     valve_next_check = millis() + smartgarden_config->valve_delay[no] * 1000;
-    //     P("%s %s\n", GREEN("valvePush RENEW"), GREEN(no));
-    //     return true;
-    // }
     int i = -1;
     while (VALVE_STACK[++i] >= 0 && i <= VALVE_STACK_MAX)
     {
@@ -147,7 +139,7 @@ bool valvePush(int no)
         return false;
     }
     VALVE_STACK[i] = no;
-    P("valvePush %d\n", no);
+    valveDump("pushed");
     return true;
 }
 
@@ -174,20 +166,19 @@ void valvePop()
 void valveSwitcher()
 {
     //  Dont switch if not the time, maybe renewed on valvePush!
-    if (VALVE_STACK[0] < 0)
+    /* if (VALVE_STACK[0] < 0)
     {
         P("valveSwitcher: no valve in stack\n");
         return;
-    }
+    } */
 
     if (valve_next_check > millis())
     {
         P("valveSwitcher: May renewed\n");
         return;
     }
-
     int no;
-    if (VALVE_CURRENT >= 0 && VALVE_CURRENT != VALVE_STACK[0])
+    if (VALVE_CURRENT >= 0 /* && VALVE_CURRENT != VALVE_STACK[0] */)
     {
         SERIAL_REG[VALVE_START + VALVE_CURRENT] = OFF;
         P("Turn Off %d\n", VALVE_CURRENT);
@@ -256,7 +247,7 @@ void smartgarden_loop()
         smartgarden_apply();
         dumpSerial(PinSerial.Valve_0, PinSerial.Sprayer);
         P("%dC %d%%\n%s", TEMPERATURE, HUMIDITY, BLUE("--------------------------\n"));
-    } /* else{
-        P("valveSwitcher: not yet\n");P("valveSwitcher: not yet\n");
-    } */
+    } else{
+        P("valveSwitcher: not yet\n");
+    }
 }

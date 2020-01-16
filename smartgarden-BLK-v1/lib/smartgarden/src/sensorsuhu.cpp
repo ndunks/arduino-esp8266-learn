@@ -15,6 +15,8 @@ void sensorsuhu_read()
         return;
     }
     lastReadTime = startTime;
+    TEMPERATURE = 0;
+    HUMIDITY = 0;
 
     uint16_t rawHumidity = 0;
     uint16_t rawTemperature = 0;

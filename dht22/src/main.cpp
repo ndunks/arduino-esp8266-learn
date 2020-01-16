@@ -19,7 +19,7 @@ void setup()
   // Autodetect is not working reliable, don't use the following line
   // dht.setup(17);
   // use this instead: 
-  dht.setup(D2, DHTesp::DHT22); // Connect DHT sensor to GPIO 17
+  dht.setup(D3, DHTesp::DHT22); // Connect DHT sensor to GPIO 17
 }
 
 void loop()
@@ -40,5 +40,5 @@ void loop()
   Serial.print(dht.computeHeatIndex(temperature, humidity, false), 1);
   Serial.print("\t\t");
   Serial.println(dht.computeHeatIndex(dht.toFahrenheit(temperature), humidity, true), 1);
-  delay(2000);
+  delay(700);
 }

@@ -48,14 +48,31 @@ void smartgarden_loop_wait()
 }
 void display_loop(){
   for(int i = 0; i < (VALVE_COUNT -1);i++ ){
-    Serial.printf("CRSOR %d: %d %d\n", i, 2 + ((i / 3 ) * 6), i % 3);
     lcd.setCursor(2 + ((i / 3 ) * 6), i % 3);
     lcd.printf("%-3d", ANALOG_SENSOR[i]);
+  }
+  // Suhu & kelemebaban
+  lcd.setCursor(12, 1);
+  lcd.printf("%2dc", TEMPERATURE);
+  lcd.setCursor(16, 1);
+  lcd.printf("%3d%%", HUMIDITY);
+
+}
+void waitSerialInput(void callback(void))
+{
+  if (Serial.available())
+  {
+    while (Serial.available())
+    {
+      Serial.read();
+    }
+    callback();
   }
 }
 void loop()
 {
-  delay(100);
-  smartgarden_loop();
+  //delay(100);
   display_loop();
+  waitSerialInput(smartgarden_loop);
+  //smartgarden_loop();
 }

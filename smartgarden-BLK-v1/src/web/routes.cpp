@@ -10,6 +10,7 @@ struct Controller routes[] = {
     {"scan", &handle_scan, false},
     // Auth Will checked on controller function on edit only
     {"config", &handle_config, false},
+    {"sensor", &handle_sensor, false},
 };
 
 // End pointer

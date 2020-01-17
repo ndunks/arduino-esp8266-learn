@@ -1,7 +1,18 @@
 #include "web.h"
 #include "controllers.h"
-#include "config.h"
+#include "header.h"
 
+void handle_sensor(String &response, HTTPMethod method)
+{
+    for (int i = 0; i < (VALVE_COUNT - 1); i++)
+    {
+        response += "S" + i;
+        response += ":" + ANALOG_SENSOR[i] + '\n';
+    }
+    // Suhu & kelemebaban
+    response += "temp: " + TEMPERATURE + '\n';
+    response += "hum: " + HUMIDITY + '\n';
+}
 void handle_index(String &response, HTTPMethod method)
 {
     //digitalWrite(ledPin, LOW);

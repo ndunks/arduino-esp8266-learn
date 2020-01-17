@@ -34,7 +34,7 @@ void config_default()
     config->valve_delay_default = (uint8_t) 5;
     config->humidity_minimal_default = (uint8_t) 50;
     config->sensor_delay = (uint8_t) 5;
-    memcpy(config->displayText, F("    BLKP KLAMPOK"), 17);
+    memcpy(config->displayText, "    BLKP KLAMPOK", 17);
 
 #ifdef SMARTGARDEN_DEBUG
     config->maksimal_pompa_hidup = 7;
@@ -64,8 +64,8 @@ void config_default()
 void firstboot()
 {
     // Load default config
+    WiFi.persistent(true);
     config_default();
-
     String ssid("smart-");
     ssid += device_id;
 
@@ -86,6 +86,7 @@ void firstboot()
     WiFi.enableSTA(false);
     WiFi.mode(WIFI_AP);
     WiFi.setAutoConnect(false);
+    ssid.clear();
 }
 void cofig_reset()
 {

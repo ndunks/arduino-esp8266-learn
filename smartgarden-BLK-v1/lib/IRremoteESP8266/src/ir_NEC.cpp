@@ -8,60 +8,7 @@
 #include <stdint.h>
 #include <algorithm>
 #include "IRrecv.h"
-#include "IRsend.h"
 #include "IRutils.h"
-
-#if (SEND_NEC || SEND_SHERWOOD || SEND_AIWA_RC_T501 || SEND_SANYO)
-// Send a raw NEC(Renesas) formatted message.
-//
-// Args:
-//   data:   The message to be sent.
-//   nbits:  The number of bits of the message to be sent. Typically kNECBits.
-//   repeat: The number of times the command is to be repeated.
-//
-// Status: STABLE / Known working.
-//
-// Ref:
-//  http://www.sbprojects.com/knowledge/ir/nec.php
-void IRsend::sendNEC(uint64_t data, uint16_t nbits, uint16_t repeat) {
-  sendGeneric(kNecHdrMark, kNecHdrSpace, kNecBitMark, kNecOneSpace, kNecBitMark,
-              kNecZeroSpace, kNecBitMark, kNecMinGap, kNecMinCommandLength,
-              data, nbits, 38, true, 0,  // Repeats are handled later.
-              33);
-  // Optional command repeat sequence.
-  if (repeat)
-    sendGeneric(kNecHdrMark, kNecRptSpace, 0, 0, 0, 0,  // No actual data sent.
-                kNecBitMark, kNecMinGap, kNecMinCommandLength, 0,
-                0,                     // No data to be sent.
-                38, true, repeat - 1,  // We've already sent a one message.
-                33);
-}
-
-// Calculate the raw NEC data based on address and command.
-// Args:
-//   address: An address value.
-//   command: An 8-bit command value.
-// Returns:
-//   A raw 32-bit NEC message.
-//
-// Status: BETA / Expected to work.
-//
-// Ref:
-//  http://www.sbprojects.com/knowledge/ir/nec.php
-uint32_t IRsend::encodeNEC(uint16_t address, uint16_t command) {
-  command &= 0xFF;  // We only want the least significant byte of command.
-  // sendNEC() sends MSB first, but protocol says this is LSB first.
-  command = reverseBits(command, 8);
-  command = (command << 8) + (command ^ 0xFF);  // Calculate the new command.
-  if (address > 0xFF) {                         // Is it Extended NEC?
-    address = reverseBits(address, 16);
-    return ((address << 16) + command);  // Extended.
-  } else {
-    address = reverseBits(address, 8);
-    return (address << 24) + ((address ^ 0xFF) << 16) + command;  // Normal.
-  }
-}
-#endif  // (SEND_NEC || SEND_SHERWOOD || SEND_AIWA_RC_T501 || SEND_SANYO )
 
 #if (DECODE_NEC || DECODE_SHERWOOD || DECODE_AIWA_RC_T501 || DECODE_SANYO)
 // Decode the supplied NEC message.

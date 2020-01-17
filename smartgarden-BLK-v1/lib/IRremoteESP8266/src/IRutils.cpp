@@ -14,7 +14,6 @@
 #endif
 #include "IRrecv.h"
 #include "IRremoteESP8266.h"
-#include "IRsend.h"
 #include "IRtext.h"
 
 // Reverse the order of the requested least significant nr. of bits.
@@ -823,44 +822,7 @@ namespace irutils {
   }
 
   String modelToStr(const decode_type_t protocol, const int16_t model) {
-    switch (protocol) {
-      case decode_type_t::GREE:
-        switch (model) {
-          case gree_ac_remote_model_t::YAW1F: return F("YAW1F");
-          case gree_ac_remote_model_t::YBOFB: return F("YBOFB");
-          default: return kUnknownStr;
-        }
-        break;
-      case decode_type_t::FUJITSU_AC:
-        switch (model) {
-          case fujitsu_ac_remote_model_t::ARRAH2E: return F("ARRAH2E");
-          case fujitsu_ac_remote_model_t::ARDB1: return F("ARDB1");
-          case fujitsu_ac_remote_model_t::ARREB1E: return F("ARREB1E");
-          case fujitsu_ac_remote_model_t::ARJW2: return F("ARJW2");
-          case fujitsu_ac_remote_model_t::ARRY4: return F("ARRY4");
-          default: return kUnknownStr;
-        }
-        break;
-      case decode_type_t::PANASONIC_AC:
-        switch (model) {
-          case panasonic_ac_remote_model_t::kPanasonicLke: return F("LKE");
-          case panasonic_ac_remote_model_t::kPanasonicNke: return F("NKE");
-          case panasonic_ac_remote_model_t::kPanasonicDke: return F("DKE");
-          case panasonic_ac_remote_model_t::kPanasonicJke: return F("JKE");
-          case panasonic_ac_remote_model_t::kPanasonicCkp: return F("CKP");
-          case panasonic_ac_remote_model_t::kPanasonicRkr: return F("RKR");
-          default: return kUnknownStr;
-        }
-        break;
-      case decode_type_t::WHIRLPOOL_AC:
-        switch (model) {
-          case whirlpool_ac_remote_model_t::DG11J13A: return F("DG11J13A");
-          case whirlpool_ac_remote_model_t::DG11J191: return F("DG11J191");
-          default: return kUnknownStr;
-        }
-        break;
-      default: return kUnknownStr;
-    }
+    return kUnknownStr;
   }
 
   String addModelToString(const decode_type_t protocol, const int16_t model,

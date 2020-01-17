@@ -1,5 +1,4 @@
-#include "smartgarden.h"
-#include "IRutils.h"
+#include "ir_remote.h"
 
 IRrecv irrecv(SENSOR_IR);
 decode_results results;
@@ -24,6 +23,10 @@ CodeMap codeMaps[] = {
     {"RIGHT", 0x5AA5},
     {"DOWN", 0x4AB5},
     {0, 0}};
+
+void ir_remote_setup(){
+    irrecv.enableIRIn();
+}
 
 bool readCode()
 {

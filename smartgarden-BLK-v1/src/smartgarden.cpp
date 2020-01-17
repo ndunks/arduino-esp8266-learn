@@ -1,4 +1,5 @@
-#include "smartgarden.h"
+#include "header.h"
+#include <user_interface.h>
 
 // OUTUT/LED PIN
 const uint8_t VALVE_START = PinSerial.Valve_0;
@@ -252,7 +253,6 @@ void smartgarden_loop()
     unsigned long now = millis();
     if (ir_remote_read())
     {
-        P("PRESSED: %s\n", codeMaps[currentButton].name);
         if (currentButton >= RemoteButton.BTN_1 && currentButton <= RemoteButton.BTN_6)
         {
             valvePush(currentButton);
@@ -267,7 +267,7 @@ void smartgarden_loop()
         readAllAnalog();
         sensor_next_check = now + smartgarden_config->sensor_delay * 1000UL;
     }
-    
+
     if (pompa_mati_sampai > 0)
     {
         if (now >= pompa_mati_sampai)

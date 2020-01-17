@@ -1,4 +1,4 @@
-#include "smartgarden.h"
+#include "header.h"
 
 DHT_MODEL_t sensorsuhu_model = DHT22;
 DHT_ERROR_t sensorsuhu_error = ERROR_NONE;

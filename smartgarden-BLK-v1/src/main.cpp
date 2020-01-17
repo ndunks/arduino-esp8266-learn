@@ -1,5 +1,5 @@
-#include "Arduino.h"
-#include "smartgarden.h"
+#include "header.h"
+#include <LiquidCrystal_I2C.h>
 
 LiquidCrystal_I2C lcd;
 char statusBuffer[21] = {};
@@ -31,7 +31,9 @@ void setup()
               "3:    6:            "
               "2:    5:    32c  93%"));
   status(smartgarden_config->displayText);
-  irrecv.enableIRIn();
+  ir_remote_setup();
+  web_setup();
+  
 }
 
 void smartgarden_loop_wait()
@@ -88,5 +90,6 @@ void loop()
   delay(100);
   display_loop();
   //waitSerialInput(smartgarden_loop);
+  web_loop();
   smartgarden_loop();
 }

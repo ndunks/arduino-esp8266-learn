@@ -29,6 +29,7 @@ static const char *const PinSerialNames[]= {
 
 // SENSOR SUHU
 #define SENSOR_SUHU_PIN D3
+#define SENSOR_IR D4
 
 const struct _Pins595
 {
@@ -65,3 +66,25 @@ const struct _Pins4051
     // uint8_t Unused_6 = 6;
     // uint8_t Unused_7 = 7;
 } PinAnalog;
+
+const struct _RemoteButton
+{
+    int8_t NONE = -1;
+    int8_t BTN_1 = 0;
+    int8_t BTN_2 = 1;
+    int8_t BTN_3 = 2;
+    int8_t BTN_4 = 3;
+    int8_t BTN_5 = 4;
+    int8_t BTN_6 = 5;
+    int8_t BTN_7 = 6;
+    int8_t BTN_8 = 7;
+    int8_t BTN_9 = 8;
+    int8_t BTN_WILDCARD = 9;
+    int8_t BTN_0 = 10;
+    int8_t BTN_HASH = 11;
+    int8_t BTN_UP = 12;
+    int8_t BTN_LEFT = 13;
+    int8_t BTN_OK = 14;
+    int8_t BTN_RIGHT = 15;
+    int8_t BTN_DOWN = 16;
+} RemoteButton;

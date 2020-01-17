@@ -87,6 +87,11 @@ void loop()
 {
   delay(100);
   display_loop();
+  int8_t code = ir_remote_read();
+  if (code != RemoteButton.NONE)
+  {
+    P("PRESSED: %s\n", codeMaps[code].name);
+  }
   //waitSerialInput(smartgarden_loop);
   smartgarden_loop();
 }

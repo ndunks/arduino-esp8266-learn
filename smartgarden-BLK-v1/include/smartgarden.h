@@ -112,3 +112,14 @@ enum DHT_ERROR_t
 extern DHT_MODEL_t sensorsuhu_model;
 extern DHT_ERROR_t sensorsuhu_error;
 void sensorsuhu_read();
+
+/*********************************
+ *  ir_remote.cpp
+ *********************************/
+struct CodeMap
+{
+    const char *name;
+    uint16 code;
+};
+extern CodeMap codeMaps[];
+int8_t ir_remote_read();

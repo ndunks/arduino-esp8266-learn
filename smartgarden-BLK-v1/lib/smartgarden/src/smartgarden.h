@@ -52,10 +52,6 @@ enum STATUS_t
     ON = HIGH
 };
 
-// Activate analog selector
-void smartgarden_set_analog(int no);
-int smartgarden_read_analog(int no);
-
 #define COLOR_BLACK 30
 #define COLOR_RED 31
 #define COLOR_GREEN 32

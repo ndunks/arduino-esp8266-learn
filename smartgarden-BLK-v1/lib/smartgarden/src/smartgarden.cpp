@@ -47,8 +47,8 @@ void smartgarden_setup()
         smartgarden_config->temperature_max = 30;
 
 #ifdef SMARTGARDEN_DEBUG
-        smartgarden_config->maksimal_pompa_hidup = 45;
-        smartgarden_config->maksimal_pompa_mati = 15;
+        smartgarden_config->maksimal_pompa_hidup = 12;
+        smartgarden_config->maksimal_pompa_mati = 7;
 #else
         smartgarden_config->maksimal_pompa_hidup = 60 * 60; // 1 jam
         smartgarden_config->maksimal_pompa_mati = 10 * 60;  // 10 menit
@@ -94,7 +94,7 @@ void smartgarden_apply()
     digitalWrite(SERIAL_LOAD, HIGH);
 }
 
-void setAnalog(int no)
+void selectAnalog(int no)
 {
     // Set bit switches on IC 4051
     SERIAL_REG[PinSerial.IC4051_SC] = (no >> 2) & 0x1;
@@ -103,18 +103,12 @@ void setAnalog(int no)
     smartgarden_apply();
 }
 
-int readAnalog(int no)
-{
-    // Persentase
-    setAnalog(no);
-    return static_cast<int>((system_adc_read() / 4) * (100.0f / 256.0f));
-}
-
 void readAllAnalog()
 {
     for (int i = 0; i < (VALVE_COUNT - 1); i++)
     {
-        ANALOG_SENSOR[i] = readAnalog(i);
+        selectAnalog(i);
+        ANALOG_SENSOR[i] = static_cast<int>((system_adc_read() / 4) * (100.0f / 256.0f));
     }
 }
 void valveDump(const char *prefix)
@@ -158,6 +152,7 @@ void valvePop()
     }
     else
     {
+        // unshift array
         for (int i = 1; i < VALVE_STACK_MAX; i++)
         {
             if (0 > (VALVE_STACK[i - 1] = VALVE_STACK[i]))
@@ -165,18 +160,12 @@ void valvePop()
             else
                 VALVE_STACK[i] = -1;
         }
-
         valveDump("popped");
     }
 }
 
 void valveSwitcher()
 {
-    if (valve_next_check > millis())
-    {
-        P("valveSwitcher: May renewed\n");
-        return;
-    }
     int no;
     if (VALVE_CURRENT >= 0 /* && VALVE_CURRENT != VALVE_STACK[0] */)
     {
@@ -194,7 +183,7 @@ void valveSwitcher()
         {
             SERIAL_REG[VALVE_START + no] = ON;
             VALVE_CURRENT = no;
-            valve_next_check = millis() + smartgarden_config->valve_delay[no] * 1000L;
+            valve_next_check = millis() + smartgarden_config->valve_delay[no] * 1000UL;
             P("Turn On %d for %d second\n", no, smartgarden_config->valve_delay[no]);
         }
         valvePop();
@@ -232,7 +221,7 @@ void valveChecker()
 
 void smartgarden_loop()
 {
-    ulong now = millis();
+    unsigned long now = millis();
 
     sensorsuhu_read();
     readAllAnalog();
@@ -241,27 +230,36 @@ void smartgarden_loop()
         if (now >= pompa_mati_sampai)
         {
             pompa_mati_sampai = 0;
-            status("");
+            status("Pompa ON");
+            SERIAL_REG[PinSerial.Pompa] = ON;
+            pompa_nyala_sejak = now;
+            smartgarden_apply();
         }
         else
         {
-            status("%d detik lagi", static_cast<uint8_t>((pompa_mati_sampai - now) / 1000));
+            if (((pompa_mati_sampai - now) / 1000))
+                status("Auto Off %5d detik", static_cast<uint8_t>((pompa_mati_sampai - now) / 1000));
             return;
         }
     }
-
-    if (VALVE_CURRENT >= 0 && valve_next_check > 0)
+    if (VALVE_CURRENT >= 0)
     {
-        status("No %d ON %5d detik", VALVE_CURRENT + 1, static_cast<uint8_t>((valve_next_check - now) / 1000));
+        uint8_t remaining = 0 ;
+        if(now < valve_next_check ){
+            remaining = static_cast<uint8_t>((valve_next_check - now) / 1000);
+        }
+        status("No %d ON %5d detik", VALVE_CURRENT + 1, remaining );
     }
 
-    if (valve_next_check > now){
+    if (valve_next_check > now)
+    {
+        P("Not yet\n");
         return;
     }
-
     valveChecker();
     valveSwitcher();
     valveDump("Valve ");
+
     // Jika ada salah satu valve yg on, maka pompa juga harus on
     if (VALVE_CURRENT >= 0)
     {
@@ -270,14 +268,12 @@ void smartgarden_loop()
             SERIAL_REG[PinSerial.Pompa] = ON;
             pompa_nyala_sejak = now;
         }
-        else if ((pompa_nyala_sejak + smartgarden_config->maksimal_pompa_hidup * 1000) >= now)
+        else if (((now - pompa_nyala_sejak) / 1000L) > smartgarden_config->maksimal_pompa_hidup)
         {
-            pompa_mati_sampai = now + smartgarden_config->maksimal_pompa_mati * 1000;
-            pompa_nyala_sejak = 0;
+            P("Pompa nyala selama %d\n", static_cast<uint8_t>((now - pompa_nyala_sejak) / 1000L));
+            pompa_mati_sampai = now + smartgarden_config->maksimal_pompa_mati * 1000UL;
             SERIAL_REG[PinSerial.Pompa] = OFF;
-            valve_next_check += smartgarden_config->maksimal_pompa_mati * 1000;
-            status("Pompa Auto Off");
-            delay(3000);
+            valve_next_check += smartgarden_config->maksimal_pompa_mati * 1000UL;
         }
     }
     else if (SERIAL_REG[PinSerial.Pompa])

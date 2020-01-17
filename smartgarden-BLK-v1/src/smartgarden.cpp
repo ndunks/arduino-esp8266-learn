@@ -79,9 +79,36 @@ void dumpSerial(int start = 0, int end = 15)
         P(" > %11s : %s\n", PinSerialNames[i], ONOFF(SERIAL_REG[i] & B1));
     }
 }
+void pompaChecker()
+{
+    unsigned long now = millis();
+    // Jika ada salah satu valve yg on, maka pompa juga harus on
+    if (VALVE_CURRENT >= 0)
+    {
+        if (!SERIAL_REG[PinSerial.Pompa])
+        {
+            SERIAL_REG[PinSerial.Pompa] = ON;
+            pompa_nyala_sejak = now;
+        }
+        else if (((now - pompa_nyala_sejak) / 1000L) > smartgarden_config->maksimal_pompa_hidup)
+        {
+            P("Pompa nyala selama %d\n", static_cast<uint8_t>((now - pompa_nyala_sejak) / 1000L));
+            pompa_mati_sampai = now + smartgarden_config->maksimal_pompa_mati * 1000UL;
+            SERIAL_REG[PinSerial.Pompa] = OFF;
+            valve_next_check += smartgarden_config->maksimal_pompa_mati * 1000UL;
+        }
+    }
+    else if (SERIAL_REG[PinSerial.Pompa])
+    {
+        SERIAL_REG[PinSerial.Pompa] = OFF;
+        pompa_nyala_sejak = 0;
+        status(smartgarden_config->displayText);
+    }
+}
 /** Apply REG value to 2 chained IC 595 */
 void smartgarden_apply()
 {
+    pompaChecker();
     digitalWrite(SERIAL_LOAD, LOW);
     for (int i = 15; i >= 0; i--)
     {
@@ -269,28 +296,6 @@ void smartgarden_loop()
     valveSwitcher();
     //valveDump("Valve ");
 
-    // Jika ada salah satu valve yg on, maka pompa juga harus on
-    if (VALVE_CURRENT >= 0)
-    {
-        if (!SERIAL_REG[PinSerial.Pompa])
-        {
-            SERIAL_REG[PinSerial.Pompa] = ON;
-            pompa_nyala_sejak = now;
-        }
-        else if (((now - pompa_nyala_sejak) / 1000L) > smartgarden_config->maksimal_pompa_hidup)
-        {
-            P("Pompa nyala selama %d\n", static_cast<uint8_t>((now - pompa_nyala_sejak) / 1000L));
-            pompa_mati_sampai = now + smartgarden_config->maksimal_pompa_mati * 1000UL;
-            SERIAL_REG[PinSerial.Pompa] = OFF;
-            valve_next_check += smartgarden_config->maksimal_pompa_mati * 1000UL;
-        }
-    }
-    else if (SERIAL_REG[PinSerial.Pompa])
-    {
-        SERIAL_REG[PinSerial.Pompa] = OFF;
-        pompa_nyala_sejak = 0;
-        status(smartgarden_config->displayText);
-    }
     smartgarden_apply();
     //dumpSerial(PinSerial.Valve_0, PinSerial.Sprayer);
     //P("%dC %d%% %s\n", TEMPERATURE, HUMIDITY, BLUE("--------------------------\n"));

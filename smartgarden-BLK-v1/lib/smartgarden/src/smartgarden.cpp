@@ -47,8 +47,8 @@ void smartgarden_setup()
         smartgarden_config->temperature_max = 30;
 
 #ifdef SMARTGARDEN_DEBUG
-        smartgarden_config->maksimal_pompa_hidup = 30;
-        smartgarden_config->maksimal_pompa_mati = 10;
+        smartgarden_config->maksimal_pompa_hidup = 45;
+        smartgarden_config->maksimal_pompa_mati = 15;
 #else
         smartgarden_config->maksimal_pompa_hidup = 60 * 60; // 1 jam
         smartgarden_config->maksimal_pompa_mati = 10 * 60;  // 10 menit
@@ -172,13 +172,6 @@ void valvePop()
 
 void valveSwitcher()
 {
-    //  Dont switch if not the time, maybe renewed on valvePush!
-    /* if (VALVE_STACK[0] < 0)
-    {
-        P("valveSwitcher: no valve in stack\n");
-        return;
-    } */
-
     if (valve_next_check > millis())
     {
         P("valveSwitcher: May renewed\n");
@@ -197,7 +190,7 @@ void valveSwitcher()
     {
         no = VALVE_STACK[0];
         // check again if it still need water, except from DHT22
-        if ( no == SPRAYER_NO || ANALOG_SENSOR[no] <= smartgarden_config->humidity_minimal[no])
+        if (no == SPRAYER_NO || ANALOG_SENSOR[no] <= smartgarden_config->humidity_minimal[no])
         {
             SERIAL_REG[VALVE_START + no] = ON;
             VALVE_CURRENT = no;
@@ -248,52 +241,51 @@ void smartgarden_loop()
         if (now >= pompa_mati_sampai)
         {
             pompa_mati_sampai = 0;
-            clearStatus();
+            status("");
         }
         else
         {
-            lcd.setCursor(10, 3);
-            lcd.printf("%d detik", static_cast<uint8_t>((pompa_mati_sampai - now) / 1000));
+            status("%d detik lagi", static_cast<uint8_t>((pompa_mati_sampai - now) / 1000));
             return;
         }
     }
-    if (valve_next_check < now)
-    {
 
-        valveChecker();
-        valveSwitcher();
-        valveDump("Valve ");
-        // Jika ada salah satu valve yg on, maka pompa juga harus on
-        if (VALVE_CURRENT >= 0)
-        {
-            // lcd.setCursor(0, 3);
-            // lcd.printf("Pompa %d On", VALVE_CURRENT + 1);
-            if (!SERIAL_REG[PinSerial.Pompa])
-            {
-                SERIAL_REG[PinSerial.Pompa] = ON;
-                pompa_nyala_sejak = now;
-            }
-            else if ((pompa_nyala_sejak + smartgarden_config->maksimal_pompa_hidup * 1000) >= now)
-            {
-                pompa_mati_sampai = now + smartgarden_config->maksimal_pompa_mati * 1000;
-                pompa_nyala_sejak = 0;
-                SERIAL_REG[PinSerial.Pompa] = OFF;
-                displayStatus("Pompa Off");
-                valve_next_check += smartgarden_config->maksimal_pompa_mati * 1000;
-                delay(1000);
-            }
-        }
-        else if (SERIAL_REG[PinSerial.Pompa])
-        {
-            SERIAL_REG[PinSerial.Pompa] = OFF;
-            pompa_nyala_sejak = 0;
-        }
-        smartgarden_apply();
-        dumpSerial(PinSerial.Valve_0, PinSerial.Sprayer);
-        P("%dC %d%%\n%s", TEMPERATURE, HUMIDITY, BLUE("--------------------------\n"));
-    }
-    /* else
+    if (VALVE_CURRENT >= 0 && valve_next_check > 0)
     {
-        P("valveSwitcher: not yet\n");
-    } */
+        status("No %d ON %5d detik", VALVE_CURRENT + 1, static_cast<uint8_t>((valve_next_check - now) / 1000));
+    }
+
+    if (valve_next_check > now){
+        return;
+    }
+
+    valveChecker();
+    valveSwitcher();
+    valveDump("Valve ");
+    // Jika ada salah satu valve yg on, maka pompa juga harus on
+    if (VALVE_CURRENT >= 0)
+    {
+        if (!SERIAL_REG[PinSerial.Pompa])
+        {
+            SERIAL_REG[PinSerial.Pompa] = ON;
+            pompa_nyala_sejak = now;
+        }
+        else if ((pompa_nyala_sejak + smartgarden_config->maksimal_pompa_hidup * 1000) >= now)
+        {
+            pompa_mati_sampai = now + smartgarden_config->maksimal_pompa_mati * 1000;
+            pompa_nyala_sejak = 0;
+            SERIAL_REG[PinSerial.Pompa] = OFF;
+            valve_next_check += smartgarden_config->maksimal_pompa_mati * 1000;
+            status("Pompa Auto Off");
+            delay(3000);
+        }
+    }
+    else if (SERIAL_REG[PinSerial.Pompa])
+    {
+        SERIAL_REG[PinSerial.Pompa] = OFF;
+        pompa_nyala_sejak = 0;
+    }
+    smartgarden_apply();
+    dumpSerial(PinSerial.Valve_0, PinSerial.Sprayer);
+    P("%dC %d%%\n%s", TEMPERATURE, HUMIDITY, BLUE("--------------------------\n"));
 }

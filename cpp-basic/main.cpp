@@ -1,4 +1,6 @@
-#include <iostream>
+#include <stdint.h>
+#include <stdio.h>
+
 void bitOp()
 {
     // 32 bit to bytes --> hex
@@ -30,14 +32,14 @@ void printAllStack(int *stack, int len)
         stack_index++;
     }
 }
-void arrayStack()
+/* void arrayStack()
 {
-    uint stackLen = 5;
+    uint8_t stackLen = 5;
     int stack[stackLen] = {};
     std::fill_n(stack, stackLen, -1);
     int *stackPointer = nullptr;
     printAllStack(stack, stackLen);
-}
+} */
 void constStruct()
 {
     static const uint8_t S00 = 0;
@@ -53,10 +55,30 @@ void constStruct()
     printf("PIN %d %d %d\n", sizeof(PINS), sizeof(Pins), Pins.LED_2);
 }
 
+char buffer[21] = {};
+void globalBufferedPrint()
+{
+    printf("BUFF:\n");
+    printf(buffer);
+    printf("\n");
+}
+void globalBuffered()
+{
+    
+    globalBufferedPrint();
+    sprintf(buffer, "HELLO WORLD");
+    globalBufferedPrint();
+    sprintf(buffer, "AAA");
+    globalBufferedPrint();
+    sprintf(buffer, "LEN %d", sizeof(buffer));
+    globalBufferedPrint();
+}
+
 int main(int argc, char const *argv[])
 {
     printf("MAIN RUN\n\n");
-    constStruct();
+    globalBuffered();
+    //constStruct();
     //arrayStack();
     return 0;
 }

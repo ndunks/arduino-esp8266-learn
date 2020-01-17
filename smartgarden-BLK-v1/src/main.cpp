@@ -2,6 +2,7 @@
 #include "smartgarden.h"
 
 LiquidCrystal_I2C lcd;
+char statusBuffer[21] = {};
 
 void setup()
 {
@@ -59,16 +60,16 @@ void display_loop()
 }
 
 // Write status text
-void displayStatus(const char *txt)
+void status(const char *txt, ...)
 {
+  va_list args;
+  va_start(args, txt);
+  int len = vsprintf(statusBuffer, txt, args);
+  va_end(args);
+  memset(&statusBuffer[len], ' ', 20 - len);
+  statusBuffer[20] = 0; // make sure is null terminated
   lcd.setCursor(0, 3);
-  lcd.print(txt);
-}
-
-void clearStatus()
-{
-  lcd.setCursor(0, 3);
-  lcd.print("                    ");
+  lcd.print(statusBuffer);
 }
 
 void waitSerialInput(void callback(void))

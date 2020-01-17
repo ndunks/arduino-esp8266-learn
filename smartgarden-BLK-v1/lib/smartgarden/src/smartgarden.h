@@ -6,8 +6,8 @@
 
 extern LiquidCrystal_I2C lcd;
 
-void displayStatus(const char *txt);
-void clearStatus();
+void status(const char *txt, ...);
+
 // Delay for checking input sensors, call set it before smartgarden_setup()
 extern uint8 SERIAL_REG[];
 extern unsigned long smartgarden_delay;

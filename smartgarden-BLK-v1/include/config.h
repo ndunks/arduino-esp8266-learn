@@ -3,7 +3,6 @@
 #include "constant.h"
 #include <ESP8266WiFi.h>
 
-#define FLAG_IS_BOOTED 0x1
 extern IPAddress local_IP;
 extern char device_id[7];
 // Config that stored on EEPROM

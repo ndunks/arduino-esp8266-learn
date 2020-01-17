@@ -1,9 +1,7 @@
 #include "header.h"
 #include "ir_remote.h"
 #include "smartgarden.h"
-#include "config.h"
 #include "sensorsuhu.h"
-#include <user_interface.h>
 
 // Serial registers
 uint8_t SERIAL_REG[16] = {};
@@ -273,10 +271,10 @@ void smartgarden_loop()
     {
         valveChecker();
         valveSwitcher();
-        valveDump("Valve ");
+        //valveDump("Valve ");
         pompaChecker();
         smartgarden_apply();
-        P("%dC %d%% %s\n", TEMPERATURE, HUMIDITY, BLUE("--------------------------\n"));
+        //P("%dC %d%% %s\n", TEMPERATURE, HUMIDITY, BLUE("--------------------------\n"));
     } /* else{
         P("NOT YET\n");
         dumpSerial(PinSerial.Pompa, PinSerial.Pompa);

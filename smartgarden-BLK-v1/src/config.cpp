@@ -5,6 +5,8 @@
 SmartGardenConfig *config = nullptr;
 IPAddress local_IP(192, 168, 4, 1);
 
+const uint8_t FLAG_IS_BOOTED = 0x1;
+
 void dump_config()
 {
     P("----Config DUMP----\n");
@@ -27,14 +29,12 @@ void dump_config()
 
 void config_default()
 {
-    P("smartgarden config use default\n");
-    config = new SmartGardenConfig();
     // Default DHT sensor max heat
-    config->temperature_max = 32;
-    config->valve_delay_default = 5;
-    config->humidity_minimal_default = 50;
-    config->sensor_delay = 5;
-    memcpy(config->displayText, F("    BLKP KLAMPOK"), 16);
+    config->temperature_max = (uint8_t) 32;
+    config->valve_delay_default = (uint8_t) 5;
+    config->humidity_minimal_default = (uint8_t) 50;
+    config->sensor_delay = (uint8_t) 5;
+    memcpy(config->displayText, F("    BLKP KLAMPOK"), 17);
 
 #ifdef SMARTGARDEN_DEBUG
     config->maksimal_pompa_hidup = 7;
@@ -55,7 +55,7 @@ void config_default()
     {
         // Default config
         P("Set default web password to \"admin\"\n");
-        strncpy(config->password, "admin", sizeof(config->password));
+        memcpy(config->password, "admin", 6);
         // make sure null terminated
         config->password[8] = 0;
     }
@@ -76,10 +76,12 @@ void firstboot()
     if (!WiFi.softAPConfig(local_IP, local_IP, IPAddress(255, 255, 255, 0)))
     {
         status("SoftAP IP Error");
+        delay(1000);
     }
     if (!WiFi.softAP(ssid))
     {
         status("SoftAP SSID ERROR");
+        delay(1000);
     }
     WiFi.enableSTA(false);
     WiFi.mode(WIFI_AP);
@@ -136,11 +138,11 @@ void config_setup()
     // Setup EEPROM
     EEPROM.begin(sizeof(SmartGardenConfig));
     config = (SmartGardenConfig *)EEPROM.getDataPtr();
-
     // After erase flash, whole flash contain 0xff
     if (config->flag != FLAG_IS_BOOTED)
     {
         status("Firstbooting...");
+        delay(1000);
         firstboot();
         config_save();
         delay(1000);

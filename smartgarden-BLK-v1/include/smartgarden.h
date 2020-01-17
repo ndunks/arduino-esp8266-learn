@@ -27,6 +27,8 @@ struct SmartGardenConfig
     uint8 valve_delay[VALVE_COUNT];
     // Default valve delay in second
     uint8 valve_delay_default;
+    // Delay membaca sensor analog
+    uint8 sensor_delay;
     // minimal kelembaban utk men trigger valve
     uint8 humidity_minimal[VALVE_COUNT];
     // Default valve delay in percent

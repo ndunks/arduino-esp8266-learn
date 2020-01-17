@@ -44,11 +44,13 @@ void smartgarden_setup()
         smartgarden_config->valve_delay_default = 5;
         smartgarden_config->humidity_minimal_default = 50;
         // Default DHT sensor max heat
-        smartgarden_config->temperature_max = 30;
+        smartgarden_config->temperature_max = 32;
 
 #ifdef SMARTGARDEN_DEBUG
-        smartgarden_config->maksimal_pompa_hidup = 12;
+        smartgarden_config->maksimal_pompa_hidup = 13;
         smartgarden_config->maksimal_pompa_mati = 7;
+        P("maksimal_pompa_hidup: %lu\n", smartgarden_config->maksimal_pompa_hidup);
+        P("maksimal_pompa_mati: %lu\n", smartgarden_config->maksimal_pompa_mati);
 #else
         smartgarden_config->maksimal_pompa_hidup = 60 * 60; // 1 jam
         smartgarden_config->maksimal_pompa_mati = 10 * 60;  // 10 menit
@@ -57,11 +59,6 @@ void smartgarden_setup()
         {
             smartgarden_config->valve_delay[no] = smartgarden_config->valve_delay_default;
             smartgarden_config->humidity_minimal[no] = smartgarden_config->humidity_minimal_default;
-
-#ifdef SMARTGARDEN_DEBUG
-            P("valve_delay  %d: %d\n", no, smartgarden_config->valve_delay[no]);
-            P("humidity_min %d: %d\n", no, smartgarden_config->humidity_minimal[no]);
-#endif
         }
 
         // spesial untuk humdity dari sensor DHT22
@@ -253,7 +250,6 @@ void smartgarden_loop()
 
     if (valve_next_check > now)
     {
-        P("Not yet\n");
         return;
     }
     valveChecker();

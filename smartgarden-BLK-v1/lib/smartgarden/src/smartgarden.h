@@ -31,9 +31,9 @@ struct SmartGardenConfig
     // max temperatur to trigger sprayer in celcius
     uint8 temperature_max;
     // Maksimal pompa menyala (detik)
-    uint8 maksimal_pompa_hidup;
+    unsigned long maksimal_pompa_hidup;
     // Maksimal pompa mati/istirahat (detik)
-    uint8 maksimal_pompa_mati;
+    unsigned long maksimal_pompa_mati;
 };
 
 // Default config will set on smartgarden_setup()

@@ -1,10 +1,9 @@
 #include "header.h"
+#include "ir_remote.h"
+#include "smartgarden.h"
+#include "config.h"
+#include "sensorsuhu.h"
 #include <user_interface.h>
-
-// OUTUT/LED PIN
-const uint8_t VALVE_START = PinSerial.Valve_0;
-
-const uint8_t SPRAYER_NO = PinSerial.Sprayer - VALVE_START;
 
 // Serial registers
 uint8_t SERIAL_REG[16] = {};
@@ -27,47 +26,12 @@ unsigned long sensor_next_check = 0;
 // Cek setiap sensor setiap:
 unsigned long smartgarden_delay = 1000; // 1 second
 
-SmartGardenConfig *smartgarden_config = nullptr;
 unsigned long pompa_nyala_sejak = 0;
 unsigned long pompa_mati_sampai = 0;
 
 void smartgarden_setup()
 {
     std::fill_n(VALVE_STACK, VALVE_STACK_MAX, -1);
-
-#ifdef SMARTGARDEN_DEBUG
-    delay(1000);
-#endif
-
-    if (!smartgarden_config)
-    {
-        P("smartgarden config use default\n");
-        smartgarden_config = new SmartGardenConfig();
-        smartgarden_config->valve_delay_default = 5;
-        smartgarden_config->humidity_minimal_default = 50;
-        smartgarden_config->sensor_delay = 5;
-        // Default DHT sensor max heat
-        smartgarden_config->temperature_max = 32;
-        memcpy(smartgarden_config->displayText, F("    BLKP KLAMPOK"), 16);
-
-#ifdef SMARTGARDEN_DEBUG
-        smartgarden_config->maksimal_pompa_hidup = 7;
-        smartgarden_config->maksimal_pompa_mati = 4;
-        P("maksimal_pompa_hidup: %lu\n", smartgarden_config->maksimal_pompa_hidup);
-        P("maksimal_pompa_mati: %lu\n", smartgarden_config->maksimal_pompa_mati);
-#else
-        smartgarden_config->maksimal_pompa_hidup = 60 * 60; // 1 jam
-        smartgarden_config->maksimal_pompa_mati = 10 * 60;  // 10 menit
-#endif
-        for (int no = 0; no < VALVE_COUNT; no++)
-        {
-            smartgarden_config->valve_delay[no] = smartgarden_config->valve_delay_default;
-            smartgarden_config->humidity_minimal[no] = smartgarden_config->humidity_minimal_default;
-        }
-
-        // spesial untuk humdity dari sensor DHT22
-        smartgarden_config->humidity_minimal[PinSerial.Sprayer - VALVE_START] = 30;
-    }
     pinMode(SERIAL_DATA, OUTPUT);
     pinMode(SERIAL_LOAD, OUTPUT);
     pinMode(SERIAL_CLOCK, OUTPUT);
@@ -93,12 +57,12 @@ void pompaChecker()
             SERIAL_REG[PinSerial.Pompa] = ON;
             pompa_nyala_sejak = now;
         }
-        else if (((now - pompa_nyala_sejak) / 1000UL) > smartgarden_config->maksimal_pompa_hidup)
+        else if (((now - pompa_nyala_sejak) / 1000UL) > config->maksimal_pompa_hidup)
         {
             P("Pompa nyala selama %d\n", static_cast<uint8_t>((now - pompa_nyala_sejak) / 1000L));
-            pompa_mati_sampai = now + smartgarden_config->maksimal_pompa_mati * 1000UL;
+            pompa_mati_sampai = now + config->maksimal_pompa_mati * 1000UL;
             SERIAL_REG[PinSerial.Pompa] = OFF;
-            valve_next_check += smartgarden_config->maksimal_pompa_mati * 1000UL;
+            valve_next_check += config->maksimal_pompa_mati * 1000UL;
             dumpSerial(PinSerial.Pompa, PinSerial.Pompa);
         }
     }
@@ -106,7 +70,7 @@ void pompaChecker()
     {
         SERIAL_REG[PinSerial.Pompa] = OFF;
         pompa_nyala_sejak = 0;
-        status(smartgarden_config->displayText);
+        status(config->displayText);
     }
 }
 /** Apply REG value to 2 chained IC 595 */
@@ -208,12 +172,12 @@ void valveSwitcher()
     {
         no = VALVE_STACK[0];
         // check again if it still need water, or force pressed. except from DHT22
-        if (no == SPRAYER_NO || no == currentButton || ANALOG_SENSOR[no] <= smartgarden_config->humidity_minimal[no])
+        if (no == SPRAYER_NO || no == currentButton || ANALOG_SENSOR[no] <= config->humidity_minimal[no])
         {
             SERIAL_REG[VALVE_START + no] = ON;
             VALVE_CURRENT = no;
-            valve_next_check = millis() + smartgarden_config->valve_delay[no] * 1000UL;
-            P("Turn On %d for %d second\n", no, smartgarden_config->valve_delay[no]);
+            valve_next_check = millis() + config->valve_delay[no] * 1000UL;
+            P("Turn On %d for %d second\n", no, config->valve_delay[no]);
         }
         valvePop();
     }
@@ -228,7 +192,7 @@ void valveChecker()
         if (i == SPRAYER_NO)
             continue;
 
-        shouldOn = ANALOG_SENSOR[i] <= smartgarden_config->humidity_minimal[i];
+        shouldOn = ANALOG_SENSOR[i] <= config->humidity_minimal[i];
         //P("Sensor_%d: %d = %d\n", i, ANALOG_SENSOR[i], shouldOn);
         if (shouldOn)
         {
@@ -236,14 +200,14 @@ void valveChecker()
         }
     }
 
-    if (TEMPERATURE >= smartgarden_config->temperature_max)
+    if (TEMPERATURE >= config->temperature_max)
     {
-        P("Suhu panas (%s >= %d)\n", YELLOW(TEMPERATURE), smartgarden_config->temperature_max);
+        P("Suhu panas (%s >= %d)\n", YELLOW(TEMPERATURE), config->temperature_max);
         valvePush(SPRAYER_NO);
     }
-    else if (HUMIDITY < smartgarden_config->humidity_minimal[SPRAYER_NO])
+    else if (HUMIDITY < config->humidity_minimal[SPRAYER_NO])
     {
-        P("Kelembaban kurang (%s < %d)\n", YELLOW(HUMIDITY), smartgarden_config->humidity_minimal[SPRAYER_NO]);
+        P("Kelembaban kurang (%s < %d)\n", YELLOW(HUMIDITY), config->humidity_minimal[SPRAYER_NO]);
         valvePush(SPRAYER_NO);
     }
 }
@@ -265,7 +229,7 @@ void smartgarden_loop()
     sensorsuhu_read();
     if( sensor_next_check < now ){
         readAllAnalog();
-        sensor_next_check = now + smartgarden_config->sensor_delay * 1000UL;
+        sensor_next_check = now + config->sensor_delay * 1000UL;
     }
 
     if (pompa_mati_sampai > 0)

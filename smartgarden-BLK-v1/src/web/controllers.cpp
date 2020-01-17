@@ -1,13 +1,14 @@
 #include "web.h"
 #include "controllers.h"
+#include "config.h"
 
 void handle_index(String &response, HTTPMethod method)
 {
-    digitalWrite(ledPin, LOW);
+    //digitalWrite(ledPin, LOW);
     File f = SPIFFS.open("/index.html.gz", "r");
     server.streamFile(f, "text/html");
     f.close();
-    digitalWrite(ledPin, HIGH);
+    //digitalWrite(ledPin, HIGH);
 }
 
 void handle_gpio(String &response, HTTPMethod method)
@@ -170,7 +171,7 @@ void handle_set_password(String &response, HTTPMethod method)
         else
         {
             strncpy(config->password, password.c_str(), password.length());
-            if (EEPROM.commit())
+            if (config_save())
             {
                 response += "OK, Berhasil disimpan";
             }

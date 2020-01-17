@@ -3,8 +3,11 @@
 #include <user_interface.h>
 #include "constant.h"
 #include <LiquidCrystal_I2C.h>
-
+#include "IRremoteESP8266.h"
+#include "IRrecv.h"
 extern LiquidCrystal_I2C lcd;
+
+extern IRrecv irrecv;
 
 void status(const char *txt, ...);
 
@@ -34,6 +37,7 @@ struct SmartGardenConfig
     unsigned long maksimal_pompa_hidup;
     // Maksimal pompa mati/istirahat (detik)
     unsigned long maksimal_pompa_mati;
+    char displayText[21];
 };
 
 // Default config will set on smartgarden_setup()
@@ -122,4 +126,5 @@ struct CodeMap
     uint16 code;
 };
 extern CodeMap codeMaps[];
-int8_t ir_remote_read();
+extern int8_t currentButton;
+bool ir_remote_read();

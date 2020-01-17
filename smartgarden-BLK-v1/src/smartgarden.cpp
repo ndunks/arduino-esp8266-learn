@@ -45,6 +45,7 @@ void smartgarden_setup()
         smartgarden_config->humidity_minimal_default = 50;
         // Default DHT sensor max heat
         smartgarden_config->temperature_max = 32;
+        memcpy(smartgarden_config->displayText, F("    BLKP KLAMPOK"), 16);
 
 #ifdef SMARTGARDEN_DEBUG
         smartgarden_config->maksimal_pompa_hidup = 13;
@@ -175,8 +176,8 @@ void valveSwitcher()
     if (VALVE_STACK[0] >= 0)
     {
         no = VALVE_STACK[0];
-        // check again if it still need water, except from DHT22
-        if (no == SPRAYER_NO || ANALOG_SENSOR[no] <= smartgarden_config->humidity_minimal[no])
+        // check again if it still need water, or force pressed. except from DHT22
+        if (no == SPRAYER_NO || no == currentButton || ANALOG_SENSOR[no] <= smartgarden_config->humidity_minimal[no])
         {
             SERIAL_REG[VALVE_START + no] = ON;
             VALVE_CURRENT = no;
@@ -197,7 +198,7 @@ void valveChecker()
             continue;
 
         shouldOn = ANALOG_SENSOR[i] <= smartgarden_config->humidity_minimal[i];
-        P("Sensor_%d: %d = %d\n", i, ANALOG_SENSOR[i], shouldOn);
+        //P("Sensor_%d: %d = %d\n", i, ANALOG_SENSOR[i], shouldOn);
         if (shouldOn)
         {
             valvePush(i);
@@ -219,6 +220,17 @@ void valveChecker()
 void smartgarden_loop()
 {
     unsigned long now = millis();
+    if (ir_remote_read())
+    {
+        P("PRESSED: %s\n", codeMaps[currentButton].name);
+        if (currentButton >= RemoteButton.BTN_1 && currentButton <= RemoteButton.BTN_6)
+        {
+            valvePush(currentButton);
+            valveSwitcher();
+            smartgarden_apply();
+            return;
+        }
+    }
 
     sensorsuhu_read();
     readAllAnalog();
@@ -241,11 +253,12 @@ void smartgarden_loop()
     }
     if (VALVE_CURRENT >= 0)
     {
-        uint8_t remaining = 0 ;
-        if(now < valve_next_check ){
+        uint8_t remaining = 0;
+        if (now < valve_next_check)
+        {
             remaining = static_cast<uint8_t>((valve_next_check - now) / 1000);
         }
-        status("No %d ON %5d detik", VALVE_CURRENT + 1, remaining );
+        status("No %d ON %5d detik", VALVE_CURRENT + 1, remaining);
     }
 
     if (valve_next_check > now)
@@ -254,7 +267,7 @@ void smartgarden_loop()
     }
     valveChecker();
     valveSwitcher();
-    valveDump("Valve ");
+    //valveDump("Valve ");
 
     // Jika ada salah satu valve yg on, maka pompa juga harus on
     if (VALVE_CURRENT >= 0)
@@ -276,8 +289,9 @@ void smartgarden_loop()
     {
         SERIAL_REG[PinSerial.Pompa] = OFF;
         pompa_nyala_sejak = 0;
+        status(smartgarden_config->displayText);
     }
     smartgarden_apply();
-    dumpSerial(PinSerial.Valve_0, PinSerial.Sprayer);
-    P("%dC %d%%\n%s", TEMPERATURE, HUMIDITY, BLUE("--------------------------\n"));
+    //dumpSerial(PinSerial.Valve_0, PinSerial.Sprayer);
+    //P("%dC %d%% %s\n", TEMPERATURE, HUMIDITY, BLUE("--------------------------\n"));
 }

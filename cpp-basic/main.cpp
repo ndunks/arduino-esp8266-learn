@@ -74,10 +74,66 @@ void globalBuffered()
     globalBufferedPrint();
 }
 
+
+struct CodeMap
+{
+    const char *name;
+    uint16_t code;
+};
+extern CodeMap codeMaps[];
+CodeMap codeMaps[] = {
+    {"1", 0xA25D},
+    {"2", 0x629D},
+    {"3", 0xE21D},
+    {"4", 0x22DD},
+    {"5", 0x02FD},
+    {"6", 0xC23D},
+    {"7", 0xE01F},
+    {"8", 0xA857},
+    {"9", 0x906F},
+    {"*", 0x6897},
+    {"0", 0x9867},
+    {"#", 0xB04F},
+    {"UP", 0x18E7},
+    {"LEFT", 0x10EF},
+    {"OK", 0x38C7},
+    {"RIGHT", 0x5AA5},
+    {"DOWN", 0x4AB5},
+    {0, 0}};
+
+const struct _RemoteButton
+{
+    int8_t NONE = -1;
+    int8_t BTN_1 = 0;
+    int8_t BTN_2 = 1;
+    int8_t BTN_3 = 2;
+    int8_t BTN_4 = 3;
+    int8_t BTN_5 = 4;
+    int8_t BTN_6 = 5;
+    int8_t BTN_7 = 6;
+    int8_t BTN_8 = 7;
+    int8_t BTN_9 = 8;
+    int8_t BTN_WILDCARD = 9;
+    int8_t BTN_0 = 10;
+    int8_t BTN_HASH = 11;
+    int8_t BTN_UP = 12;
+    int8_t BTN_LEFT = 13;
+    int8_t BTN_OK = 14;
+    int8_t BTN_RIGHT = 15;
+    int8_t BTN_DOWN = 16;
+} RemoteButton;
+
+void constStructAccess()
+{
+    int8_t code = RemoteButton.BTN_OK;
+    printf("Code %d %s\n", code, codeMaps[code].name);
+}
+
 int main(int argc, char const *argv[])
 {
     printf("MAIN RUN\n\n");
-    globalBuffered();
+    constStructAccess();
+    //globalBuffered();
     //constStruct();
     //arrayStack();
     return 0;

@@ -1,10 +1,9 @@
 #include "smartgarden.h"
-#include "IRremoteESP8266.h"
-#include "IRrecv.h"
 #include "IRutils.h"
 
 IRrecv irrecv(SENSOR_IR);
 decode_results results;
+int8_t currentButton = -1;
 
 CodeMap codeMaps[] = {
     {"1", 0xA25D},
@@ -26,35 +25,35 @@ CodeMap codeMaps[] = {
     {"DOWN", 0x4AB5},
     {0, 0}};
 
-void readCode(uint8_t *code)
+bool readCode()
 {
     CodeMap *current = codeMaps;
     do
     {
-        *code++;
+        currentButton++;
         if ((results.value & current->code) == current->code)
         {
-            P("Tombol %d: %s\n", *code, current->name);
-            return;
+            P("Tombol %d: %s\n", currentButton, current->name);
+            return true;
         }
         current++;
     } while (current->code);
-    *code = -1;
+    currentButton = RemoteButton.NONE;
     P("IR Mbuh: %s %s\n", typeToString(results.decode_type).c_str(), resultToHexidecimal(&results).c_str());
+    return false;
 }
 
-int8_t ir_remote_read()
+bool ir_remote_read()
 {
-    if (!irrecv.decode(&results))
+    currentButton = RemoteButton.NONE;
+    if (irrecv.decode(&results))
     {
-        return -1;
+        irrecv.resume(); // Receive the next value
+        if (results.bits > 0)
+        {
+            return readCode();
+        }
+        return false;
     }
-    // ignore no bits (Missed)
-    uint8_t code = -1;
-    if (results.bits > 0)
-    {
-        readCode(&code);
-    }
-    irrecv.resume(); // Receive the next value
-    return code;
+    return false;
 }

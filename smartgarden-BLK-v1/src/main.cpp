@@ -30,10 +30,10 @@ void setup()
   lcd.print(F("1:    4:    Suhu Kel"
               "3:    6:            "
               "2:    5:    32c  93%"));
+  status(smartgarden_config->displayText);
+  irrecv.enableIRIn();
 }
-void displaySetNo(uint8 no, uint8 value)
-{
-}
+
 void smartgarden_loop_wait()
 {
   if (Serial.available())
@@ -87,11 +87,6 @@ void loop()
 {
   delay(100);
   display_loop();
-  int8_t code = ir_remote_read();
-  if (code != RemoteButton.NONE)
-  {
-    P("PRESSED: %s\n", codeMaps[code].name);
-  }
   //waitSerialInput(smartgarden_loop);
   smartgarden_loop();
 }

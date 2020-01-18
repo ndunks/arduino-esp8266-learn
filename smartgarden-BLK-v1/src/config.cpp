@@ -35,10 +35,10 @@ void dump_config()
 void config_default()
 {
     // Default DHT sensor max heat
-    config->temperature_max = (uint8_t) 32;
-    config->valve_delay_default = (uint8_t) 5;
-    config->humidity_minimal_default = (uint8_t) 50;
-    config->sensor_delay = (uint8_t) 5;
+    config->temperature_max = (uint8_t)32;
+    config->valve_delay_default = (uint8_t)5;
+    config->humidity_minimal_default = (uint8_t)50;
+    config->sensor_delay = (uint8_t)5;
     memcpy(config->displayText, "    BLKP KLAMPOK", 17);
 
 #ifdef SMARTGARDEN_DEBUG
@@ -153,23 +153,20 @@ void config_setup()
         config_save();
         delay(1000);
     }
-    else
+    
+    if (wifi_get_opmode() & WIFI_STA && WiFi.getAutoConnect())
     {
-        if (WiFi.getAutoConnect())
+        //wait connected
+        status("Wifi Connecting...");
+        int8 wifiStatus = WiFi.waitForConnectResult(15000);
+        if (wifiStatus == WL_CONNECTED)
         {
-            //wait connected
-            status("Wifi Connecting...");
-            int8 wifiStatus = WiFi.waitForConnectResult(15000);
-            if (wifiStatus == WL_CONNECTED)
-            {
-                status("WiFi Connected");
-                delay(1000);
-            }
-            else
-            {
-                status("WiFi Fail %d", wifiStatus);
-                delay(2000);
-            }
+            status("WiFi Connected");
+            delay(1000);
+        }
+        else
+        {
+            P("WiFi Fail %d\n", wifiStatus);
         }
     }
     dump_config();

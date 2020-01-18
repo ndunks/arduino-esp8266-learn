@@ -16,7 +16,7 @@ bool server_guard()
     {
         return true;
     }
-    Serial.println("Blocked by GUARD");
+    P("Blocked by GUARD\n");
     server.send(403, "text/plain", "Unauthorized");
     return false;
 }
@@ -42,14 +42,14 @@ void web_setup()
                               host.equals(WiFi.softAPIP().toString()) ||
                               server.uri().endsWith("generate_204")))
         {
-            Serial.println("SPA");
+            P("SPA\n");
             handle_index(*((String *)&emptyString), server.method());
         }
         else
         {
             server.sendHeader("Location", "http://" + WiFi.hostname() + "/");
             server.send(302);
-            P("Handled Captive Portal");
+            P("Handled Captive Portal\n");
         }
     });
     server.begin();

@@ -50,7 +50,7 @@ void config_default()
     }
 
     // spesial untuk humdity dari sensor DHT22
-    config->humidity_minimal[PinSerial.Sprayer - PinSerial.Valve_0] = 30;
+    config->humidity_minimal[PinSerial::Sprayer - PinSerial::Valve_0] = 30;
     if (config->password[0] == 0 || config->password[0] == 0xff)
     {
         // Default config

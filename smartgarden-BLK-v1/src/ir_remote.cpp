@@ -2,53 +2,52 @@
 
 IRrecv irrecv(SENSOR_IR);
 decode_results results;
-int8_t currentButton = -1;
-
-CodeMap codeMaps[] = {
-    {"1", 0xA25D},
-    {"2", 0x629D},
-    {"3", 0xE21D},
-    {"4", 0x22DD},
-    {"5", 0x02FD},
-    {"6", 0xC23D},
-    {"7", 0xE01F},
-    {"8", 0xA857},
-    {"9", 0x906F},
-    {"*", 0x6897},
-    {"0", 0x9867},
-    {"#", 0xB04F},
-    {"UP", 0x18E7},
-    {"LEFT", 0x10EF},
-    {"OK", 0x38C7},
-    {"RIGHT", 0x5AA5},
-    {"DOWN", 0x4AB5},
-    {0, 0}};
-
-void ir_remote_setup(){
+Button *currentButton = nullptr;
+Button codeMaps[] = {
+    {RemoteButton::BTN_1, 0xA25D, RemoteButtonName[RemoteButton ::BTN_1]},
+    {RemoteButton::BTN_2, 0x629D, RemoteButtonName[RemoteButton ::BTN_2]},
+    {RemoteButton::BTN_3, 0xE21D, RemoteButtonName[RemoteButton ::BTN_3]},
+    {RemoteButton::BTN_4, 0x22DD, RemoteButtonName[RemoteButton ::BTN_4]},
+    {RemoteButton::BTN_5, 0x02FD, RemoteButtonName[RemoteButton ::BTN_5]},
+    {RemoteButton::BTN_6, 0xC23D, RemoteButtonName[RemoteButton ::BTN_6]},
+    {RemoteButton::BTN_7, 0xE01F, RemoteButtonName[RemoteButton ::BTN_7]},
+    {RemoteButton::BTN_8, 0xA857, RemoteButtonName[RemoteButton ::BTN_8]},
+    {RemoteButton::BTN_9, 0x906F, RemoteButtonName[RemoteButton ::BTN_9]},
+    {RemoteButton::BTN_WILDCARD, 0x6897, RemoteButtonName[RemoteButton ::BTN_WILDCARD]},
+    {RemoteButton::BTN_0, 0x9867, RemoteButtonName[RemoteButton ::BTN_0]},
+    {RemoteButton::BTN_HASH, 0xB04F, RemoteButtonName[RemoteButton ::BTN_HASH]},
+    {RemoteButton::BTN_UP, 0x18E7, RemoteButtonName[RemoteButton ::BTN_UP]},
+    {RemoteButton::BTN_LEFT, 0x10EF, RemoteButtonName[RemoteButton ::BTN_LEFT]},
+    {RemoteButton::BTN_OK, 0x38C7, RemoteButtonName[RemoteButton ::BTN_OK]},
+    {RemoteButton::BTN_RIGHT, 0x5AA5, RemoteButtonName[RemoteButton ::BTN_RIGHT]},
+    {RemoteButton::BTN_DOWN, 0x4AB5, RemoteButtonName[RemoteButton ::BTN_DOWN]},
+    {RemoteButton::NONE, 0, RemoteButtonName[RemoteButton ::NONE]},
+};
+void ir_remote_setup()
+{
     irrecv.enableIRIn();
 }
 
 bool readCode()
 {
-    CodeMap *current = codeMaps;
+    uint8_t index = 0U;
     do
     {
-        currentButton++;
-        if ((results.value & current->code) == current->code)
+        if ((results.value & codeMaps[index].code) == codeMaps[index].code)
         {
-            P("Tombol %d: %s\n", currentButton, current->name);
+            currentButton = &codeMaps[index];
+            P("Tombol %d: %s\n", currentButton->remoteButton, currentButton->name);
             return true;
         }
-        current++;
-    } while (current->code);
-    currentButton = RemoteButton.NONE;
+    } while (codeMaps[++index].code);
+
     P("IR Mbuh: %s %s\n", typeToString(results.decode_type).c_str(), resultToHexidecimal(&results).c_str());
     return false;
 }
 
 bool ir_remote_read()
 {
-    currentButton = RemoteButton.NONE;
+    currentButton = nullptr;
     if (irrecv.decode(&results))
     {
         irrecv.resume(); // Receive the next value

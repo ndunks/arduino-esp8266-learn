@@ -50,23 +50,23 @@ void pompaChecker()
     // Jika ada salah satu valve yg on, maka pompa juga harus on
     if (VALVE_CURRENT >= 0)
     {
-        if (!SERIAL_REG[PinSerial.Pompa])
+        if (!SERIAL_REG[PinSerial::Pompa])
         {
-            SERIAL_REG[PinSerial.Pompa] = ON;
+            SERIAL_REG[PinSerial::Pompa] = ON;
             pompa_nyala_sejak = now;
         }
         else if (((now - pompa_nyala_sejak) / 1000UL) > config->maksimal_pompa_hidup)
         {
             P("Pompa nyala selama %d\n", static_cast<uint8_t>((now - pompa_nyala_sejak) / 1000L));
             pompa_mati_sampai = now + config->maksimal_pompa_mati * 1000UL;
-            SERIAL_REG[PinSerial.Pompa] = OFF;
+            SERIAL_REG[PinSerial::Pompa] = OFF;
             valve_next_check += config->maksimal_pompa_mati * 1000UL;
-            dumpSerial(PinSerial.Pompa, PinSerial.Pompa);
+            dumpSerial(PinSerial::Pompa, PinSerial::Pompa);
         }
     }
-    else if (SERIAL_REG[PinSerial.Pompa])
+    else if (SERIAL_REG[PinSerial::Pompa])
     {
-        SERIAL_REG[PinSerial.Pompa] = OFF;
+        SERIAL_REG[PinSerial::Pompa] = OFF;
         pompa_nyala_sejak = 0;
         status(config->displayText);
     }
@@ -82,15 +82,15 @@ void smartgarden_apply()
         digitalWrite(SERIAL_CLOCK, LOW);
     }
     digitalWrite(SERIAL_LOAD, HIGH);
-    //dumpSerial(PinSerial.Valve_0, PinSerial.Sprayer);
+    //dumpSerial(PinSerial::Valve_0, PinSerial::Sprayer);
 }
 
 void selectAnalog(int no)
 {
     // Set bit switches on IC 4051
-    SERIAL_REG[PinSerial.IC4051_SC] = (no >> 2) & 0x1;
-    SERIAL_REG[PinSerial.IC4051_SB] = (no >> 1) & 0x1;
-    SERIAL_REG[PinSerial.IC4051_SA] = (no >> 0) & 0x1;
+    SERIAL_REG[PinSerial::IC4051_SC] = (no >> 2) & 0x1;
+    SERIAL_REG[PinSerial::IC4051_SB] = (no >> 1) & 0x1;
+    SERIAL_REG[PinSerial::IC4051_SA] = (no >> 0) & 0x1;
     smartgarden_apply();
 }
 
@@ -170,7 +170,7 @@ void valveSwitcher()
     {
         no = VALVE_STACK[0];
         // check again if it still need water, or force pressed. except from DHT22
-        if (no == SPRAYER_NO || no == currentButton || ANALOG_SENSOR[no] <= config->humidity_minimal[no])
+        if (no == SPRAYER_NO || no == currentButton->remoteButton || ANALOG_SENSOR[no] <= config->humidity_minimal[no])
         {
             SERIAL_REG[VALVE_START + no] = ON;
             VALVE_CURRENT = no;
@@ -215,9 +215,9 @@ void smartgarden_loop()
     unsigned long now = millis();
     if (ir_remote_read())
     {
-        if (currentButton >= RemoteButton.BTN_1 && currentButton <= RemoteButton.BTN_6)
+        if (currentButton->remoteButton >= RemoteButton::BTN_1 && currentButton->remoteButton <= RemoteButton::BTN_6)
         {
-            valvePush(currentButton);
+            valvePush(currentButton->remoteButton - 1);
             valveSwitcher();
             smartgarden_apply();
             return;
@@ -237,7 +237,7 @@ void smartgarden_loop()
             pompa_mati_sampai = 0;
             //status("Pompa ON");
             P("POMPA ON\n");
-            // SERIAL_REG[PinSerial.Pompa] = ON;
+            // SERIAL_REG[PinSerial::Pompa] = ON;
             pompa_nyala_sejak = now;
             pompaChecker();
             smartgarden_apply();
@@ -277,6 +277,6 @@ void smartgarden_loop()
         //P("%dC %d%% %s\n", TEMPERATURE, HUMIDITY, BLUE("--------------------------\n"));
     } /* else{
         P("NOT YET\n");
-        dumpSerial(PinSerial.Pompa, PinSerial.Pompa);
+        dumpSerial(PinSerial::Pompa, PinSerial::Pompa);
     } */
 }

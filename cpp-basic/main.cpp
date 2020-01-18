@@ -64,7 +64,7 @@ void globalBufferedPrint()
 }
 void globalBuffered()
 {
-    
+
     globalBufferedPrint();
     sprintf(buffer, "HELLO WORLD");
     globalBufferedPrint();
@@ -73,7 +73,6 @@ void globalBuffered()
     sprintf(buffer, "LEN %d", sizeof(buffer));
     globalBufferedPrint();
 }
-
 
 struct CodeMap
 {
@@ -128,11 +127,32 @@ void constStructAccess()
     int8_t code = RemoteButton.BTN_OK;
     printf("Code %d %s\n", code, codeMaps[code].name);
 }
-
+void enumIndex()
+{
+    enum Colors : unsigned char
+    {
+        RED,
+        GREEN,
+        BLUE,
+        CYAN,
+        MAGENTA,
+        ORANGE,
+        BLACK,
+        WHITE,
+        _END = WHITE
+    };
+    int no = Colors::_END;
+    printf("ENUM %d bytes ~ %d \n", Colors::_END, Colors::BLACK);
+    // loop
+    for( char i = 0U; i < Colors::_END; i++){
+        printf("\t%d @ %x \n", (Colors) i, &Colors::GREEN);
+    }
+}
 int main(int argc, char const *argv[])
 {
     printf("MAIN RUN\n\n");
-    constStructAccess();
+    enumIndex();
+    //constStructAccess();
     //globalBuffered();
     //constStruct();
     //arrayStack();

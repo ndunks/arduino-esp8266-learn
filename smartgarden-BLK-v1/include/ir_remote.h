@@ -59,7 +59,7 @@ struct Button
 };
 
 // Jika mau nambah code dari remote merk lain, mappingkan disini
-extern Button codeMaps[];
-void ir_remote_setup();
+
 extern Button *currentButton;
-bool ir_remote_read();
+void ir_remote_setup();
+void ir_remote_loop();

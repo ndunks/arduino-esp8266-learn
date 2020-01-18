@@ -45,17 +45,14 @@ bool readCode()
     return false;
 }
 
-bool ir_remote_read()
-{
+void ir_remote_loop(){
     currentButton = nullptr;
     if (irrecv.decode(&results))
     {
         irrecv.resume(); // Receive the next value
         if (results.bits > 0)
         {
-            return readCode();
+            readCode();
         }
-        return false;
     }
-    return false;
 }

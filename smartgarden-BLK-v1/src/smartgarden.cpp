@@ -1,7 +1,10 @@
-#include "header.h"
-#include "ir_remote.h"
+#include <Arduino.h>
 #include "smartgarden.h"
+#include "constant.h"
+#include "ir_remote.h"
 #include "sensorsuhu.h"
+#include "config.h"
+#include "display.h"
 
 // Serial registers
 uint8_t SERIAL_REG[16] = {};
@@ -220,24 +223,17 @@ void valveChecker()
         valvePush(SPRAYER_NO);
     }
 }
-bool handle_ir_remote()
-{
-    if (ir_remote_read())
-    {
-        if (currentButton->remoteButton >= RemoteButton::BTN_1 && currentButton->remoteButton <= RemoteButton::BTN_6)
-        {
-            valvePush(currentButton->remoteButton - 1);
-            valveSwitcher();
-            smartgarden_apply();
-            return true;
-        }
-    }
-    return false;
-}
+
 void smartgarden_loop()
 {
     unsigned long now = millis();
-    handle_ir_remote();
+    // check pressed button
+    if (currentButton && currentButton->remoteButton >= RemoteButton::BTN_1 && currentButton->remoteButton <= RemoteButton::BTN_6)
+    {
+        valvePush(currentButton->remoteButton - 1);
+        valveSwitcher();
+        smartgarden_apply();
+    }
     sensorsuhu_read();
 
     if (sensor_next_check < now)

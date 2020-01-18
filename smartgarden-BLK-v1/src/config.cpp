@@ -1,6 +1,8 @@
 #include "header.h"
 #include <user_interface.h>
 #include <EEPROM.h>
+#include "display.h"
+#include "ir_remote.h"
 
 SmartGardenConfig *config = nullptr;
 IPAddress local_IP(192, 168, 4, 1);
@@ -172,3 +174,10 @@ void config_setup()
     }
     dump_config();
 }
+
+// Detect reset button
+/* void config_loop(){
+    if( currentButton ){
+
+    }
+} */

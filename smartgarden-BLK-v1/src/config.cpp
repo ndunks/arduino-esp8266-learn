@@ -42,8 +42,8 @@ void config_default()
     memcpy(config->displayText, "    BLKP KLAMPOK", 17);
 
 #ifdef SMARTGARDEN_DEBUG
-    config->maksimal_pompa_hidup = 7;
-    config->maksimal_pompa_mati = 4;
+    config->maksimal_pompa_hidup = 30;
+    config->maksimal_pompa_mati = 10;
 #else
     smartgarden_config->maksimal_pompa_hidup = 60 * 60; // 1 jam
     smartgarden_config->maksimal_pompa_mati = 10 * 60;  // 10 menit

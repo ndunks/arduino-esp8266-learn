@@ -33,7 +33,6 @@ void setup()
 void loop()
 {
   //waitSerialInput(smartgarden_loop);
-  delay(100);
   ir_remote_loop();
   smartgarden_loop();
   display_loop();

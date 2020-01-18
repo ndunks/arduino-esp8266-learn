@@ -9,7 +9,6 @@
 #include "constant.h"
 
 enum RemoteButton : int8_t {
-    NONE,
     BTN_1,
     BTN_2,
     BTN_3,
@@ -27,10 +26,10 @@ enum RemoteButton : int8_t {
     BTN_OK,
     BTN_RIGHT,
     BTN_DOWN,
+    BTN_UNKNOWN,
 };
 
 static const PROGMEM char *const RemoteButtonName[] = {
-    "NONE",
     "1",
     "2",
     "3",
@@ -48,14 +47,13 @@ static const PROGMEM char *const RemoteButtonName[] = {
     "OK",
     "RIGHT",
     "DOWN",
-    0};
+    "UNKNOWN"};
 
 struct Button
 {
     RemoteButton remoteButton;
     // NEX Code ignored first byte (always 0xff on universal mini remote)
     uint16 code;
-    const char *const name;
 };
 
 // Jika mau nambah code dari remote merk lain, mappingkan disini

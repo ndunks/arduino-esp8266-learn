@@ -121,6 +121,7 @@ bool valvePush(int no, bool clearOther = false)
     int i = -1;
     if (clearOther)
     {
+        P("valvePush Clear other %d\n", no);
         while (VALVE_STACK[++i] >= 0 && i <= VALVE_STACK_MAX)
         {
             VALVE_STACK[i] = -1;
@@ -169,7 +170,7 @@ void valvePop()
     }
 }
 
-void valveSwitcher()
+void valveSwitcher(bool force = false)
 {
     int no;
     if (VALVE_CURRENT >= 0 /* && VALVE_CURRENT != VALVE_STACK[0] */)
@@ -183,8 +184,20 @@ void valveSwitcher()
     if (VALVE_STACK[0] >= 0)
     {
         no = VALVE_STACK[0];
-        // check again if it still need water, or force pressed. except from DHT22
-        if (no == SPRAYER_NO || no == currentButton->remoteButton || ANALOG_SENSOR[no] <= config->humidity_minimal[no])
+        P("valveSwitcher: %d\n", no);
+        bool turnItOn = false;
+
+        // Forced on by remote ir or web
+        if (force || no == SPRAYER_NO)
+        {
+            turnItOn = true;
+        }
+        // check again if it still need water, except from DHT22
+        else
+        {
+            turnItOn = ANALOG_SENSOR[no] <= config->humidity_minimal[no];
+        }
+        if (turnItOn)
         {
             SERIAL_REG[VALVE_START + no] = ON;
             VALVE_CURRENT = no;
@@ -223,21 +236,40 @@ void valveChecker()
         valvePush(SPRAYER_NO);
     }
 }
-
+void handle_ir_remote()
+{
+    RemoteButton pressed = currentButton->remoteButton;
+    uint8_t forcedValve = -1;
+    // Valve button 1 - 6
+    if (pressed >= RemoteButton::BTN_1 && pressed <= RemoteButton::BTN_6)
+    {
+        forcedValve = pressed;
+    }
+    // TUrn on sprayer
+    else if (pressed >= RemoteButton::BTN_7 && pressed <= RemoteButton::BTN_9)
+    {
+        forcedValve = SPRAYER_NO;
+    }
+    if (forcedValve >= 0)
+    {
+        //valve_next_check = 0;
+        valvePush(forcedValve, true);
+        valveSwitcher(true);
+        smartgarden_apply();
+    }
+}
 void smartgarden_loop()
 {
     unsigned long now = millis();
     // check pressed button
-    if (currentButton && currentButton->remoteButton >= RemoteButton::BTN_1 && currentButton->remoteButton <= RemoteButton::BTN_6)
+    if (currentButton)
     {
-        valvePush(currentButton->remoteButton - 1);
-        valveSwitcher();
-        smartgarden_apply();
+        handle_ir_remote();
     }
-    sensorsuhu_read();
 
     if (sensor_next_check < now)
     {
+        sensorsuhu_read();
         readAllAnalog();
         sensor_next_check = now + config->sensor_delay * 1000UL;
     }
@@ -275,7 +307,7 @@ void smartgarden_loop()
         }
         else
         {
-            status("No %d ON %5d detik", VALVE_CURRENT + 1, remaining + 1);
+            status("No %d ON %6d detik", VALVE_CURRENT + 1, remaining + 1);
         }
     }
 

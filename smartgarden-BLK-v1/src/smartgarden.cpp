@@ -113,22 +113,33 @@ void valveDump(const char *prefix)
     Serial.print('\n');
 }
 // Add valve to on when applied
-bool valvePush(int no)
+bool valvePush(int no, bool clearOther = false)
 {
     int i = -1;
-    while (VALVE_STACK[++i] >= 0 && i <= VALVE_STACK_MAX)
+    if (clearOther)
     {
-        if (VALVE_STACK[i] == no)
+        while (VALVE_STACK[++i] >= 0 && i <= VALVE_STACK_MAX)
         {
-            P("%s %s\n", RED("valvePush Exists"), RED(no));
+            VALVE_STACK[i] = -1;
+        }
+        i = 0;
+    }
+    else
+    {
+        while (VALVE_STACK[++i] >= 0 && i <= VALVE_STACK_MAX)
+        {
+            if (VALVE_STACK[i] == no)
+            {
+                P("%s %s\n", RED("valvePush Exists"), RED(no));
+                return false;
+            }
+        }
+        if (i == VALVE_STACK_MAX)
+        {
+
+            Serial.println("[!] Valve stack is full");
             return false;
         }
-    }
-    if (i == VALVE_STACK_MAX)
-    {
-
-        Serial.println("[!] Valve stack is full");
-        return false;
     }
     VALVE_STACK[i] = no;
     valveDump("pushed");
@@ -209,10 +220,8 @@ void valveChecker()
         valvePush(SPRAYER_NO);
     }
 }
-
-void smartgarden_loop()
+bool handle_ir_remote()
 {
-    unsigned long now = millis();
     if (ir_remote_read())
     {
         if (currentButton->remoteButton >= RemoteButton::BTN_1 && currentButton->remoteButton <= RemoteButton::BTN_6)
@@ -220,12 +229,19 @@ void smartgarden_loop()
             valvePush(currentButton->remoteButton - 1);
             valveSwitcher();
             smartgarden_apply();
-            return;
+            return true;
         }
     }
-
+    return false;
+}
+void smartgarden_loop()
+{
+    unsigned long now = millis();
+    handle_ir_remote();
     sensorsuhu_read();
-    if( sensor_next_check < now ){
+
+    if (sensor_next_check < now)
+    {
         readAllAnalog();
         sensor_next_check = now + config->sensor_delay * 1000UL;
     }
@@ -259,7 +275,7 @@ void smartgarden_loop()
         }
         if (VALVE_CURRENT == SPRAYER_NO)
         {
-            status("Sprayer ON %3d detik", VALVE_CURRENT + 1, remaining + 1);
+            status("Sprayer ON %3d detik", remaining + 1);
         }
         else
         {

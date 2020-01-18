@@ -22,6 +22,9 @@ void dump_config()
     for (int no = 0; no < VALVE_COUNT; no++)
     {
         P("valve_delay[%d]: %d\n", no, config->valve_delay_default);
+    }
+    for (int no = 0; no < VALVE_COUNT; no++)
+    {
         P("humidity_minimal[%d]: %d\n", no, config->humidity_minimal_default);
     }
     P("---------------\n");

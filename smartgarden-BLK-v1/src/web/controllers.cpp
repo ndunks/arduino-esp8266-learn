@@ -1,17 +1,25 @@
 #include "web.h"
 #include "controllers.h"
-#include "header.h"
+#include "smartgarden.h"
+#include "config.h"
 
 void handle_sensor(String &response, HTTPMethod method)
 {
     for (int i = 0; i < (VALVE_COUNT - 1); i++)
     {
-        response += "S" + i;
-        response += ":" + ANALOG_SENSOR[i] + '\n';
+        response += "S";
+        response += i;
+        response += ":";
+        response += ANALOG_SENSOR[i];
+        response += '\n';
     }
     // Suhu & kelemebaban
-    response += "temp: " + TEMPERATURE + '\n';
-    response += "hum: " + HUMIDITY + '\n';
+    response += "temp:";
+    response += TEMPERATURE;
+    response += '\n';
+    response += "hum:";
+    response += HUMIDITY;
+    response += '\n';
 }
 void handle_index(String &response, HTTPMethod method)
 {

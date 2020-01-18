@@ -1,6 +1,7 @@
 #include "ir_remote.h"
 #include "display.h"
 #include "config.h"
+#include "ESP8266WiFi.h"
 
 IRrecv irrecv(SENSOR_IR);
 decode_results results;
@@ -85,12 +86,26 @@ void do_special_command(uint8_t code)
     P("DO CODE %d\n", code);
     switch (code)
     {
-    case RemoteButton::BTN_0: // *000
+    case RemoteButton::BTN_0: // *000 - Reset Factory
         do_confirm("Tekan OK untuk reset", &cofig_reset);
         break;
-    case RemoteButton::BTN_1: // *111
+    case RemoteButton::BTN_1: // *111 - Restart
 
         do_confirm("Tekan OK utk restart", &system_restart);
+        break;
+    case RemoteButton::BTN_2: // *222 - Show IP
+        if (WiFi.isConnected())
+        {
+            String info = WiFi.localIP().toString();
+            info += " ~ ";
+            info += WiFi.SSID();
+            status(info.substring(0, 20).c_str());
+        }
+        else
+        {
+            status("WiFi Tidak Terhubung");
+        }
+        delay(3000);
         break;
     default:
         status("KODE %d TDK DIKENAL", code + 1);

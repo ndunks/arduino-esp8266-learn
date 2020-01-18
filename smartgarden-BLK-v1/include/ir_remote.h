@@ -9,7 +9,7 @@
 #include "constant.h"
 
 enum RemoteButton : int8_t {
-    BTN_1,
+    BTN_1, // This must be 0, because linked with valve index!
     BTN_2,
     BTN_3,
     BTN_4,
@@ -18,8 +18,8 @@ enum RemoteButton : int8_t {
     BTN_7,
     BTN_8,
     BTN_9,
-    BTN_WILDCARD,
     BTN_0,
+    BTN_WILDCARD,
     BTN_HASH,
     BTN_UP,
     BTN_LEFT,
@@ -39,8 +39,8 @@ static const PROGMEM char *const RemoteButtonName[] = {
     "7",
     "8",
     "9",
-    "*",
     "0",
+    "*",
     "#",
     "UP",
     "LEFT",

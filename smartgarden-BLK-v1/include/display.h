@@ -5,7 +5,7 @@
 extern LiquidCrystal_I2C lcd;
 
 void status(const char *txt, ...);
+void statusSmall(const char * txt = nullptr);
 
-void status();
 void display_setup();
 void display_loop();

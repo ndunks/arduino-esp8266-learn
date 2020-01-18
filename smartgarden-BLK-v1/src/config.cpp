@@ -97,8 +97,8 @@ void cofig_reset()
 {
     uint32 startSector = (0x405FB000 - 0x40200000) / SPI_FLASH_SEC_SIZE;
     uint32 sector = 0x0;
-    status("RESET CONFIGRATION");
-    delay(1000);
+    status("MENGHAPUS DATA...");
+    delay(2000);
     //DELETE 5 Sector (EEPROM 1 sector, rfcal 1 sector, WIFI 3 Sectors)
     for (int i = 0; i < 5; i++)
     {
@@ -112,8 +112,10 @@ void cofig_reset()
         {
             status("Fail, %d", i + 1);
         }
+        delay(500);
     }
-    delay(1000);
+    status("RESTARTING...");
+    delay(2000);
     ESP.restart();
 }
 
@@ -153,7 +155,7 @@ void config_setup()
         config_save();
         delay(1000);
     }
-    
+
     if (wifi_get_opmode() & WIFI_STA && WiFi.getAutoConnect())
     {
         //wait connected

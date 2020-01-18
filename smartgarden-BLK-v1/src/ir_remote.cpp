@@ -1,4 +1,6 @@
 #include "ir_remote.h"
+#include "display.h"
+#include "config.h"
 
 IRrecv irrecv(SENSOR_IR);
 decode_results results;
@@ -25,11 +27,22 @@ Button codeMaps[] = {
 };
 void ir_remote_setup()
 {
+    pinMode(SENSOR_IR, INPUT);
+    delay(500);
     irrecv.enableIRIn();
 }
 
 void readCode()
 {
+    currentButton = nullptr;
+    if (!irrecv.decode(&results))
+        return;
+
+    irrecv.resume();
+
+    if (results.bits <= 0)
+        return;
+
     uint8_t index = 0U;
     do
     {
@@ -42,18 +55,93 @@ void readCode()
     } while (codeMaps[++index].code != RemoteButton::BTN_UNKNOWN);
 
     P("IR Mbuh: %s %s\n", typeToString(results.decode_type).c_str(), resultToHexidecimal(&results).c_str());
-    return;
+}
+void do_confirm(const char *prompt, std::function<void(void)> callback)
+{
+    status(prompt);
+    unsigned long until = millis() + 4000UL;
+    do
+    {
+        readCode();
+        if (currentButton)
+        {
+            if (currentButton->remoteButton == RemoteButton::BTN_OK)
+            {
+                callback();
+            }
+            else
+            {
+                break;
+            }
+        }
+        delay(10);
+    } while (millis() < until);
+    status("DIBATALKAN");
+    delay(2000);
 }
 
-void ir_remote_loop(){
-    currentButton = nullptr;
-    // TODO: Save Recent Button, display on LCD
-    if (irrecv.decode(&results))
+void do_special_command(uint8_t code)
+{
+    P("DO CODE %d\n", code);
+    switch (code)
     {
-        irrecv.resume(); // Receive the next value
-        if (results.bits > 0)
+    case RemoteButton::BTN_0: // *000
+        do_confirm("Tekan OK untuk reset", &cofig_reset);
+        break;
+    case RemoteButton::BTN_1: // *111
+
+        do_confirm("Tekan OK utk restart", &system_restart);
+        break;
+    default:
+        status("KODE %d TDK DIKENAL", code + 1);
+        delay(2000);
+        break;
+    }
+}
+void handle_special_command()
+{
+    char buffer[5] = "    ";
+    int counter = 0;
+    uint8_t code = 0x0;
+    unsigned long until = millis() + 3000UL;
+    do
+    {
+        if (currentButton)
         {
-            readCode();
+            RemoteButton &tombol = currentButton->remoteButton;
+            buffer[counter++] = RemoteButtonName[tombol][0];
+            P("CODE %s\n", buffer);
+            statusSmall(buffer);
+            // don't include '*'
+            if (counter > 1)
+            {
+                if (tombol < RemoteButton::BTN_1 || tombol > RemoteButton::BTN_0)
+                {
+                    P("Invalid button\n");
+                    break;
+                }
+                code |= tombol;
+                if (counter == 4)
+                {
+                    do_special_command(code);
+                    break;
+                }
+            }
+            until = millis() + 5000UL;
         }
+        delay(10);
+        readCode();
+    } while (millis() < until);
+    currentButton = nullptr;
+    // CLear status small
+    statusSmall();
+}
+
+void ir_remote_loop()
+{
+    readCode();
+    if (currentButton && currentButton->remoteButton == BTN_WILDCARD)
+    {
+        handle_special_command();
     }
 }

@@ -5,17 +5,43 @@ LiquidCrystal_I2C lcd;
 
 unsigned long next_update_display = 0;
 char statusBuffer[21] = {};
+char *clearSmall PROGMEM = "        ";
+// maks 8 huruf
+void statusSmall(const char *txt)
+{
+  lcd.setCursor(12, 2);
+  if (txt)
+  {
+    lcd.printf(txt);
+  }
+  else
+  {
+    // clear
+    lcd.printf(clearSmall);
+  }
+}
 
+// maks 20 huruf
 void status(const char *txt, ...)
 {
   va_list args;
   va_start(args, txt);
   int len = vsprintf(statusBuffer, txt, args);
   va_end(args);
-  memset(&statusBuffer[len], ' ', 20 - len);
-  statusBuffer[20] = 0; // make sure is null terminated
-  lcd.setCursor(0, 3);
-  lcd.print(statusBuffer);
+  if (len > 20)
+  {
+    P("STATUS TERLALU PANJANG %d\n", len);
+  }
+  else
+  {
+    if (len < 20)
+    {
+      memset(&statusBuffer[len], ' ', 20 - len);
+    }
+    statusBuffer[20] = 0; // make sure is null terminated
+    lcd.setCursor(0, 3);
+    lcd.print(statusBuffer);
+  }
 }
 
 void display_setup()

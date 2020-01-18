@@ -5,7 +5,6 @@ LiquidCrystal_I2C lcd;
 
 unsigned long next_update_display = 0;
 char statusBuffer[21] = {};
-char *clearSmall PROGMEM = "        ";
 // maks 8 huruf
 void statusSmall(const char *txt)
 {
@@ -17,7 +16,10 @@ void statusSmall(const char *txt)
   else
   {
     // clear
-    lcd.printf(clearSmall);
+    for (int i = 0; i < 8; i++)
+    {
+      lcd.write(' ');
+    }
   }
 }
 

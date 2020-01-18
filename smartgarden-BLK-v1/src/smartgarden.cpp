@@ -55,21 +55,21 @@ void pompaChecker()
     {
         if (!SERIAL_REG[PinSerial::Pompa])
         {
-            SERIAL_REG[PinSerial::Pompa] = ON;
+            SERIAL_REG[PinSerial::Pompa] = HIGH;
             pompa_nyala_sejak = now;
         }
         else if (((now - pompa_nyala_sejak) / 1000UL) > config->maksimal_pompa_hidup)
         {
             P("Pompa nyala selama %d\n", static_cast<uint8_t>((now - pompa_nyala_sejak) / 1000L));
             pompa_mati_sampai = now + config->maksimal_pompa_mati * 1000UL;
-            SERIAL_REG[PinSerial::Pompa] = OFF;
+            SERIAL_REG[PinSerial::Pompa] = LOW;
             valve_next_check += config->maksimal_pompa_mati * 1000UL;
             dumpSerial(PinSerial::Pompa, PinSerial::Pompa);
         }
     }
     else if (SERIAL_REG[PinSerial::Pompa])
     {
-        SERIAL_REG[PinSerial::Pompa] = OFF;
+        SERIAL_REG[PinSerial::Pompa] = LOW;
         pompa_nyala_sejak = 0;
         status(config->displayText);
     }
@@ -175,7 +175,7 @@ void valveSwitcher(bool force = false)
     int no;
     if (VALVE_CURRENT >= 0 /* && VALVE_CURRENT != VALVE_STACK[0] */)
     {
-        SERIAL_REG[VALVE_START + VALVE_CURRENT] = OFF;
+        SERIAL_REG[VALVE_START + VALVE_CURRENT] = LOW;
         P("Turn Off %d\n", VALVE_CURRENT);
         valve_next_check = millis() + 100;
         VALVE_CURRENT = -1;
@@ -199,7 +199,7 @@ void valveSwitcher(bool force = false)
         }
         if (turnItOn)
         {
-            SERIAL_REG[VALVE_START + no] = ON;
+            SERIAL_REG[VALVE_START + no] = HIGH;
             VALVE_CURRENT = no;
             valve_next_check = millis() + config->valve_delay[no] * 1000UL;
             P("Turn On %d for %d second\n", no, config->valve_delay[no]);
@@ -238,9 +238,8 @@ void valveChecker()
 }
 void handle_ir_remote()
 {
-
     RemoteButton pressed = currentButton->remoteButton;
-    int8_t forcedValve = -1;
+    uint8_t forcedValve = -1;
     // Valve button 1 - 6
     if (pressed >= RemoteButton::BTN_1 && pressed <= RemoteButton::BTN_6)
     {

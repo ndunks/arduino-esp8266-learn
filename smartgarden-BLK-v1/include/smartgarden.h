@@ -23,9 +23,3 @@ void smartgarden_loop();
 
 // Apply REG to Serial Pararel Chained IC 595
 void smartgarden_apply();
-
-enum STATUS_t
-{
-    OFF = LOW,
-    ON = HIGH
-};

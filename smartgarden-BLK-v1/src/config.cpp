@@ -163,8 +163,11 @@ void config_setup()
         int8 wifiStatus = WiFi.waitForConnectResult(15000);
         if (wifiStatus == WL_CONNECTED)
         {
-            status("WiFi Connected");
-            delay(1000);
+            String str("Connected to ");
+            str += WiFi.SSID();
+            status(str.c_str());
+            str.clear();
+            delay(1500);
         }
         else
         {

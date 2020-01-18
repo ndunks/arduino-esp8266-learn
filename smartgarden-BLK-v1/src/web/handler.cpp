@@ -17,7 +17,7 @@ bool Handler::canHandle(HTTPMethod method, String path)
 
 bool Handler::handle(ESP8266WebServer &server, HTTPMethod method, String path)
 {
-    Serial.printf("Handler: %s\n", path.c_str());
+    P("Handler: %s\n", path.c_str());
     server.sendHeader("Access-Control-Allow-Origin", "*");
     if (method == HTTP_OPTIONS)
     {
@@ -30,7 +30,7 @@ bool Handler::handle(ESP8266WebServer &server, HTTPMethod method, String path)
     }
     String response;
     String subPath = path.substring(prefix.length());
-    Serial.printf("Api Check: %s\n", subPath.c_str());
+    P("Api Check: %s\n", subPath.c_str());
     Controller *matched = routes;
 
     while (matched < routeEnd)
@@ -55,6 +55,6 @@ bool Handler::handle(ESP8266WebServer &server, HTTPMethod method, String path)
         matched++;
     }
 
-    Serial.printf("No Api handle it\n");
+    P("No Api handle it\n");
     return false;
 }

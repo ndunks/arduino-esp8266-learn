@@ -239,7 +239,7 @@ void valveChecker()
 void handle_ir_remote()
 {
     RemoteButton pressed = currentButton->remoteButton;
-    uint8_t forcedValve = -1;
+    int8_t forcedValve = -1;
     // Valve button 1 - 6
     if (pressed >= RemoteButton::BTN_1 && pressed <= RemoteButton::BTN_6)
     {

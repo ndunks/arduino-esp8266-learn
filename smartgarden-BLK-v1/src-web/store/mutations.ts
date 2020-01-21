@@ -64,6 +64,13 @@ const mutations: {
         newStatus.ap_clients = parseInt(raw.ap_clients)
         newStatus.isConnected = newStatus.status == WifiStatus.Connected
 
+        // status sensors
+        for(let i = 0; i < 6; i++){
+            newStatus[`S${i}`] = parseInt(raw[`S${i}`])
+        }
+        newStatus.temp = parseInt(raw.temp)
+        newStatus.hum = parseInt(raw.hum)
+
         if (isConfigRaw(raw)) {
             newStatus.hostname = raw.hostname
             newStatus.autoconnect = parseInt(raw.autoconnect) > 0
@@ -76,6 +83,7 @@ const mutations: {
             newStatus.isApMode = !!(newStatus.mode & WifiMode["Access Point"])
             newStatus.isStaMode = !!(newStatus.mode & WifiMode.Station)
         }
+        
         this.state.status = newStatus;
     }
 }

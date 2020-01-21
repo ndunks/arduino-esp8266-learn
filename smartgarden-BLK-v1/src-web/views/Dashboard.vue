@@ -2,7 +2,30 @@
   <v-container fluid>
     <v-row>
       <v-col>
-        <widget-wifi />
+        <widget-ruangan />
+      </v-col>
+      <v-col>
+        <widget-pompa />
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col>
+        <widget-meja :no="0" />
+      </v-col>
+      <v-col>
+        <widget-meja :no="1" />
+      </v-col>
+      <v-col>
+        <widget-meja :no="2" />
+      </v-col>
+      <v-col>
+        <widget-meja :no="3" />
+      </v-col>
+      <v-col>
+        <widget-meja :no="4" />
+      </v-col>
+      <v-col>
+        <widget-meja :no="5" />
       </v-col>
     </v-row>
   </v-container>
@@ -10,10 +33,12 @@
 <script lang="ts">
 import Vue from 'vue'
 import Component from 'vue-class-component';
-import WidgetWifi from "@/widget/WidgetWifi.vue";
+import WidgetMeja from "@/widget/WidgetMeja.vue";
+import WidgetRuangan from "@/widget/WidgetRuangan.vue";
+import WidgetPompa from "@/widget/WidgetPompa.vue";
 
 @Component({
-  components: { WidgetWifi }
+  components: { WidgetMeja, WidgetRuangan, WidgetPompa }
 })
 export default class Dashboard extends Vue {
 

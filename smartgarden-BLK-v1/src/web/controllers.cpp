@@ -9,15 +9,15 @@ void handle_sensor(String &response, HTTPMethod method)
     {
         response += "S";
         response += i;
-        response += ":";
+        response += "\t";
         response += ANALOG_SENSOR[i];
         response += '\n';
     }
     // Suhu & kelemebaban
-    response += "temp:";
+    response += "temp\t";
     response += TEMPERATURE;
     response += '\n';
-    response += "hum:";
+    response += "hum\t";
     response += HUMIDITY;
     response += '\n';
 }
@@ -68,6 +68,9 @@ void handle_status(String &response, HTTPMethod method)
         response += "\nap_clients\t";
         response += WiFi.softAPgetStationNum();
     }
+    // show sensors too
+    response += "\n";
+    handle_sensor(response, method);
 }
 
 // A supertset of Status with more detail, loaded onetime from frontend at first page load
@@ -115,6 +118,9 @@ void handle_config_get(String &response, HTTPMethod method)
         response += "\nap_clients\t";
         response += WiFi.softAPgetStationNum();
     }
+    // show sensors too
+    response += "\n";
+    handle_sensor(response, method);
 }
 
 void handle_config_set(String &response, HTTPMethod method)

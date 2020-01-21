@@ -13,7 +13,8 @@ type ApiAxios = AxiosInstance & {
 }
 
 const Api: ApiAxios = Axios.create({
-    baseURL: process.env.VUE_APP_API || '/'
+    baseURL: process.env.VUE_APP_API || '/',
+    timeout: 16000
 })
 
 Object.defineProperty(Api, 'password', {

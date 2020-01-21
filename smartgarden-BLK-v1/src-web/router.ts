@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Dashboard from '@/views/Dashboard.vue'
+import Wifi from '@/views/Wifi.vue'
 import About from '@/views/About.vue'
 import Login from '@/views/Login.vue'
 import store from '@/store'
@@ -13,7 +14,7 @@ const routes = [
     path: '/',
     component: Login,
     meta: {
-      title: 'Access System',
+      title: 'Akses Masuk',
       public: true,
       hideMenu: true // Dont show in sidebar menu
     }
@@ -22,17 +23,35 @@ const routes = [
     path: '/dash',
     component: Dashboard,
     meta: {
-      title: "",
-      label: "Dashboard",
+      title: "Greenhouse",
+      label: "Beranda",
       icon: 'home',
+    }
+  },
+  {
+    path: '/wifi',
+    component: Wifi,
+    meta: {
+      title: "WiFi",
+      label: "WiFi",
+      icon: 'wifi',
+    }
+  },
+  {
+    path: '/setting',
+    component: Dashboard,
+    meta: {
+      title: "Pengaturan Perangkat",
+      label: "Pengaturan",
+      icon: 'settings',
     }
   },
   {
     path: '/about',
     component: About,
     meta: {
-      title: 'About Device',
-      label: 'About', // text displayed on sidebar menu
+      title: 'Tentang Sistem',
+      label: 'Tentang', // text displayed on sidebar menu
       icon: 'help',
       public: true
     }
@@ -73,7 +92,7 @@ router.beforeEach(async (to, from, next) => {
   } else if (!to.meta.public) {
     store.commit('popup', {
       color: 'warning',
-      message: 'Please login first'
+      message: 'Harap masukan katasandi'
     } as Popup)
     // check allowed path
     let next = to.path;

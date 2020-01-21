@@ -127,7 +127,7 @@ export default class App extends Vue {
 
   statusChecker() {
     this.$store.dispatch("status").then(
-      () => setTimeout(() => this.statusChecker(), 5000)
+      () => setTimeout(() => this.statusChecker(), 3000)
     )
   }
 }

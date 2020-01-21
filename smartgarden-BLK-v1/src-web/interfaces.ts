@@ -18,7 +18,7 @@ export interface ActionDialogObject {
 
 export type ActionDialog = ActionDialogObject | string
 
-export interface ConfigRaw {
+export interface ConfigRaw extends SensorsRaw {
     heap: string
     mode: string
     hostname: string
@@ -34,7 +34,7 @@ export interface ConfigRaw {
     ap_clients: string
 }
 
-export type StatusRaw = Pick<ConfigRaw, 'heap' | 'mode' | 'status' | 'rssi' | 'ap_clients'>
+export type StatusRaw = Pick<ConfigRaw, 'heap' | 'mode' | 'status' | 'rssi' | 'ap_clients'> & SensorsRaw
 
 // Config/Status type guad
 export function isConfigRaw(raw: ConfigRaw | StatusRaw): raw is ConfigRaw {
@@ -100,7 +100,7 @@ export interface Config {
 
 }
 
-export interface Status extends Config {
+export interface Status extends Config, Sensors {
 
     signal?: number // converted from 100 + rssi (rssi is negative)
     isConnected: boolean // from status 
@@ -108,4 +108,26 @@ export interface Status extends Config {
     statusStr?: string
     isApMode: boolean // bitwise check from mode
     isStaMode: boolean // bitwise check from mode
+}
+
+export interface SensorsRaw {
+    S0: string
+    S1: string
+    S2: string
+    S3: string
+    S4: string
+    S5: string
+    temp: string
+    hum: string
+}
+
+export interface Sensors {
+    S0: number
+    S1: number
+    S2: number
+    S3: number
+    S4: number
+    S5: number
+    temp: number
+    hum: number
 }

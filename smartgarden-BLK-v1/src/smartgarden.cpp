@@ -255,7 +255,13 @@ void handle_ir_remote()
         //valve_next_check = 0;
         valvePush(forcedValve, true);
         valveSwitcher(true);
+        pompaChecker();
         smartgarden_apply();
+        if (pompa_mati_sampai > 0)
+        {
+            // force on
+            pompa_mati_sampai = millis() - 1000;
+        }
     }
 }
 void smartgarden_loop()
@@ -309,6 +315,8 @@ void smartgarden_loop()
         {
             status("No %d ON %6d detik", VALVE_CURRENT + 1, remaining + 1);
         }
+    }else{
+        status(config->displayText);
     }
 
     if (valve_next_check <= now)

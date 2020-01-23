@@ -1,6 +1,7 @@
 import { Store } from 'vuex'
 import { Popup, StatusRaw, WifiMode, WifiStatus, ConfigRaw, isConfigRaw } from '@/interfaces';
-import { parseResponse, parseSensorRaw, parseConfigRaw, parseStatusRaw } from '@/helper';
+import { parseResponse, parseSensorRaw, parseConfigRaw, parseStatusRaw, parseSmartGardenConfig } from '@/helper';
+import { SPRAYER_NO } from '@/constant';
 
 const mutations: {
     [name: string]: (this: Store<State>, state: State, payload?: any) => any
@@ -11,6 +12,10 @@ const mutations: {
     },
     login(state, login: boolean) {
         state.login = login
+        // loadsettings if login after boot
+        if (state.bootComplete && login) {
+            this.dispatch('settings')
+        }
     },
     bootComplete(state) {
         state.bootComplete = true
@@ -59,6 +64,17 @@ const mutations: {
         }
 
         this.state.status = newStatus;
+    },
+    settings(state, payload: string) {
+        this.state.settings = parseSmartGardenConfig(payload);
+    },
+    valveOn(state, valveNo) {
+        const newStatus = { ...state.status }
+        newStatus.valve = state.status.valve.map((v, i) => i == valveNo)
+        if (valveNo == SPRAYER_NO) {
+            newStatus.sprayer = true
+        }
+        state.status = newStatus
     }
 }
 export default mutations;

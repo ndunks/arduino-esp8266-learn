@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Dashboard from '@/views/Dashboard.vue'
+import Settings from '@/views/Settings.vue'
 import Wifi from '@/views/Wifi.vue'
 import About from '@/views/About.vue'
 import Login from '@/views/Login.vue'
@@ -23,7 +24,8 @@ const routes = [
     path: '/dash',
     component: Dashboard,
     meta: {
-      title: "Greenhouse",
+      // title use default = settings->displayText
+      //title: "Greenhouse",
       label: "Beranda",
       icon: 'home',
     }
@@ -39,7 +41,7 @@ const routes = [
   },
   {
     path: '/setting',
-    component: Dashboard,
+    component: Settings,
     meta: {
       title: "Pengaturan Perangkat",
       label: "Pengaturan",
@@ -68,6 +70,8 @@ router.afterEach((to, from) => {
   if (to.meta.title) {
     // Auto set router title
     store.commit('title', to.meta.title);
+  } else if (store.state.settings) {
+    store.commit('title', store.state.settings.displayText);
   }
 })
 

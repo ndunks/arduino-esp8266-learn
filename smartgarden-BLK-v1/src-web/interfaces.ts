@@ -36,8 +36,6 @@ export interface ConfigRaw extends SensorsRaw {
     status: string
     rssi: string
     ap_clients: string
-    // Stored config
-    cfg: string
 }
 
 export type StatusRaw = Pick<ConfigRaw, 'heap' | 'mode' | 'status' | 'rssi' | 'ap_clients'> & SensorsRaw
@@ -103,7 +101,6 @@ export interface Config {
     ap_ip?: string
     ap_psk?: string
     ap_clients: number
-    cfg: SmartGardenConfig
 
 }
 
@@ -135,7 +132,7 @@ export interface Sensors extends Pick<SensorsRaw, 'in' | 'out'> {
     hum: number
 }
 
-export interface SmartGardenConfig {
+export interface Settings {
     // Boot status flag
     flag: number
     // Delay membaca sensor analog

@@ -1,4 +1,4 @@
-import { ConfigRaw, Status, WifiMode, StatusRaw, WifiStatus, SensorsRaw, SmartGardenConfig } from './interfaces';
+import { ConfigRaw, Status, WifiMode, StatusRaw, WifiStatus, SensorsRaw, Settings } from './interfaces';
 import { VALVE_COUNT } from './constant';
 /**
  * Parse key-value separate by tab
@@ -30,7 +30,6 @@ export function parseConfigRaw(raw: ConfigRaw, newStatus: Status) {
     newStatus.ap_psk = raw.ap_psk
     newStatus.isApMode = !!(newStatus.mode & WifiMode["Access Point"])
     newStatus.isStaMode = !!(newStatus.mode & WifiMode.Station)
-    newStatus.cfg = parseSmartGardenConfig(raw.cfg)
 }
 
 export function parseStatusRaw(raw: StatusRaw, newStatus: Status) {
@@ -56,7 +55,7 @@ export function parseSensorRaw(raw: SensorsRaw, newStatus: Status) {
         v => parseInt(v)
     )
     let value = parseInt(raw.out);
-    newStatus.valve = [];
+    //newStatus.valve = [];
     newStatus.valve[0] = (value & (1 >> 0)) > 0;
     newStatus.valve[1] = (value & (1 >> 1)) > 0;
     newStatus.valve[2] = (value & (1 >> 2)) > 0;
@@ -71,25 +70,17 @@ export function parseSensorRaw(raw: SensorsRaw, newStatus: Status) {
 
 export function parseSmartGardenConfig(raw: string) {
 
-    let cfg: SmartGardenConfig = {} as any;
-    const tmp = raw.split(' ', 2)
-    const len = parseInt(tmp[0])
-
-    const rawStr = atob(tmp[1])
+    let cfg: Settings = {} as any;
+    const rawStr = atob(raw)
+    const len = rawStr.length
     let buff = new ArrayBuffer(len)
 
     let buffView = new Uint8Array(buff)
-    let tmpNum: number
+
     for (let i = 0; i < len; i++) {
         buffView[i] = rawStr.charCodeAt(i)
-        // first bit set is null
-        // buffView[i] = (code & (1 << 7)) ? 0 : code
     }
-    console.log(buffView);
-    const firstUint8Len = 4 + VALVE_COUNT * 2
     let offset = 0
-    let firstBytes = new Uint8Array(buff, offset, firstUint8Len);
-
     cfg.valve_delay = []
     cfg.humidity_minimal = []
 
@@ -142,5 +133,5 @@ function readNullString(buff: Uint8Array, offset: number, maxLen: number) {
         tmp.push(String.fromCharCode(code))
     }
 
-    return tmp.join("");
+    return tmp.join("").trim();
 }

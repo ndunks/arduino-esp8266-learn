@@ -4,6 +4,17 @@
 #include "config.h"
 #include <base64.h>
 
+void handle_settings(String &response, HTTPMethod method)
+{
+    switch (method)
+    {
+    case HTTPMethod::HTTP_GET:
+        response = base64::encode((uint8_t *)config, sizeof(SmartGardenConfig), false);
+        break;
+    default:
+        break;
+    }
+}
 void handle_sensor(String &response, HTTPMethod method)
 {
     uint8_t tmp = 0U;
@@ -138,11 +149,6 @@ void handle_config_get(String &response, HTTPMethod method)
     response += "\n";
     // show sensors too
     handle_sensor(response, method);
-    // Dump stored config
-    response += "cfg\t";
-    response += sizeof(SmartGardenConfig);
-    response += " ";
-    response += base64::encode((uint8_t *)config, sizeof(SmartGardenConfig), false);
 }
 
 void handle_config_set(String &response, HTTPMethod method)

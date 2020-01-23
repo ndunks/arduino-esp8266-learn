@@ -9,7 +9,11 @@ const actions: ActionTree<State, any> = {
         // Validating password
         if (Api.password) {
             await Api.get('ping').then(
-                resp => context.commit('login', true)
+                resp => {
+                    context.commit('login', true)
+                    // auto load setttings too
+                    return this.dispatch('settings')
+                }
             ).catch(
                 e => Api.password = null
             )
@@ -22,12 +26,17 @@ const actions: ActionTree<State, any> = {
     },
     status(context) {
         // Dont update loading state
-        ApiNoLoading.get("status").then(
+        return ApiNoLoading.get("status").then(
             response => context.commit('status', response.data)
         )
     },
+    settings(context) {
+        return Api.get("settings").then(
+            response => context.commit('settings', response.data)
+        )
+    },
     config(context) {
-        Api.get("config").then(
+        return Api.get("config").then(
             response => context.commit('status', response.data)
         )
     }

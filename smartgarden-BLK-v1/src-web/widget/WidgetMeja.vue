@@ -1,6 +1,10 @@
 <template>
   <v-card>
-    <v-card-title> Meja {{ no + 1 }} </v-card-title>
+    <v-toolbar dense flat>
+      <v-toolbar-title>Meja {{ no + 1 }}</v-toolbar-title>
+      <v-spacer />
+      <v-chip v-text="statusText" dark :color="statusColor" />
+    </v-toolbar>
     <v-card-text class="text-center">
       <v-progress-circular
         class="mx-auto"
@@ -22,10 +26,14 @@
     </v-list-item>
     <v-list-item>
       <v-list-item-content>
-        <v-list-item-title>Keran</v-list-item-title>
-        <v-list-item-subtitle>
-          {{ status.valve[no] ? "Terbuka" : "Tertutup" }}
-        </v-list-item-subtitle>
+        <v-btn
+          @click="$store.commit('valveOn', no)"
+          color="success"
+          block
+          rounded
+        >
+          Nyalakan
+        </v-btn>
       </v-list-item-content>
     </v-list-item>
   </v-card>
@@ -36,7 +44,7 @@ import Component from 'vue-class-component';
 import { Status } from '@/interfaces';
 import { mapState } from 'vuex';
 import Api from '@/api';
-import { Prop } from 'vue-property-decorator';
+import { Prop, Watch } from 'vue-property-decorator';
 
 @Component({
   computed: mapState(['status'])
@@ -46,5 +54,13 @@ export default class WidgetMeja extends Vue {
   no: number;
   // Typing helper
   status: Status
+
+  get statusText() {
+    return this.status.valve[this.no] ? 'On' : 'Off'
+  }
+
+  get statusColor() {
+    return this.status.valve[this.no] ? 'green' : 'gray'
+  }
 }
 </script>

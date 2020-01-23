@@ -26,6 +26,21 @@ void handle_valve_patch(String &response, HTTPMethod method)
         server.send(500);
     }
 }
+void handle_pump_patch(String &response, HTTPMethod method)
+{
+    config->maksimal_pompa_hidup = strtoul(server.arg("maxon").c_str(), NULL, 0);
+    config->maksimal_pompa_mati = strtoul(server.arg("maxoff").c_str(), NULL, 0);
+
+    if (config_save())
+    {
+        //send the current settings
+        handle_settings(response, method);
+    }
+    else
+    {
+        server.send(500);
+    }
+}
 void handle_valve(String &response, HTTPMethod method)
 {
     if (method == HTTPMethod::HTTP_POST)
@@ -91,6 +106,18 @@ void handle_sensor(String &response, HTTPMethod method)
     response += "pompa\t";
     response += SERIAL_REG[PinSerial::Pompa];
     response += '\n';
+    if (SERIAL_REG[PinSerial::Pompa])
+    {
+        response += "pompa_on\t";
+        response += (millis() - pompa_nyala_sejak) / 1000;
+        response += '\n';
+    }
+    else
+    {
+        response += "pompa_off\t";
+        response += (pompa_mati_sampai - millis()) / 1000;
+        response += '\n';
+    }
 }
 void handle_index(String &response, HTTPMethod method)
 {

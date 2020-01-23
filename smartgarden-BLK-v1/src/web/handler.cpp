@@ -1,6 +1,5 @@
 #include "web.h"
 
-
 bool Handler::canHandle(HTTPMethod method, String path)
 {
     if (method == HTTP_OPTIONS)
@@ -19,6 +18,7 @@ bool Handler::handle(ESP8266WebServer &server, HTTPMethod method, String path)
 {
     P("Handler: %s\n", path.c_str());
     server.sendHeader("Access-Control-Allow-Origin", "*");
+    server.sendHeader("Cache-Control", "no-cache");
     if (method == HTTP_OPTIONS)
     {
         server.sendHeader("Access-Control-Allow-Methods", "GET,POST");

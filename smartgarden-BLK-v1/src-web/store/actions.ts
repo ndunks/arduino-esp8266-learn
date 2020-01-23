@@ -52,6 +52,12 @@ const actions: ActionTree<State, any> = {
         return Api.post(`valve?${urlEncode(params)}`).then(
             response => context.commit('settings', response.data)
         )
+    },
+    pumpSetting(context, params) {
+        //send the request
+        return Api.post(`pump?${urlEncode(params)}`).then(
+            response => context.commit('settings', response.data)
+        )
     }
 
 }

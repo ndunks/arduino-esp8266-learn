@@ -4,6 +4,53 @@
       <v-toolbar-title>Pompa</v-toolbar-title>
       <v-spacer />
       <v-chip v-text="statusText" dark :color="statusColor" />
+      <v-dialog max-width="600" ref="dialog">
+        <template #activator="{on}">
+          <v-btn v-on="on" icon color="danger"><v-icon>settings</v-icon></v-btn>
+        </template>
+        <v-form @submit.prevent="submit" ref="form">
+          <v-card>
+            <v-card-title>
+              Pengaturan Pompa
+            </v-card-title>
+            <v-card-text>
+              <v-row>
+                <v-col>
+                  <v-text-field
+                    label="Maksimal Lama Menyala"
+                    type="number"
+                    v-model="edit.maxon"
+                  >
+                    <template #append>
+                      Detik
+                    </template>
+                  </v-text-field>
+                </v-col>
+                <v-col>
+                  <v-text-field
+                    label="Lama Mati"
+                    type="number"
+                    v-model="edit.maxoff"
+                  >
+                    <template #append>
+                      Detik
+                    </template>
+                  </v-text-field>
+                </v-col>
+              </v-row>
+            </v-card-text>
+            <v-card-actions>
+              <v-btn color="error" text @click="$refs.dialog.isActive = false">
+                Batal
+              </v-btn>
+              <v-spacer />
+              <v-btn color="success" text @click="submit">
+                Simpan
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-form>
+      </v-dialog>
     </v-toolbar>
     <v-list-item>
       <v-list-item-content>
@@ -13,14 +60,14 @@
     </v-list-item>
     <v-list-item v-if="status.pompa">
       <v-list-item-content>
-        <v-list-item-title>Nyala Sejak</v-list-item-title>
-        <v-list-item-subtitle> ... </v-list-item-subtitle>
+        <v-list-item-title>Lama Nyala</v-list-item-title>
+        <v-list-item-subtitle> {{ status.pompa_on }} </v-list-item-subtitle>
       </v-list-item-content>
     </v-list-item>
-    <v-list-item v-else>
+    <v-list-item v-if="status.pompa_off !== null">
       <v-list-item-content>
-        <v-list-item-title>Mati Sejak</v-list-item-title>
-        <v-list-item-subtitle> ... </v-list-item-subtitle>
+        <v-list-item-title>Akan Hidup Setelah</v-list-item-title>
+        <v-list-item-subtitle> {{ status.pompa_off }} </v-list-item-subtitle>
       </v-list-item-content>
     </v-list-item>
   </v-card>
@@ -36,9 +83,23 @@ import Api from '@/api';
   computed: mapState(['status', 'settings'])
 })
 export default class WidgetPompa extends Vue {
+  edit = {
+    maxon: 0,
+    maxoff: 0
+  }
   // Typing helper
   status: Status
   settings: Settings
+
+  $refs: {
+    form: Vue & any
+    dialog: Vue & any
+  }
+
+  mounted() {
+    this.edit.maxon = this.settings.maksimal_pompa_hidup
+    this.edit.maxoff = this.settings.maksimal_pompa_mati
+  }
 
   get statusText() {
     return this.status.pompa ? 'On' : 'Off'
@@ -54,6 +115,15 @@ export default class WidgetPompa extends Vue {
     } else {
       return this.settings.maksimal_pompa_hidup + ' Detik'
     }
+  }
+  submit() {
+    if (!this.$refs.form.validate()) {
+      return
+    }
+
+    this.$store.dispatch('pumpSetting', this.edit).then(
+      () => this.$refs.dialog.isActive = false
+    )
   }
 }
 </script>

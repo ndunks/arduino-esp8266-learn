@@ -12,6 +12,7 @@ struct Controller routes[] = {
     {"config", &handle_config, false},
     {"settings", &handle_settings, true},
     {"valve", &handle_valve, true},
+    {"pump", &handle_pump_patch, true},
 };
 
 // End pointer

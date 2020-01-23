@@ -17,6 +17,8 @@ extern uint8 HUMIDITY;
 // in celcius
 extern int8 TEMPERATURE;
 extern int VALVE_CURRENT;
+extern unsigned long pompa_nyala_sejak;
+extern unsigned long pompa_mati_sampai;
 
 // Setup pin and start ticker
 void smartgarden_setup();

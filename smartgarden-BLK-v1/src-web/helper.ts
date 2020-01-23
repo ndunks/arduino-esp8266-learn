@@ -72,6 +72,12 @@ export function parseSensorRaw(raw: SensorsRaw, newStatus: Status) {
     }
     newStatus.sprayer = SPRAYER_NO == newStatus.cur;
     newStatus.pompa = !!parseInt(raw.pompa);
+    newStatus.pompa_on = parseInt(raw.pompa_on);
+    if (typeof raw.pompa_off == 'undefined') {
+        newStatus.pompa_off = null;
+    } else {
+        newStatus.pompa_off = parseInt(raw.pompa_off);
+    }
 }
 
 export function parseSmartGardenConfig(raw: string) {

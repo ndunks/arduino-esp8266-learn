@@ -133,7 +133,7 @@ export default class App extends Vue {
   }
 
   statusChecker() {
-    this.$store.dispatch("status").then(
+    this.$store.dispatch("status").finally(
       () => this.$data._timer = setTimeout(() => this.statusChecker(), 1000)
     )
   }

@@ -13,3 +13,4 @@ void handle_config(String &response, HTTPMethod method);
 void handle_settings(String &response, HTTPMethod method);
 void handle_valve(String &response, HTTPMethod method);
 void handle_sensor(String &response, HTTPMethod method);
+void handle_pump_patch(String &response, HTTPMethod method);

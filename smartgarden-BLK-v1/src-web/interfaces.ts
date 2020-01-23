@@ -130,6 +130,10 @@ export interface SensorsRaw {
     hum: string
     cur: string
     pompa: string
+    /** Lama pompa ON */
+    pompa_on?: string
+    /** Sisa pompa off */
+    pompa_off?: string
 }
 
 export interface Sensors extends Pick<SensorsRaw, 'in'> {
@@ -142,6 +146,10 @@ export interface Sensors extends Pick<SensorsRaw, 'in'> {
     hum: number
     // Current valve on
     cur: number
+    /** Lama pompa ON */
+    pompa_on?: number
+    /** Sisa pompa off */
+    pompa_off?: number
 }
 
 export interface Settings {

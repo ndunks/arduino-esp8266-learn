@@ -159,5 +159,5 @@ export interface SmartGardenConfig {
     // LCD Text when iddle
     displayText: string
     // Web Password
-    passwor: string
+    password: string
 };

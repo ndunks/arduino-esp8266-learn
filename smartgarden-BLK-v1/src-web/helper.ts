@@ -122,9 +122,25 @@ export function parseSmartGardenConfig(raw: string) {
     cfg.maksimal_pompa_mati = tmpLong[0]
 
     // char name[21];
+    cfg.name = readNullString(buffView, offset, 21)
+    offset += 21
     // char displayText[21];
+    cfg.displayText = readNullString(buffView, offset, 21)
+    offset += 21
     // char password[9];
+    cfg.password = readNullString(buffView, offset, 9)
+    offset += 9
     console.log(cfg)
 
     return cfg
+}
+
+function readNullString(buff: Uint8Array, offset: number, maxLen: number) {
+    let tmp: string[] = []
+    let code: number;
+    while ((code = buff[offset]) && ++offset < buff.length) {
+        tmp.push(String.fromCharCode(code))
+    }
+
+    return tmp.join("");
 }

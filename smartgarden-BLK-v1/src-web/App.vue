@@ -113,21 +113,19 @@ export default class App extends Vue {
     this.$router.push('/')
   }
   mounted() {
-    setTimeout(() => this.statusChecker(), 5000)
+    setTimeout(() => this.statusChecker(), 3000)
   }
 
   @Watch('status.mode')
   modeChanged(newMode, oldMode) {
-
     if ('undefined' == typeof oldMode) return;
     // if mode changed, load full config
     this.$store.dispatch('config')
   }
 
-
   statusChecker() {
     this.$store.dispatch("status").then(
-      () => setTimeout(() => this.statusChecker(), 3000)
+      () => setTimeout(() => this.statusChecker(), 1000)
     )
   }
 }

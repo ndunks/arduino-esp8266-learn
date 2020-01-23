@@ -4,6 +4,24 @@
 #include "config.h"
 #include <base64.h>
 
+void handle_valve(String &response, HTTPMethod method)
+{
+    if (server.args())
+    {
+        int no = server.arg(0).toInt();
+        if (no >= 0 && no < VALVE_COUNT)
+        {
+            P("WEB ON %d\n", no);
+            valveForceOn(no);
+            // Send current sensor state
+            handle_sensor(response, method);
+        }
+        else
+        {
+            server.send(401);
+        }
+    }
+}
 void handle_settings(String &response, HTTPMethod method)
 {
     switch (method)
@@ -27,7 +45,7 @@ void handle_sensor(String &response, HTTPMethod method)
     response += '\n';
     // 8 bit state
     // 0 - 5 : valve
-    tmp = 0;
+    /* tmp = 0;
     tmp |= SERIAL_REG[PinSerial::Valve_0] << 0;
     tmp |= SERIAL_REG[PinSerial::Valve_1] << 1;
     tmp |= SERIAL_REG[PinSerial::Valve_2] << 2;
@@ -40,13 +58,19 @@ void handle_sensor(String &response, HTTPMethod method)
     tmp |= SERIAL_REG[PinSerial::Pompa] << 7;
     response += "out\t";
     response += tmp;
-    response += '\n';
+    response += '\n'; */
     // Suhu & kelemebaban
     response += "temp\t";
     response += TEMPERATURE;
     response += '\n';
     response += "hum\t";
     response += HUMIDITY;
+    response += '\n';
+    response += "cur\t";
+    response += VALVE_CURRENT;
+    response += '\n';
+    response += "pompa\t";
+    response += SERIAL_REG[PinSerial::Pompa];
     response += '\n';
 }
 void handle_index(String &response, HTTPMethod method)

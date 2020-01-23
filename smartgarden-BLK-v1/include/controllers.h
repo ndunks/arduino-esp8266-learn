@@ -11,3 +11,5 @@ void handle_set_password(String &response, HTTPMethod method);
 void handle_scan(String &response, HTTPMethod method);
 void handle_config(String &response, HTTPMethod method);
 void handle_settings(String &response, HTTPMethod method);
+void handle_valve(String &response, HTTPMethod method);
+void handle_sensor(String &response, HTTPMethod method);

@@ -11,6 +11,7 @@ struct Controller routes[] = {
     // Auth Will checked on controller function on edit only
     {"config", &handle_config, false},
     {"settings", &handle_settings, true},
+    {"valve", &handle_valve, true},
 };
 
 // End pointer

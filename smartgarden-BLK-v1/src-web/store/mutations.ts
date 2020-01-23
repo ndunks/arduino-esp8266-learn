@@ -1,7 +1,6 @@
 import { Store } from 'vuex'
-import { Popup, StatusRaw, WifiMode, WifiStatus, ConfigRaw, isConfigRaw } from '@/interfaces';
+import { Popup, StatusRaw, ConfigRaw, isConfigRaw, isSensorsRaw, isStatusRaw, SensorsRaw } from '@/interfaces';
 import { parseResponse, parseSensorRaw, parseConfigRaw, parseStatusRaw, parseSmartGardenConfig } from '@/helper';
-import { SPRAYER_NO } from '@/constant';
 
 const mutations: {
     [name: string]: (this: Store<State>, state: State, payload?: any) => any
@@ -51,13 +50,17 @@ const mutations: {
         }
     },
     status(state, payload: string) {
-        const raw = parseResponse<StatusRaw | ConfigRaw>(payload);
+        const raw = parseResponse<StatusRaw | ConfigRaw | SensorsRaw>(payload);
         const newStatus = { ...state.status };
 
         // status is always included
-        parseStatusRaw(raw, newStatus)
+        if (isStatusRaw(raw)) {
+            parseStatusRaw(raw, newStatus)
+        }
         // status sensors
-        parseSensorRaw(raw, newStatus)
+        if (isSensorsRaw(raw)) {
+            parseSensorRaw(raw, newStatus)
+        }
 
         if (isConfigRaw(raw)) {
             parseConfigRaw(raw, newStatus)
@@ -67,14 +70,6 @@ const mutations: {
     },
     settings(state, payload: string) {
         this.state.settings = parseSmartGardenConfig(payload);
-    },
-    valveOn(state, valveNo) {
-        const newStatus = { ...state.status }
-        newStatus.valve = state.status.valve.map((v, i) => i == valveNo)
-        if (valveNo == SPRAYER_NO) {
-            newStatus.sprayer = true
-        }
-        state.status = newStatus
     }
 }
 export default mutations;

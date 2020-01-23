@@ -16,10 +16,11 @@ extern uint8 ANALOG_SENSOR[];
 extern uint8 HUMIDITY;
 // in celcius
 extern int8 TEMPERATURE;
+extern int VALVE_CURRENT;
 
 // Setup pin and start ticker
 void smartgarden_setup();
 void smartgarden_loop();
-
+void valveForceOn(int no);
 // Apply REG to Serial Pararel Chained IC 595
 void smartgarden_apply();

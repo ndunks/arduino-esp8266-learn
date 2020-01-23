@@ -38,11 +38,18 @@ export interface ConfigRaw extends SensorsRaw {
     ap_clients: string
 }
 
-export type StatusRaw = Pick<ConfigRaw, 'heap' | 'mode' | 'status' | 'rssi' | 'ap_clients'> & SensorsRaw
+export type StatusRaw = Pick<ConfigRaw, 'heap' | 'mode' | 'status' | 'rssi' | 'ap_clients'>
 
 // Config/Status type guad
-export function isConfigRaw(raw: ConfigRaw | StatusRaw): raw is ConfigRaw {
+export function isConfigRaw(raw): raw is ConfigRaw {
     return (raw as ConfigRaw).hostname !== undefined;
+}
+export function isStatusRaw(raw): raw is StatusRaw {
+    return (raw as ConfigRaw).status !== undefined;
+}
+
+export function isSensorsRaw(raw): raw is SensorsRaw {
+    return (raw as ConfigRaw).in !== undefined;
 }
 
 /*
@@ -118,18 +125,23 @@ export interface SensorsRaw {
     /** Sensor separated by space */
     in: string
     /** 8 bit valve & other output state */
-    out: string
+    // out: string
     temp: string
     hum: string
+    cur: string
+    pompa: string
 }
 
-export interface Sensors extends Pick<SensorsRaw, 'in' | 'out'> {
+export interface Sensors extends Pick<SensorsRaw, 'in'> {
     sensorTanah: number[]
     valve: boolean[]
     sprayer: boolean
+    // Pompa status
     pompa: boolean
     temp: number
     hum: number
+    // Current valve on
+    cur: number
 }
 
 export interface Settings {

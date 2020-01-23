@@ -1,5 +1,5 @@
 import { ConfigRaw, Status, WifiMode, StatusRaw, WifiStatus, SensorsRaw, Settings } from './interfaces';
-import { VALVE_COUNT } from './constant';
+import { VALVE_COUNT, SPRAYER_NO } from './constant';
 /**
  * Parse key-value separate by tab
  */
@@ -54,18 +54,18 @@ export function parseSensorRaw(raw: SensorsRaw, newStatus: Status) {
     newStatus.sensorTanah = raw.in.trim().split(' ').map(
         v => parseInt(v)
     )
-    let value = parseInt(raw.out);
+
     //newStatus.valve = [];
-    newStatus.valve[0] = (value & (1 >> 0)) > 0;
-    newStatus.valve[1] = (value & (1 >> 1)) > 0;
-    newStatus.valve[2] = (value & (1 >> 2)) > 0;
-    newStatus.valve[3] = (value & (1 >> 3)) > 0;
-    newStatus.valve[4] = (value & (1 >> 4)) > 0;
-    newStatus.valve[5] = (value & (1 >> 5)) > 0;
-    newStatus.sprayer = (value & (1 >> 6)) > 0;
-    newStatus.pompa = (value & (1 >> 7)) > 0;
     newStatus.temp = parseInt(raw.temp)
     newStatus.hum = parseInt(raw.hum)
+    newStatus.cur = parseInt(raw.cur)
+    // loop all valves without sprayer
+    for (let i = 0; i < VALVE_COUNT - 1; i++) {
+        newStatus.valve[i] = newStatus.cur == i
+
+    }
+    newStatus.sprayer = SPRAYER_NO == newStatus.cur;
+    newStatus.pompa = !!parseInt(raw.pompa);
 }
 
 export function parseSmartGardenConfig(raw: string) {

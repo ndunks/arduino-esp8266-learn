@@ -39,6 +39,12 @@ const actions: ActionTree<State, any> = {
         return Api.get("config").then(
             response => context.commit('status', response.data)
         )
+    },
+    valveOn(context, valveNo) {
+        //send the request
+        return Api.get(`valve?on=${valveNo}`).then(
+            response => context.commit('status', response.data)
+        )
     }
 
 }

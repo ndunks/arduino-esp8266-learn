@@ -32,7 +32,7 @@ void loop()
 {
   //waitSerialInput(smartgarden_loop);
   ir_remote_loop();
+  web_loop();
   smartgarden_loop();
   display_loop();
-  web_loop();
 }

@@ -20,7 +20,7 @@
     <v-list-item>
       <v-list-item-content>
         <v-btn
-          @click="$store.commit('valveOn', no)"
+          @click="$store.dispatch('valveOn', no)"
           color="success"
           block
           rounded

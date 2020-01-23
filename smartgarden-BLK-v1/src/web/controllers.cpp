@@ -2,17 +2,34 @@
 #include "controllers.h"
 #include "smartgarden.h"
 #include "config.h"
+#include <base64.h>
 
 void handle_sensor(String &response, HTTPMethod method)
 {
-    for (int i = 0; i < (VALVE_COUNT - 1); i++)
+    uint8_t tmp = 0U;
+    response += "in\t";
+    for (tmp = 0; tmp < (VALVE_COUNT - 1); tmp++)
     {
-        response += "S";
-        response += i;
-        response += "\t";
-        response += ANALOG_SENSOR[i];
-        response += '\n';
+        response += ANALOG_SENSOR[tmp];
+        response += ' ';
     }
+    response += '\n';
+    // 8 bit state
+    // 0 - 5 : valve
+    tmp = 0;
+    tmp |= SERIAL_REG[PinSerial::Valve_0] << 0;
+    tmp |= SERIAL_REG[PinSerial::Valve_1] << 1;
+    tmp |= SERIAL_REG[PinSerial::Valve_2] << 2;
+    tmp |= SERIAL_REG[PinSerial::Valve_3] << 3;
+    tmp |= SERIAL_REG[PinSerial::Valve_4] << 4;
+    tmp |= SERIAL_REG[PinSerial::Valve_5] << 5;
+    // 6     : sprayer
+    tmp |= SERIAL_REG[PinSerial::Sprayer] << 6;
+    // 7     : pump
+    tmp |= SERIAL_REG[PinSerial::Pompa] << 7;
+    response += "out\t";
+    response += tmp;
+    response += '\n';
     // Suhu & kelemebaban
     response += "temp\t";
     response += TEMPERATURE;
@@ -118,9 +135,14 @@ void handle_config_get(String &response, HTTPMethod method)
         response += "\nap_clients\t";
         response += WiFi.softAPgetStationNum();
     }
-    // show sensors too
     response += "\n";
+    // show sensors too
     handle_sensor(response, method);
+    // Dump stored config
+    response += "cfg\t";
+    response += sizeof(SmartGardenConfig);
+    response += " ";
+    response += base64::encode((uint8_t *)config, sizeof(SmartGardenConfig), false);
 }
 
 void handle_config_set(String &response, HTTPMethod method)

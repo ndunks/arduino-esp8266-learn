@@ -59,15 +59,24 @@ void config_default()
     if (config->password[0] == 0 || config->password[0] == 0xff)
     {
         // Default config
-        P("Set default web password to \"admin\"\n");
         memcpy(config->password, "admin", 6);
+        P("Set default web password to \"%s\"\n", config->password);
         // make sure null terminated
         config->password[8] = 0;
     }
     config->flag = FLAG_IS_BOOTED;
+    // Make config is dirty, so it will comitted
+    EEPROM.getDataPtr();
 }
 void firstboot()
 {
+    // Nulled all bytes in config
+    for (unsigned long i = 0; i < sizeof(SmartGardenConfig); i++)
+    {
+        EEPROM.write(i, 0);
+    }
+    EEPROM.commit();
+
     // Load default config
     WiFi.persistent(true);
     config_default();
@@ -93,7 +102,8 @@ void firstboot()
     WiFi.setAutoConnect(false);
     ssid.clear();
 }
-void cofig_reset()
+
+void config_reset()
 {
     uint32 startSector = (0x405FB000 - 0x40200000) / SPI_FLASH_SEC_SIZE;
     uint32 sector = 0x0;
@@ -112,7 +122,7 @@ void cofig_reset()
         {
             status("Fail, %d", i + 1);
         }
-        delay(500);
+        delay(200);
     }
     status("RESTARTING...");
     delay(2000);

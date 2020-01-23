@@ -87,7 +87,7 @@ void do_special_command(uint8_t code)
     switch (code)
     {
     case RemoteButton::BTN_0: // *000 - Reset Factory
-        do_confirm("Tekan OK untuk reset", &cofig_reset);
+        do_confirm("Tekan OK untuk reset", &config_reset);
         break;
     case RemoteButton::BTN_1: // *111 - Restart
 

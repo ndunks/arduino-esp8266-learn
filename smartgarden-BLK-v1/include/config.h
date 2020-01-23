@@ -36,4 +36,4 @@ struct SmartGardenConfig
 extern SmartGardenConfig *config;
 void config_setup();
 bool config_save();
-void cofig_reset();
+void config_reset();

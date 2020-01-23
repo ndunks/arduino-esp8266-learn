@@ -33,6 +33,7 @@ void web_setup()
             String host = server.hostHeader();
             P("Not found: %s %s\n", host.c_str(), server.uri().c_str());
             if (host.length() && (host.equalsIgnoreCase(config->name) ||
+                                  host.equals(WiFi.hostname()) ||
                                   host.equals(WiFi.localIP().toString()) ||
                                   host.equals(WiFi.softAPIP().toString()) ||
                                   server.uri().endsWith("generate_204")))

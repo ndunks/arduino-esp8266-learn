@@ -30,6 +30,7 @@ void dump_config()
     {
         P("humidity_minimal[%d]: %d\n", no, config->humidity_minimal_default);
     }
+    P("Hostname: %s\nSSID: %s\nConnected: %d\n", WiFi.hostname().c_str(), WiFi.SSID().c_str(), WiFi.isConnected());
     P("---------------\n");
 }
 
@@ -173,7 +174,7 @@ void config_setup()
     if (wifi_get_opmode() & WIFI_STA && WiFi.getAutoConnect())
     {
         //wait connected
-        status("Wifi Connecting...");
+        status("%s...", WiFi.SSID().c_str());
         int8 wifiStatus = WiFi.waitForConnectResult(15000);
         if (wifiStatus == WL_CONNECTED)
         {

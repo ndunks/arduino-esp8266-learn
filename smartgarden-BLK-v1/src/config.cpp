@@ -31,6 +31,7 @@ void dump_config()
         P("humidity_minimal[%d]: %d\n", no, config->humidity_minimal_default);
     }
     P("Hostname: %s\nSSID: %s\nConnected: %d\n", WiFi.hostname().c_str(), WiFi.SSID().c_str(), WiFi.isConnected());
+    P("MacAddr: %s\n", WiFi.macAddress().c_str());
     P("---------------\n");
 }
 
@@ -93,7 +94,9 @@ void config_default()
 }
 void firstboot()
 {
-
+#ifdef SMARTGARDEN_DEBUG
+    delay(1000);
+#endif
     // Load default config
     P("\n--- FIRST BOOT ---\n");
     config_default();

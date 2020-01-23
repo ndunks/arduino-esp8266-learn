@@ -23,36 +23,43 @@ bool server_guard()
 
 void web_setup()
 {
-    P("Server web_setup");
-    dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-    dnsServer.start(53, "*", local_IP);
-    if (!SPIFFS.begin())
+
+    if (SPIFFS.begin())
+    {
+        server.addHandler(&handler);
+        server.serveStatic("/", SPIFFS, "/", "public, max-age=86400");
+
+        server.onNotFound([]() {
+            String host = server.hostHeader();
+            P("Not found: %s %s\n", host.c_str(), server.uri().c_str());
+            if (host.length() && (host.equalsIgnoreCase(config->name) ||
+                                  host.equals(WiFi.localIP().toString()) ||
+                                  host.equals(WiFi.softAPIP().toString()) ||
+                                  server.uri().endsWith("generate_204")))
+            {
+                P("SPA\n");
+                handle_index(*((String *)&emptyString), server.method());
+            }
+            else
+            {
+                String redirect("http://");
+                redirect += config->name;
+                server.sendHeader("Location", redirect.c_str());
+                server.send(302);
+                P("Handled Captive Portal %s\n", redirect.c_str());
+            }
+        });
+    }
+    else
     {
         status("[!] FileSystem ERROR");
-        return;
+        server.onNotFound([]() {
+            server.send(200, "text/html", "<html><body><h1>FILE SYSTEM ERROR</h1></body></html>");
+        });
     }
-    server.addHandler(&handler);
-    server.serveStatic("/", SPIFFS, "/", "public, max-age=86400");
-
-    server.onNotFound([]() {
-        String host = server.hostHeader();
-        P("Not found: %s %s\n", host.c_str(), server.uri().c_str());
-        if (host.length() && (host.equalsIgnoreCase(WiFi.hostname()) ||
-                              host.equals(WiFi.localIP().toString()) ||
-                              host.equals(WiFi.softAPIP().toString()) ||
-                              server.uri().endsWith("generate_204")))
-        {
-            P("SPA\n");
-            handle_index(*((String *)&emptyString), server.method());
-        }
-        else
-        {
-            server.sendHeader("Location", "http://" + WiFi.hostname() + "/");
-            server.send(302);
-            P("Handled Captive Portal\n");
-        }
-    });
     server.begin();
+    dnsServer.setErrorReplyCode(DNSReplyCode::Refused);
+    dnsServer.start(53, "*", local_IP);
 }
 
 void web_loop()

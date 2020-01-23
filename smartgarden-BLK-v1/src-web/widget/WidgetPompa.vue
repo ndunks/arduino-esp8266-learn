@@ -38,6 +38,7 @@ export default class WidgetPompa extends Vue {
   status: Status
 
   get statusPompa() {
+    ///@ts-ignore
     return status.pump ? 'Nyala' : 'Mati';
   }
 }

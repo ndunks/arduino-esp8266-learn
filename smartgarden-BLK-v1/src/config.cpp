@@ -13,6 +13,7 @@ void dump_config()
 {
     P("----Config DUMP----\n");
     P("Config Size %d ~ %d\n", sizeof(SmartGardenConfig), sizeof(config));
+    P("name: %s\n", config->name);
     P("Flag: %d\nWeb Password: %s\n", config->flag, config->password);
     P("maksimal_pompa_hidup: %lu\n", config->maksimal_pompa_hidup);
     P("maksimal_pompa_mati: %lu\n", config->maksimal_pompa_mati);
@@ -34,6 +35,29 @@ void dump_config()
 
 void config_default()
 {
+    // get chip id as device id, leave first byte, is zero
+    char device_id[7] = {};
+    String name("smart-");
+    uint32 num = system_get_chip_id();
+
+    sprintf(device_id,
+            "%02X%02X%02X",
+            (byte)(num >> 16),
+            (byte)(num >> 8),
+            (byte)(num >> 0));
+    name += device_id;
+
+    // Nulled all bytes in config
+    for (unsigned long i = 0; i < sizeof(SmartGardenConfig); i++)
+    {
+        EEPROM.write(i, 0);
+    }
+    EEPROM.commit();
+    // Make config is dirty, so it will comitted (saved to flash chip)
+    EEPROM.getDataPtr();
+    // Device name
+    memcpy(config->name, name.c_str(), name.length());
+
     // Default DHT sensor max heat
     config->temperature_max = (uint8_t)32;
     config->valve_delay_default = (uint8_t)5;
@@ -62,37 +86,24 @@ void config_default()
         memcpy(config->password, "admin", 6);
         P("Set default web password to \"%s\"\n", config->password);
         // make sure null terminated
-        config->password[8] = 0;
+        //config->password[8] = 0;
     }
     config->flag = FLAG_IS_BOOTED;
-    // Make config is dirty, so it will comitted
-    EEPROM.getDataPtr();
 }
 void firstboot()
 {
-    // Nulled all bytes in config
-    for (unsigned long i = 0; i < sizeof(SmartGardenConfig); i++)
-    {
-        EEPROM.write(i, 0);
-    }
-    EEPROM.commit();
 
     // Load default config
-    WiFi.persistent(true);
-    config_default();
-    String ssid("smart-");
-    ssid += device_id;
-
     P("\n--- FIRST BOOT ---\n");
-    P("Device ID: %s\n", device_id);
-    WiFi.hostname(ssid.c_str());
+    config_default();
+    WiFi.persistent(true);
 
     if (!WiFi.softAPConfig(local_IP, local_IP, IPAddress(255, 255, 255, 0)))
     {
         status("SoftAP IP Error");
         delay(1000);
     }
-    if (!WiFi.softAP(ssid))
+    if (!WiFi.softAP(config->name))
     {
         status("SoftAP SSID ERROR");
         delay(1000);
@@ -100,7 +111,9 @@ void firstboot()
     WiFi.enableSTA(false);
     WiFi.mode(WIFI_AP);
     WiFi.setAutoConnect(false);
-    ssid.clear();
+    WiFi.hostname(config->name);
+    // Save config
+    config_save();
 }
 
 void config_reset()
@@ -125,7 +138,7 @@ void config_reset()
         delay(200);
     }
     status("RESTARTING...");
-    delay(2000);
+    delay(1500);
     ESP.restart();
 }
 
@@ -145,14 +158,6 @@ bool config_save()
 void config_setup()
 {
 
-    // get chip id as device id, leave first byte, is zero
-    uint32 num = system_get_chip_id();
-    sprintf(device_id,
-            "%02X%02X%02X",
-            (byte)(num >> 16),
-            (byte)(num >> 8),
-            (byte)(num >> 0));
-
     // Setup EEPROM
     EEPROM.begin(sizeof(SmartGardenConfig));
     config = (SmartGardenConfig *)EEPROM.getDataPtr();
@@ -162,7 +167,6 @@ void config_setup()
         status("Firstbooting...");
         delay(1000);
         firstboot();
-        config_save();
         delay(1000);
     }
 
@@ -184,6 +188,7 @@ void config_setup()
             P("WiFi Fail %d\n", wifiStatus);
         }
     }
+
     dump_config();
 }
 

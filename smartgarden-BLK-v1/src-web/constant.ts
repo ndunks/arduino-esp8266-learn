@@ -1,0 +1,1 @@
+export const VALVE_COUNT = 7; // 6 penyiraman, 1 pengembunan

@@ -18,20 +18,26 @@ export interface ActionDialogObject {
 
 export type ActionDialog = ActionDialogObject | string
 
+export interface ConfigDetailRaw {
+}
+
 export interface ConfigRaw extends SensorsRaw {
-    heap: string
-    mode: string
     hostname: string
     autoconnect: string
-    status: string
     ssid: string
-    rssi: string
     ip: string
     gateway: string
     ap_ssid: string
     ap_ip: string
     ap_psk: string
+    // in booth config & status response //
+    heap: string
+    mode: string
+    status: string
+    rssi: string
     ap_clients: string
+    // Stored config
+    cfg: string
 }
 
 export type StatusRaw = Pick<ConfigRaw, 'heap' | 'mode' | 'status' | 'rssi' | 'ap_clients'> & SensorsRaw
@@ -97,6 +103,7 @@ export interface Config {
     ap_ip?: string
     ap_psk?: string
     ap_clients: number
+    cfg: SmartGardenConfig
 
 }
 
@@ -111,23 +118,46 @@ export interface Status extends Config, Sensors {
 }
 
 export interface SensorsRaw {
-    S0: string
-    S1: string
-    S2: string
-    S3: string
-    S4: string
-    S5: string
+    /** Sensor separated by space */
+    in: string
+    /** 8 bit valve & other output state */
+    out: string
     temp: string
     hum: string
 }
 
-export interface Sensors {
-    S0: number
-    S1: number
-    S2: number
-    S3: number
-    S4: number
-    S5: number
+export interface Sensors extends Pick<SensorsRaw, 'in' | 'out'> {
+    sensorTanah: number[]
+    valve: boolean[]
+    sprayer: boolean
+    pompa: boolean
     temp: number
     hum: number
 }
+
+export interface SmartGardenConfig {
+    // Boot status flag
+    flag: number
+    // Delay membaca sensor analog
+    sensor_delay: number
+    // Default valve delay in percent
+    humidity_minimal_default: number
+    // max temperatur to trigger sprayer in celcius
+    temperature_max: number
+    // Default valve delay in second
+    valve_delay_default: number
+    // Delay valve in second
+    valve_delay: number[]
+    // minimal kelembaban utk men trigger valve
+    humidity_minimal: number[]
+    // Maksimal pompa menyala (detik)
+    maksimal_pompa_hidup: number
+    // Maksimal pompa mati/istirahat (detik)
+    maksimal_pompa_mati: number
+    // Device name / hostname
+    name: string
+    // LCD Text when iddle
+    displayText: string
+    // Web Password
+    passwor: string
+};

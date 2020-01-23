@@ -1,8 +1,6 @@
 
 #include "header.h"
 
-char device_id[7] = {0};
-
 void setup()
 {
   Serial.begin(115200);

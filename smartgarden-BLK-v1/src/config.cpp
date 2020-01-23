@@ -55,8 +55,6 @@ void config_default()
         EEPROM.write(i, 0);
     }
     EEPROM.commit();
-    // Make config is dirty, so it will comitted (saved to flash chip)
-    EEPROM.getDataPtr();
     // Device name
     memcpy(config->name, name.c_str(), name.length());
 
@@ -148,9 +146,12 @@ void config_reset()
 
 bool config_save()
 {
+    // Make config is dirty, so it will comitted (saved to flash chip)
+    EEPROM.getDataPtr();
+
     if (EEPROM.commit())
     {
-        status("Config Saved");
+        status("Config Updated");
         return true;
     }
     else

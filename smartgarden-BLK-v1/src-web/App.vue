@@ -106,14 +106,13 @@ export default class App extends Vue {
 
   // Typing helper
   status: Status
+  login: boolean
+  _timer = 0
 
   logout() {
     Api.password = null
     this.$store.commit('login', false)
     this.$router.push('/')
-  }
-  mounted() {
-    setTimeout(() => this.statusChecker(), 3000)
   }
 
   @Watch('status.mode')
@@ -123,9 +122,19 @@ export default class App extends Vue {
     this.$store.dispatch('config')
   }
 
+  @Watch('login')
+  loginChanged(newMode, oldMode) {
+    console.log('Login changed');
+    if (this.login) {
+      this.statusChecker();
+    } else if (this.$data._timer) {
+      clearTimeout(this.$data._timer)
+    }
+  }
+
   statusChecker() {
     this.$store.dispatch("status").then(
-      () => setTimeout(() => this.statusChecker(), 1000)
+      () => this.$data._timer = setTimeout(() => this.statusChecker(), 1000)
     )
   }
 }

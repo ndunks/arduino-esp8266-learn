@@ -4,9 +4,35 @@
 #include "config.h"
 #include <base64.h>
 
+void handle_valve_patch(String &response, HTTPMethod method)
+{
+    int no = server.arg("no").toInt();
+    int delay = server.arg("delay").toInt();
+    int humidity = server.arg("humidity").toInt();
+    config->humidity_minimal[no] = static_cast<uint8>(humidity);
+    config->valve_delay[no] = static_cast<uint8>(delay);
+    if (no == SPRAYER_NO)
+    {
+        config->temperature_max = static_cast<uint8>(server.arg("temp").toInt());
+    }
+
+    if (config_save())
+    {
+        //send the current settings
+        handle_settings(response, method);
+    }
+    else
+    {
+        server.send(500);
+    }
+}
 void handle_valve(String &response, HTTPMethod method)
 {
-    if (server.args())
+    if (method == HTTPMethod::HTTP_POST)
+    {
+        handle_valve_patch(response, method);
+    }
+    else if (server.args())
     {
         int no = server.arg(0).toInt();
         if (no >= 0 && no < VALVE_COUNT)
@@ -24,14 +50,7 @@ void handle_valve(String &response, HTTPMethod method)
 }
 void handle_settings(String &response, HTTPMethod method)
 {
-    switch (method)
-    {
-    case HTTPMethod::HTTP_GET:
-        response = base64::encode((uint8_t *)config, sizeof(SmartGardenConfig), false);
-        break;
-    default:
-        break;
-    }
+    response = base64::encode((uint8_t *)config, sizeof(SmartGardenConfig), false);
 }
 void handle_sensor(String &response, HTTPMethod method)
 {
@@ -208,9 +227,9 @@ void handle_wifi(String &response, HTTPMethod method)
     {
         int id = server.arg("connect").toInt();
         String pass = server.arg("pass");
-        wl_status_t state = WiFi.begin(WiFi.SSID(id).c_str(), pass.c_str(), WiFi.channel(id));
+        WiFi.begin(WiFi.SSID(id).c_str(), pass.c_str(), WiFi.channel(id));
         WiFi.setAutoConnect(true);
-        response = state;
+        ESP.restart();
     }
     else if (server.hasArg("disconnect"))
     {

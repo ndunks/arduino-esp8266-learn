@@ -11,10 +11,6 @@ const mutations: {
     },
     login(state, login: boolean) {
         state.login = login
-        // loadsettings if login after boot
-        if (state.bootComplete && login) {
-            this.dispatch('settings')
-        }
     },
     bootComplete(state) {
         state.bootComplete = true

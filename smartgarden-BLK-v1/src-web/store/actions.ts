@@ -1,6 +1,7 @@
 import { ActionTree } from 'vuex'
 import Api from '@/api'
 import Axios, { AxiosInstance } from 'axios'
+import { urlEncode } from '@/helper';
 let ApiNoLoading: AxiosInstance;
 
 const actions: ActionTree<State, any> = {
@@ -44,6 +45,12 @@ const actions: ActionTree<State, any> = {
         //send the request
         return Api.get(`valve?on=${valveNo}`).then(
             response => context.commit('status', response.data)
+        )
+    },
+    valveSetting(context, params) {
+        //send the request
+        return Api.post(`valve?${urlEncode(params)}`).then(
+            response => context.commit('settings', response.data)
         )
     }
 

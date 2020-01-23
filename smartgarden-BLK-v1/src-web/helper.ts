@@ -1,5 +1,11 @@
 import { ConfigRaw, Status, WifiMode, StatusRaw, WifiStatus, SensorsRaw, Settings } from './interfaces';
 import { VALVE_COUNT, SPRAYER_NO } from './constant';
+
+export function urlEncode(params: any) {
+    return Object.keys(params).map(
+        f => `${f}=${escape(params[f])}`
+    ).join('&')
+}
 /**
  * Parse key-value separate by tab
  */

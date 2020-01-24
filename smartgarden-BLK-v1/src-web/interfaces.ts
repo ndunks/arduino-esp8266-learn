@@ -157,14 +157,12 @@ export interface Settings {
     flag: number
     // Delay membaca sensor analog
     sensor_delay: number
-    // Default valve delay in percent
-    humidity_minimal_default: number
     // max temperatur to trigger sprayer in celcius
     temperature_max: number
-    // Default valve delay in second
-    valve_delay_default: number
     // Delay valve in second
     valve_delay: number[]
+    // Delay space before next check
+    valve_gap: number[]
     // minimal kelembaban utk men trigger valve
     humidity_minimal: number[]
     // Maksimal pompa menyala (detik)

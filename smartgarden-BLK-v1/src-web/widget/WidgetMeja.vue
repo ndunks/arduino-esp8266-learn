@@ -10,32 +10,45 @@
         </template>
         <v-form @submit.prevent="submit" ref="form">
           <v-card>
-            <v-card-title>Pengaturan Meja {{ no }}</v-card-title>
+            <v-card-title>Pengaturan Meja {{ no + 1 }}</v-card-title>
             <v-card-text>
-              <v-row>
-                <v-col>
-                  <v-text-field
-                    label="Minimal Kelembaban"
-                    type="number"
-                    v-model="humidity"
-                  >
-                    <template #append>
-                      %
-                    </template>
-                  </v-text-field>
-                </v-col>
-                <v-col>
-                  <v-text-field
-                    label="Lama Penyiraman"
-                    type="number"
-                    v-model="delay"
-                  >
-                    <template #append>
-                      Detik
-                    </template>
-                  </v-text-field>
-                </v-col>
-              </v-row>
+              <v-text-field
+                label="Minimal Kelembaban"
+                type="number"
+                v-model="edit.humidity"
+                filled
+                persistent-hint
+                hint="Jika kelembaban kurang dari nilai diatas, maka penyiraman akan menyala otomatis"
+              >
+                <template #append>
+                  %
+                </template>
+              </v-text-field>
+
+              <v-text-field
+                label="Lama Penyiraman"
+                type="number"
+                v-model="edit.delay"
+                filled
+                persistent-hint
+                hint="Lama waktu dalam satu sesi penyiraman"
+              >
+                <template #append>
+                  Detik
+                </template>
+              </v-text-field>
+              <v-text-field
+                label="Delay Penyiraman"
+                type="number"
+                v-model="edit.gap"
+                filled
+                persistent-hint
+                hint="Delay spasi penyiraman sebelum melakukan penyiraman selanjutnya"
+              >
+                <template #append>
+                  Detik
+                </template>
+              </v-text-field>
             </v-card-text>
             <v-card-actions>
               <v-btn color="error" text @click="$refs.dialog.isActive = false">
@@ -85,7 +98,7 @@
           block
           rounded
         >
-          Nyalakan
+          Siram
         </v-btn>
       </v-list-item-content>
     </v-list-item>
@@ -108,8 +121,12 @@ export default class WidgetMeja extends Vue {
   // Typing helper
   status: Status
   settings: Settings
-  humidity = 0
-  delay = 0
+  edit = {
+    no: 0,
+    humidity: 0,
+    delay: 0,
+    gap: 0
+  }
   _required = v => !!v || 'Harus di isi.'
   $refs: {
     form: Vue & any
@@ -117,8 +134,10 @@ export default class WidgetMeja extends Vue {
   }
 
   mounted() {
-    this.humidity = this.settings.humidity_minimal[this.no]
-    this.delay = this.settings.valve_delay[this.no]
+    this.edit.no = this.no
+    this.edit.humidity = this.settings.humidity_minimal[this.no]
+    this.edit.delay = this.settings.valve_delay[this.no]
+    this.edit.gap = this.settings.valve_gap[this.no]
   }
 
   get statusText() {
@@ -133,11 +152,7 @@ export default class WidgetMeja extends Vue {
     if (!this.$refs.form.validate()) {
       return
     }
-    this.$store.dispatch('valveSetting', {
-      no: this.no,
-      humidity: this.humidity,
-      delay: this.delay
-    }).then(
+    this.$store.dispatch('valveSetting', this.edit).then(
       () => this.$refs.dialog.isActive = false
     )
   }

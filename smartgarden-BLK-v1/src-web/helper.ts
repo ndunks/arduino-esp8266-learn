@@ -101,16 +101,15 @@ export function parseSmartGardenConfig(raw: string) {
     // uint8
     cfg.sensor_delay = buffView[offset++]
     // uint8
-    cfg.humidity_minimal_default = buffView[offset++]
-    // uint8
     cfg.temperature_max = buffView[offset++]
-    // uint8
-    cfg.valve_delay_default = buffView[offset++]
     // uint8 * VALVE_COUNT
     cfg.valve_delay = Array.prototype.slice.call(buffView, offset, offset + VALVE_COUNT)
     offset += VALVE_COUNT
     // uint8 * VALVE_COUNT
     cfg.humidity_minimal = Array.prototype.slice.call(buffView, offset, offset + VALVE_COUNT)
+    offset += VALVE_COUNT
+    // uint8 * VALVE_COUNT
+    cfg.valve_gap = Array.prototype.slice.call(buffView, offset, offset + VALVE_COUNT)
     offset += VALVE_COUNT
     // have one gap in struct??
     offset++;

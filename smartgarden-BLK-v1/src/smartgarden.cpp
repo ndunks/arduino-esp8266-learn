@@ -63,6 +63,7 @@ void pompaChecker()
             P("Pompa nyala selama %d\n", static_cast<uint8_t>((now - pompa_nyala_sejak) / 1000L));
             pompa_mati_sampai = now + config->maksimal_pompa_mati * 1000UL;
             SERIAL_REG[PinSerial::Pompa] = LOW;
+            SERIAL_REG[VALVE_START + VALVE_CURRENT] = LOW;
             valve_next_check += config->maksimal_pompa_mati * 1000UL;
             dumpSerial(PinSerial::Pompa, PinSerial::Pompa);
         }
@@ -295,6 +296,10 @@ void smartgarden_loop()
             P("POMPA ON\n");
             // SERIAL_REG[PinSerial::Pompa] = ON;
             pompa_nyala_sejak = now;
+            if(VALVE_CURRENT >= 0){
+                // turn back on
+                SERIAL_REG[VALVE_START + VALVE_CURRENT] = HIGH;
+            }
             pompaChecker();
             smartgarden_apply();
         }

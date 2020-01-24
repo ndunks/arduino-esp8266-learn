@@ -14,41 +14,56 @@
               >Pengaturan Suhu &amp; Kelembaban Ruangan</v-card-title
             >
             <v-card-text>
-              <v-row>
-                <v-col>
-                  <v-text-field
-                    label="Maksimal Suhu"
-                    type="number"
-                    v-model="edit.temp"
-                  >
-                    <template #append>
-                      C
-                    </template>
-                  </v-text-field>
-                </v-col>
-                <v-col>
-                  <v-text-field
-                    label="Minimal Kelembaban"
-                    type="number"
-                    v-model="edit.humidity"
-                  >
-                    <template #append>
-                      %
-                    </template>
-                  </v-text-field>
-                </v-col>
-                <v-col>
-                  <v-text-field
-                    label="Lama Pengembunan"
-                    type="number"
-                    v-model="edit.delay"
-                  >
-                    <template #append>
-                      Detik
-                    </template>
-                  </v-text-field>
-                </v-col>
-              </v-row>
+              <v-text-field
+                label="Maksimal Suhu"
+                type="number"
+                v-model="edit.temp"
+                filled
+                persistent-hint
+                hint="Pengembunan secara otomatis ketika suhu mencapai batas yang ditentukan"
+              >
+                <template #append>
+                  &deg;C
+                </template>
+              </v-text-field>
+
+              <v-text-field
+                label="Minimal Kelembaban"
+                type="number"
+                v-model="edit.humidity"
+                filled
+                persistent-hint
+                hint="Pengembunan secara otomatis ketika kelembaban kurang dari batas yang ditentukan"
+              >
+                <template #append>
+                  %
+                </template>
+              </v-text-field>
+
+              <v-text-field
+                label="Lama Pengembunan"
+                type="number"
+                v-model="edit.delay"
+                filled
+                persistent-hint
+                hint="Lama waktu dalam satu sesi pengembunan"
+              >
+                <template #append>
+                  Detik
+                </template>
+              </v-text-field>
+              <v-text-field
+                label="Delay Pengembunan"
+                type="number"
+                v-model="edit.gap"
+                filled
+                persistent-hint
+                hint="Delay spasi pengembunan sebelum melakukan pengembunan selanjutnya"
+              >
+                <template #append>
+                  Detik
+                </template>
+              </v-text-field>
             </v-card-text>
             <v-card-actions>
               <v-btn color="error" text @click="$refs.dialog.isActive = false">
@@ -105,7 +120,8 @@ export default class WidgetRuangan extends Vue {
     no: SPRAYER_NO,
     temp: 0,
     humidity: 0,
-    delay: 0
+    delay: 0,
+    gap: 0
   }
 
   // Typing helper
@@ -116,11 +132,14 @@ export default class WidgetRuangan extends Vue {
     form: Vue & any
     dialog: Vue & any
   }
+
   mounted() {
     this.edit.humidity = this.settings.humidity_minimal[this.no]
     this.edit.delay = this.settings.valve_delay[this.no]
+    this.edit.gap = this.settings.valve_gap[this.no]
     this.edit.temp = this.settings.temperature_max
   }
+
   get statusText() {
     return 'Sprayer: ' + (this.status.sprayer ? 'On' : 'Off')
   }

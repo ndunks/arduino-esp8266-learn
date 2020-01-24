@@ -11,16 +11,14 @@ struct SmartGardenConfig
     uint8 flag;
     // Delay membaca sensor analog
     uint8 sensor_delay;
-    // Default valve delay in percent
-    uint8 humidity_minimal_default;
     // max temperatur to trigger sprayer in celcius
     uint8 temperature_max;
-    // Default valve delay in second
-    uint8 valve_delay_default;
     // Delay valve in second
     uint8 valve_delay[VALVE_COUNT];
     // minimal kelembaban utk men trigger valve
     uint8 humidity_minimal[VALVE_COUNT];
+    // Delay space before next check
+    uint8 valve_gap[VALVE_COUNT];
     // Maksimal pompa menyala (detik)
     unsigned long maksimal_pompa_hidup;
     // Maksimal pompa mati/istirahat (detik)

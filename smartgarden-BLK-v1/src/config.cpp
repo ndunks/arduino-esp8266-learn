@@ -17,18 +17,20 @@ void dump_config()
     P("Flag: %d\nWeb Password: %s\n", config->flag, config->password);
     P("maksimal_pompa_hidup: %lu\n", config->maksimal_pompa_hidup);
     P("maksimal_pompa_mati: %lu\n", config->maksimal_pompa_mati);
-    P("valve_delay_default: %d\n", config->valve_delay_default);
-    P("humidity_minimal_default: %d\n", config->humidity_minimal_default);
     P("sensor_delay: %d\n", config->sensor_delay);
     P("temperature_max: %d\n", config->temperature_max);
     P("displayText: %s\n", config->displayText);
     for (int no = 0; no < VALVE_COUNT; no++)
     {
-        P("valve_delay[%d]: %d\n", no, config->valve_delay_default);
+        P("valve_delay[%d]: %d\n", no, config->valve_delay[no]);
     }
     for (int no = 0; no < VALVE_COUNT; no++)
     {
-        P("humidity_minimal[%d]: %d\n", no, config->humidity_minimal_default);
+        P("valve_gap[%d]: %d\n", no, config->valve_gap[no]);
+    }
+    for (int no = 0; no < VALVE_COUNT; no++)
+    {
+        P("humidity_minimal[%d]: %d\n", no, config->humidity_minimal[no]);
     }
     P("Hostname: %s\nSSID: %s\nConnected: %d\n", WiFi.hostname().c_str(), WiFi.SSID().c_str(), WiFi.isConnected());
     P("MacAddr: %s\n", WiFi.macAddress().c_str());
@@ -59,9 +61,7 @@ void config_default()
     memcpy(config->name, name.c_str(), name.length());
 
     // Default DHT sensor max heat
-    config->temperature_max = (uint8_t)32;
-    config->valve_delay_default = (uint8_t)5;
-    config->humidity_minimal_default = (uint8_t)50;
+    config->temperature_max = (uint8_t)27;
     config->sensor_delay = (uint8_t)5;
     memcpy(config->displayText, "    BLKP KLAMPOK", 17);
 
@@ -69,17 +69,18 @@ void config_default()
     config->maksimal_pompa_hidup = 30;
     config->maksimal_pompa_mati = 10;
 #else
-    smartgarden_config->maksimal_pompa_hidup = 60 * 60; // 1 jam
-    smartgarden_config->maksimal_pompa_mati = 10 * 60;  // 10 menit
+    smartgarden_config->maksimal_pompa_hidup = 60 * 30; // 30 menit
+    smartgarden_config->maksimal_pompa_mati = 60;  // 1 menit
 #endif
     for (int no = 0; no < VALVE_COUNT; no++)
     {
-        config->valve_delay[no] = config->valve_delay_default;
-        config->humidity_minimal[no] = config->humidity_minimal_default;
+        config->valve_delay[no] = 5U;
+        config->valve_gap[no] = 5U;
+        config->humidity_minimal[no] = 70U;
     }
 
     // spesial untuk humdity dari sensor DHT22
-    config->humidity_minimal[PinSerial::Sprayer - PinSerial::Valve_0] = 30;
+    config->humidity_minimal[PinSerial::Sprayer - PinSerial::Valve_0] = 50;
     if (config->password[0] == 0 || config->password[0] == 0xff)
     {
         // Default config

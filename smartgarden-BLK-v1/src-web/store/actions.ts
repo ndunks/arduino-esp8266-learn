@@ -2,6 +2,7 @@ import { ActionTree } from 'vuex'
 import Api from '@/api'
 import Axios, { AxiosInstance } from 'axios'
 import { urlEncode } from '@/helper';
+import { Popup } from '@/interfaces';
 let ApiNoLoading: AxiosInstance;
 
 const actions: ActionTree<State, any> = {
@@ -16,14 +17,34 @@ const actions: ActionTree<State, any> = {
                     return this.dispatch('settings')
                 }
             ).catch(
-                e => Api.password = null
+                e => {
+                    console.log(e)
+                    Api.password = null
+                }
             )
         }
         // Load full status
-        await Api.get("config").then(
-            response => context.commit('status', response.data)
-        )
-        context.commit('bootComplete')
+        let tryCount = 0;
+        let error = null
+        do {
+            error = null
+            tryCount++
+            await context.dispatch('config').catch(e => error = e)
+            if (error) {
+                console.log('Try', tryCount, error, error.data, error.response);
+            }
+            if (tryCount > 5) {
+                console.warn("Tired retrying..");
+                context.commit('popup', {
+                    message: 'Gagal terhubung ke perangkat',
+                    color: 'error'
+                } as Popup)
+                break;
+            }
+        } while (error)
+        if (!error) {
+            context.commit('bootComplete')
+        }
     },
     status(context) {
         // Dont update loading state

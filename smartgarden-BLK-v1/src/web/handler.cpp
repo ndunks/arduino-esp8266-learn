@@ -16,21 +16,21 @@ bool Handler::canHandle(HTTPMethod method, String path)
 
 bool Handler::handle(ESP8266WebServer &server, HTTPMethod method, String path)
 {
-    P("Handler: %s\n", path.c_str());
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.sendHeader("Cache-Control", "no-cache");
+    //P("Handler: %s\n", path.c_str());
+    server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
+    server.sendHeader(F("Cache-Control"), F("no-cache"));
     if (method == HTTP_OPTIONS)
     {
-        server.sendHeader("Access-Control-Allow-Methods", "GET,POST");
-        server.sendHeader("Access-Control-Allow-Headers", "*");
+        server.sendHeader(F("Access-Control-Allow-Methods"), F("GET,POST"));
+        server.sendHeader(F("Access-Control-Allow-Headers"), F("*"));
         // 60 * 60 * 60 * 30 = 6480000
-        server.sendHeader("Access-Control-Max-Age", "6480000");
+        server.sendHeader(F("Access-Control-Max-Age"), F("6480000"));
         server.send(200, "text/plain");
         return true;
     }
     String response;
     String subPath = path.substring(prefix.length());
-    P("Api Check: %s\n", subPath.c_str());
+    //P("Api Check: %s\n", subPath.c_str());
     Controller *matched = routes;
 
     while (matched < routeEnd)
@@ -48,12 +48,9 @@ bool Handler::handle(ESP8266WebServer &server, HTTPMethod method, String path)
                 server.send(200, "text/plain", response);
             } // no response mean handled directly
             response.clear();
-            yield();
             return true;
         }
         matched++;
     }
-
-    P("No Api handle it\n");
     return false;
 }

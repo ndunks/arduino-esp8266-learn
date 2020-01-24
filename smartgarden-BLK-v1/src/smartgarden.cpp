@@ -50,27 +50,32 @@ void dumpSerial(int start = 0, int end = 15)
 }
 void pompaChecker()
 {
-    uint32_t now = millis();
     // Jika ada salah satu valve yg on, maka pompa juga harus on
     if (VALVE_CURRENT >= 0)
     {
-        if (!SERIAL_REG[PinSerial::Pompa])
+        if (SERIAL_REG[PinSerial::Pompa] == HIGH)
+        {
+            uint lamaPompaNyala = static_cast<uint>((millis() - pompa_nyala_sejak) / 1000);
+            if (lamaPompaNyala >= config->maksimal_pompa_hidup)
+            {
+                P("Pompa auto off %i >= %i\n", lamaPompaNyala, config->maksimal_pompa_hidup);
+                //valveForceOn(-1, config->maksimal_pompa_mati);
+                pompa_mati_sampai = millis() + config->maksimal_pompa_mati * 1000UL;
+                SERIAL_REG[PinSerial::Pompa] = LOW;
+                SERIAL_REG[VALVE_START + VALVE_CURRENT] = LOW;
+                VALVE_CURRENT = -1;
+                valve_next_check += config->maksimal_pompa_mati * 1000UL;
+            }
+        }
+        else // Nyalakan pompa sekarang
         {
             SERIAL_REG[PinSerial::Pompa] = HIGH;
-            pompa_nyala_sejak = now;
-        }
-        else if (((now - pompa_nyala_sejak) / 1000UL) > config->maksimal_pompa_hidup)
-        {
-            P("Pompa nyala selama %d\n", static_cast<uint8_t>((now - pompa_nyala_sejak) / 1000L));
-            pompa_mati_sampai = now + config->maksimal_pompa_mati * 1000UL;
-            SERIAL_REG[PinSerial::Pompa] = LOW;
-            SERIAL_REG[VALVE_START + VALVE_CURRENT] = LOW;
-            valve_next_check += config->maksimal_pompa_mati * 1000UL;
-            dumpSerial(PinSerial::Pompa, PinSerial::Pompa);
+            pompa_nyala_sejak = millis();
         }
     }
-    else if (SERIAL_REG[PinSerial::Pompa])
+    else if (SERIAL_REG[PinSerial::Pompa] == HIGH)
     {
+        // all off
         SERIAL_REG[PinSerial::Pompa] = LOW;
         pompa_nyala_sejak = 0;
         status(config->displayText);
@@ -123,7 +128,6 @@ bool valvePush(int no, bool clearOther = false)
     int i = -1;
     if (clearOther)
     {
-        P("valvePush Clear other %d\n", no);
         while (VALVE_STACK[++i] >= 0 && i <= VALVE_COUNT)
         {
             VALVE_STACK[i] = -1;
@@ -136,13 +140,11 @@ bool valvePush(int no, bool clearOther = false)
         {
             if (VALVE_STACK[i] == no)
             {
-                P("%s %s\n", RED("valvePush Exists"), RED(no));
                 return false;
             }
         }
         if (i == VALVE_COUNT)
         {
-
             Serial.println("[!] Valve stack is full");
             return false;
         }
@@ -183,8 +185,17 @@ void valveSwitcher(bool force = false)
     {
         SERIAL_REG[VALVE_START + VALVE_CURRENT] = LOW;
         P("Turn Off %d\n", VALVE_CURRENT);
-        valve_next_check = millis() + config->valve_gap[VALVE_CURRENT] * 1000UL;
-        VALVE_CURRENT = -1;
+        if (VALVE_CURRENT == VALVE_STACK[0])
+        {
+            valve_next_check = millis() + config->valve_gap[VALVE_CURRENT] * 1000UL;
+            VALVE_CURRENT = -1;
+            return;
+        }
+        else
+        {
+            valve_next_check = 0;
+            VALVE_CURRENT = -1;
+        }
     }
     // Stillhave in stack?
     if (VALVE_STACK[0] >= 0)
@@ -235,27 +246,33 @@ void valveChecker()
 
     if (TEMPERATURE >= config->temperature_max)
     {
-        P("Suhu panas (%s >= %d)\n", YELLOW(TEMPERATURE), config->temperature_max);
+        //P("Suhu panas (%s >= %d)\n", YELLOW(TEMPERATURE), config->temperature_max);
         valvePush(SPRAYER_NO);
     }
     else if (HUMIDITY < config->humidity_minimal[SPRAYER_NO])
     {
-        P("Kelembaban kurang (%s < %d)\n", YELLOW(HUMIDITY), config->humidity_minimal[SPRAYER_NO]);
+        //P("Kelembaban kurang (%s < %d)\n", YELLOW(HUMIDITY), config->humidity_minimal[SPRAYER_NO]);
         valvePush(SPRAYER_NO);
     }
 }
 
-void valveForceOn(int no)
+void valveForceOn(int8 no, int forceOffSeconds)
 {
     valvePush(no, true);
     valveSwitcher(true);
-    pompaChecker();
-    smartgarden_apply();
-    if (pompa_mati_sampai > 0)
+    if (no < 0)
+    {
+        // Force All Off
+        pompa_mati_sampai = millis() + forceOffSeconds * 1000UL;
+        valve_next_check = pompa_mati_sampai;
+    }
+    else if (VALVE_CURRENT >= 0 && pompa_mati_sampai > 0)
     {
         // force on
-        pompa_mati_sampai = millis() - 1000;
+        pompa_mati_sampai = 0;
+        pompaChecker();
     }
+    smartgarden_apply();
 }
 
 void handle_ir_remote()
@@ -313,9 +330,10 @@ void smartgarden_loop()
         }
         else
         {
-            if (((pompa_mati_sampai - now) / 1000) >= 0)
+            uint remaining = (pompa_mati_sampai - now) / 1000;
+            if (remaining >= 0)
             {
-                status("Auto Off %5d detik", static_cast<uint8_t>((pompa_mati_sampai - now) / 1000) + 1);
+                status("Auto Off %5d detik", remaining + 1);
             }
         }
     }

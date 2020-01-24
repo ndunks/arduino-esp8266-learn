@@ -23,6 +23,6 @@ extern uint32_t pompa_mati_sampai;
 // Setup pin and start ticker
 void smartgarden_setup();
 void smartgarden_loop();
-void valveForceOn(int no);
+void valveForceOn(int8 no, int forceOffSeconds = 0);
 // Apply REG to Serial Pararel Chained IC 595
 void smartgarden_apply();

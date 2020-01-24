@@ -71,6 +71,47 @@
         <v-list-item-subtitle> {{ status.pompa_off }} </v-list-item-subtitle>
       </v-list-item-content>
     </v-list-item>
+    <v-card-actions>
+      <v-dialog max-width="400" ref="dialogMatikan">
+        <template #activator="{on}">
+          <v-btn v-on="on" text outlined block color="warning">
+            Matikan Semua
+          </v-btn>
+        </template>
+        <v-form @submit.prevent="submitMatikan">
+          <v-card>
+            <v-card-title>Matikan Semua</v-card-title>
+            <v-card-text>
+              <v-text-field
+                label="Matikan selama"
+                type="number"
+                v-model="lamaMati"
+                filled
+                persistent-hint
+                hint="Matikan pompa dan semua penyiraman selama waktu yang ditentukan"
+              >
+                <template #append>
+                  Detik
+                </template>
+              </v-text-field>
+            </v-card-text>
+            <v-card-actions>
+              <v-btn
+                color="error"
+                text
+                @click="$refs.dialogMatikan.isActive = false"
+              >
+                Batal
+              </v-btn>
+              <v-spacer />
+              <v-btn color="success" text type="submit">
+                Matikan Sekarang
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-form>
+      </v-dialog>
+    </v-card-actions>
   </v-card>
 </template>
 <script lang="ts">
@@ -88,6 +129,7 @@ export default class WidgetPompa extends Vue {
     maxon: 0,
     maxoff: 0
   }
+  lamaMati = 20
   // Typing helper
   status: Status
   settings: Settings
@@ -95,6 +137,7 @@ export default class WidgetPompa extends Vue {
   $refs: {
     form: Vue & any
     dialog: Vue & any
+    dialogMatikan: Vue & any
   }
 
   mounted() {
@@ -124,6 +167,11 @@ export default class WidgetPompa extends Vue {
 
     this.$store.dispatch('pumpSetting', this.edit).then(
       () => this.$refs.dialog.isActive = false
+    )
+  }
+  submitMatikan() {
+    this.$store.dispatch('valveAllOff', this.lamaMati).then(
+      () => this.$refs.dialogMatikan.isActive = false
     )
   }
 }

@@ -11,12 +11,12 @@ static const PROGMEM char *const PinSerialNames[] = {
     "Unused_S05",
     "Unused_S06",
     "Unused_S07",
-    "Valve_0",
-    "Valve_1",
-    "Valve_2",
-    "Valve_3",
-    "Valve_4",
-    "Valve_5",
+    "Meja 1",
+    "Meja 2",
+    "Meja 3",
+    "Meja 4",
+    "Meja 5",
+    "Meja 6",
     "Sprayer",
     "Unused_S15",
     0};
@@ -30,7 +30,8 @@ static const PROGMEM char *const PinSerialNames[] = {
 #define SENSOR_SUHU_PIN D3
 #define SENSOR_IR D4
 
-enum PinSerial : uint8_t {
+enum PinSerial : uint8_t
+{
     // Pin of first IC 74HC595
     /* 0 */ IC4051_SA,
     /* 1 */ IC4051_SB,
@@ -53,7 +54,8 @@ enum PinSerial : uint8_t {
 };
 
 // Analog/Digital (de)multiplexer CD4051
-enum PinAnalog : uint8_t {
+enum PinAnalog : uint8_t
+{
     /* 0 */ SensorTanah_0 = 0,
     /* 1 */ SensorTanah_1,
     /* 2 */ SensorTanah_2,
@@ -63,7 +65,6 @@ enum PinAnalog : uint8_t {
     /* 6 */ Unused_6,
     /* 7 */ Unused_7,
 };
-
 
 #define COLOR_BLACK 30
 #define COLOR_RED 31

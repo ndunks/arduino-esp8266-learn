@@ -49,8 +49,15 @@ void handle_valve(String &response, HTTPMethod method)
     }
     else if (server.args())
     {
-        int no = server.arg(0).toInt();
-        if (no >= 0 && no < VALVE_COUNT)
+        int no = server.arg("no").toInt();
+        if (no < 0)
+        {
+            P("WEB ON ALL OFF\n");
+            valveForceOn(no, server.arg("off").toInt());
+            // Send current sensor state
+            handle_sensor(response, method);
+        }
+        else if (no < VALVE_COUNT)
         {
             P("WEB ON %d\n", no);
             valveForceOn(no);
@@ -115,7 +122,14 @@ void handle_sensor(String &response, HTTPMethod method)
     else
     {
         response += "pompa_off\t";
-        response += (pompa_mati_sampai - millis()) / 1000 + 1;
+        if (pompa_mati_sampai > 0)
+        {
+            response += (pompa_mati_sampai - millis()) / 1000 + 1;
+        }
+        else
+        {
+            response += 0;
+        }
         response += '\n';
     }
 }

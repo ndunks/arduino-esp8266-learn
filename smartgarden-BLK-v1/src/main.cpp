@@ -1,4 +1,3 @@
-
 #include "header.h"
 
 void setup()
@@ -17,22 +16,12 @@ void setup()
   ir_remote_setup();
 }
 
-/* void waitSerialInput(void callback(void))
-{
-  if (Serial.available())
-  {
-    while (Serial.available())
-    {
-      Serial.read();
-    }
-    callback();
-  }
-} */
+
 void loop()
 {
-  //waitSerialInput(smartgarden_loop);
   ir_remote_loop();
   web_loop();
   smartgarden_loop();
   display_loop();
+  delay(100);
 }

@@ -66,23 +66,24 @@ const actions: ActionTree<State, any> = {
         )
     },
     valveOn(context, valveNo) {
-        //send the request
-        return Api.get(`valve?on=${valveNo}`).then(
+        return Api.get('valve', { params: { no: valveNo } }).then(
             response => context.commit('status', response.data)
         )
     },
     valveSetting(context, params) {
-        //send the request
-        return Api.post(`valve?${urlEncode(params)}`).then(
+        return Api.post('valve', null, { params }).then(
             response => context.commit('settings', response.data)
         )
     },
     pumpSetting(context, params) {
-        //send the request
-        return Api.post(`pump?${urlEncode(params)}`).then(
+        return Api.post('pump', null, { params }).then(
             response => context.commit('settings', response.data)
         )
-    }
-
+    },
+    valveAllOff(context, lamaMati) {
+        return Api.get('valve', { params: { no: -1, off: lamaMati } }).then(
+            response => context.commit('status', response.data)
+        )
+    },
 }
 export default actions;

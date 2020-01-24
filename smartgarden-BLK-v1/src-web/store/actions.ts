@@ -1,13 +1,12 @@
 import { ActionTree } from 'vuex'
-import Api from '@/api'
+import Api, { ApiNoLoading } from '@/api'
 import Axios, { AxiosInstance, AxiosError } from 'axios'
 import { urlEncode } from '@/helper';
 import { Popup } from '@/interfaces';
-let ApiNoLoading: AxiosInstance;
+
 
 const actions: ActionTree<State, any> = {
     async boot(context) {
-        ApiNoLoading = Axios.create(Api.defaults);
         // Validating password
         if (Api.password) {
             await this.dispatch('settings').then(

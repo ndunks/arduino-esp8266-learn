@@ -40,7 +40,7 @@ const routes = [
       icon: 'wifi',
     }
   },
-  /*   {
+    {
       path: '/setting',
       component: Settings,
       meta: {
@@ -48,7 +48,7 @@ const routes = [
         label: "Pengaturan",
         icon: 'settings',
       }
-    }, */
+    },
   {
     path: '/about',
     component: About,

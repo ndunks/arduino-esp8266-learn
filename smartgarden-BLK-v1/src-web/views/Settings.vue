@@ -2,45 +2,156 @@
   <v-container fluid>
     <v-row>
       <v-col>
-        <widget-ruangan />
+        <v-form lazy-validation ref="password" @submit.prevent="submitPassword">
+          <v-card>
+            <v-card-title>Ubah Katasandi</v-card-title>
+            <v-card-text>
+              <v-text-field
+                label="Katasandi Saat ini"
+                v-model="password.current"
+                :rules="[v => !!v || 'Harus diisi']"
+                type="password"
+              />
+              <v-text-field
+                label="Katasandi Baru"
+                v-model="password.new"
+                :rules="[v => !!v || 'Harus diisi']"
+                type="password"
+              />
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer />
+              <v-btn rounded color="success" type="submit">
+                Simpan
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-form>
       </v-col>
       <v-col>
-        <widget-pompa />
+        <v-card>
+          <v-card-title>Nyalakan Ulang Perangkat</v-card-title>
+          <v-list-item>
+            <v-btn color="warning" block rounded text outlined @click="restart">
+              Nyalakan Ulang
+            </v-btn>
+          </v-list-item>
+          <v-list-item>
+            <v-btn
+              color="error"
+              block
+              rounded
+              text
+              outlined
+              @click="restartAndReset"
+            >
+              Hapus Data
+            </v-btn>
+          </v-list-item>
+        </v-card>
       </v-col>
     </v-row>
-    <v-row>
-      <v-col>
-        <widget-meja :no="0" />
-      </v-col>
-      <v-col>
-        <widget-meja :no="1" />
-      </v-col>
-      <v-col>
-        <widget-meja :no="2" />
-      </v-col>
-      <v-col>
-        <widget-meja :no="3" />
-      </v-col>
-      <v-col>
-        <widget-meja :no="4" />
-      </v-col>
-      <v-col>
-        <widget-meja :no="5" />
-      </v-col>
-    </v-row>
+    <DialogConfirm
+      :message="dialogMessage"
+      :title="dialogTitle"
+      v-model="dialogActions"
+    />
   </v-container>
 </template>
 <script lang="ts">
 import Vue from 'vue'
 import Component from 'vue-class-component';
-import WidgetMeja from "@/widget/WidgetMeja.vue";
-import WidgetRuangan from "@/widget/WidgetRuangan.vue";
-import WidgetPompa from "@/widget/WidgetPompa.vue";
+import { mapState } from 'vuex';
+import { Settings, Popup, ActionDialog } from '@/interfaces';
+import Api from '@/api';
+import DialogConfirm from "@/dialog/DialogConfirm.vue";
 
 @Component({
-  components: { WidgetMeja, WidgetRuangan, WidgetPompa }
+  computed: mapState(['settings']),
+  components: { DialogConfirm }
 })
 export default class Dashboard extends Vue {
+  password = {
+    current: '',
+    new: ''
+  }
+  dialogMessage: string = null
+  dialogTitle: string = null
+  dialogActions: ActionDialog[] = null
 
+  settings: Settings
+  $refs: {
+    password: Vue & any
+  }
+
+  submitPassword() {
+    if (!this.$refs.password.validate()) return
+
+    if (this.settings.password != this.password.current) {
+      return this.$store.commit('popup', {
+        message: 'Katasandi saat ini salah',
+        color: 'warning'
+      } as Popup)
+    }
+    Api.get('set-password', {
+      params: {
+        password: this.password.new
+      }
+    }).then(
+      res => {
+        this.$store.commit('popup', {
+          message: res.data,
+          color: res.data.indexOf('OK') >= 0 ? 'success' : 'warning'
+        } as Popup)
+        setTimeout(() => location.reload(), 3000)
+      }
+    )
+  }
+  restart() {
+    this.dialogTitle = "Nyalakan Ulang"
+    this.dialogMessage = "Nyalakan ulang perangkat?";
+    this.dialogActions = [
+      {
+        label: 'Batal',
+        color: 'success'
+      },
+      'spacer',
+      {
+        label: "Ya",
+        color: "error",
+        action() {
+          Api.get('reboot').then(
+            response =>
+              setTimeout(() => location.reload(), 2000)
+          )
+        }
+      }
+    ]
+  }
+  restartAndReset() {
+    this.dialogTitle = "Hapus Data"
+    this.dialogMessage = "Semua data dan pengaturan akan dihapus. Lanjutkan?";
+    this.dialogActions = [
+      {
+        label: 'Batal',
+        color: 'success'
+      },
+      'spacer',
+      {
+        label: "Ya, hapus semua data!",
+        color: "error",
+        action() {
+          Api.get('reboot', {
+            params: {
+              factory: true
+            }
+          }).then(
+            response =>
+              setTimeout(() => location.reload(), 2000)
+          )
+        }
+      }
+    ]
+  }
 }
 </script>

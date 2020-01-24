@@ -37,7 +37,7 @@ import { ActionDialog } from '../interfaces';
 @Component
 export default class DialogConfirm extends Vue {
 
-  @Prop({ type: String, default: "Are you sure?" })
+  @Prop({ type: String, default: "Konfirmasi" })
   title: string
 
   @Prop({ type: String, default: null })

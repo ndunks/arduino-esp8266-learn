@@ -115,7 +115,7 @@ void handle_sensor(String &response, HTTPMethod method)
     else
     {
         response += "pompa_off\t";
-        response += (pompa_mati_sampai - millis()) / 1000;
+        response += (pompa_mati_sampai - millis()) / 1000 + 1;
         response += '\n';
     }
 }
@@ -128,16 +128,6 @@ void handle_index(String &response, HTTPMethod method)
     //digitalWrite(ledPin, HIGH);
 }
 
-void handle_gpio(String &response, HTTPMethod method)
-{
-    response += String((uint32_t)(((GPI | GPO) & 0xFFFF) | ((GP16I & 0x01) << 16)));
-    response += "|" + String(analogRead(A0));
-}
-
-void handle_ping(String &response, HTTPMethod method)
-{
-    response = server_guard();
-}
 // Status will periodically called by frontend, make it cheap
 void handle_status(String &response, HTTPMethod method)
 {
@@ -238,41 +228,51 @@ void handle_config(String &response, HTTPMethod method)
     }
     else
     {
-        response = "Disallowed";
+        response = F("Disallowed");
     }
 }
 
 void handle_reboot(String &response, HTTPMethod method)
 {
-    ESP.restart();
+    if (server.hasArg(F("factory")))
+    {
+        server.send(200);
+        yield();
+        config_reset();
+    }
+    else
+    {
+        ESP.restart();
+    }
 }
-
+const char F_CONNECT[] PROGMEM = "connect";
+const char F_DISCONNECT[] PROGMEM = "disconnect";
 void handle_wifi(String &response, HTTPMethod method)
 {
 
-    if (server.hasArg("connect"))
+    if (server.hasArg(F_CONNECT))
     {
-        int id = server.arg("connect").toInt();
-        String pass = server.arg("pass");
+        int id = server.arg(F_CONNECT).toInt();
+        String pass = server.arg(F("pass"));
         WiFi.begin(WiFi.SSID(id).c_str(), pass.c_str(), WiFi.channel(id));
         WiFi.setAutoConnect(true);
         ESP.restart();
     }
-    else if (server.hasArg("disconnect"))
+    else if (server.hasArg(F_DISCONNECT))
     {
         WiFi.persistent(false);
         response = WiFi.disconnect(false);
         WiFi.persistent(true);
     }
-    else if (server.hasArg("ap"))
+    else if (server.hasArg(F("ap")))
     {
-        response = WiFi.enableAP(server.arg("ap").equals("true"));
+        response = WiFi.enableAP(server.arg(F("ap")).equals(F("true")));
     }
-    else if (server.hasArg("sta"))
+    else if (server.hasArg(F("sta")))
     {
         if (WiFi.disconnect(true))
         {
-            response = WiFi.enableSTA(server.arg("sta").equals("true"));
+            response = WiFi.enableSTA(server.arg(F("sta")).equals(F("true")));
         }
         else
         {
@@ -284,29 +284,31 @@ void handle_wifi(String &response, HTTPMethod method)
 void handle_set_password(String &response, HTTPMethod method)
 {
 
-    if (server.hasArg("password"))
+    if (server.hasArg(F("password")))
     {
-        String password = server.arg("password");
+        String password = server.arg(F("password"));
         if (password.length() > 8)
         {
-            response += "Password terlalu panjang, maks 8 huruf";
+            response += F("Password terlalu panjang, maks 8 huruf");
         }
         else
         {
             strncpy(config->password, password.c_str(), password.length());
+            // make sure null terminated
+            config->password[password.length()] = 0;
             if (config_save())
             {
-                response += "OK, Berhasil disimpan";
+                response += F("OK, Berhasil disimpan");
             }
             else
             {
-                response += "Gagal menyimpan";
+                response += F("Gagal menyimpan");
             }
         }
     }
     else
     {
-        response += "Password tidak boleh kosong";
+        response += F("Password tidak boleh kosong");
     }
 }
 

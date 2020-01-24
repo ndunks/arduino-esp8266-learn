@@ -39,15 +39,18 @@ export default class Login extends Vue {
       return this.$store.commit('popup', 'Masukan Katasandi')
     }
     Api.password = this.password
-    Api.get('ping').then(
-      resp => this.$store.dispatch('settings').then(
-        () => {
-          this.$store.commit('login', true)
-          this.$nextTick(
-            () => this.$router.replace(this.$route.query.next as string || '/dash')
-          )
-        }
-      )
+    this.$store.dispatch('settings').then(
+      () => {
+        this.$store.commit('login', true)
+        this.$nextTick(
+          () => this.$router.replace(this.$route.query.next as string || '/dash')
+        )
+      }
+    ).catch(
+      e => this.$store.commit('popup', {
+        message: 'Katasandi tidak cocok',
+        color: 'error'
+      } as Popup)
     )
   }
 }

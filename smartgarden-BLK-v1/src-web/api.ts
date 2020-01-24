@@ -16,6 +16,7 @@ const Api: ApiAxios = Axios.create({
     baseURL: process.env.VUE_APP_API || '/',
     timeout: 5000
 })
+const ApiNoLoading = Axios.create(Api.defaults);
 
 Object.defineProperty(Api, 'password', {
     get() {
@@ -25,9 +26,11 @@ Object.defineProperty(Api, 'password', {
         if (value) {
             window['localStorage'] && localStorage.setItem && localStorage.setItem('password', value)
             Api.defaults.headers.Authorization = value;
+            ApiNoLoading.defaults.headers.Authorization = value;
         } else {
             window['localStorage'] && localStorage.removeItem && localStorage.removeItem('password');
             delete Api.defaults.headers.Authorization
+            delete ApiNoLoading.defaults.headers.Authorization
         }
     }
 })
@@ -68,3 +71,4 @@ Api.interceptors.response.use(
     ApiErrorHandler
 )
 export default Api
+export { ApiNoLoading }

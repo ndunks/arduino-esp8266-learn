@@ -4,7 +4,7 @@
       <v-toolbar-title>Pompa</v-toolbar-title>
       <v-spacer />
       <v-chip v-text="statusText" dark :color="statusColor" />
-      <v-dialog max-width="600" ref="dialog">
+      <v-dialog max-width="500" ref="dialog">
         <template #activator="{on}">
           <v-btn v-on="on" icon color="danger"><v-icon>settings</v-icon></v-btn>
         </template>
@@ -14,30 +14,31 @@
               Pengaturan Pompa
             </v-card-title>
             <v-card-text>
-              <v-row>
-                <v-col>
-                  <v-text-field
-                    label="Maksimal Lama Menyala"
-                    type="number"
-                    v-model="edit.maxon"
-                  >
-                    <template #append>
-                      Detik
-                    </template>
-                  </v-text-field>
-                </v-col>
-                <v-col>
-                  <v-text-field
-                    label="Lama Mati"
-                    type="number"
-                    v-model="edit.maxoff"
-                  >
-                    <template #append>
-                      Detik
-                    </template>
-                  </v-text-field>
-                </v-col>
-              </v-row>
+              <v-text-field
+                label="Maksimal Lama Menyala"
+                type="number"
+                v-model="edit.maxon"
+                filled
+                persistent-hint
+                hint="Maksimal lama pompa menyala"
+              >
+                <template #append>
+                  Detik
+                </template>
+              </v-text-field>
+
+              <v-text-field
+                label="Lama Mati"
+                type="number"
+                v-model="edit.maxoff"
+                filled
+                persistent-hint
+                hint="Lama pompa istirahat ketika melebihi batas maksimal nyala"
+              >
+                <template #append>
+                  Detik
+                </template>
+              </v-text-field>
             </v-card-text>
             <v-card-actions>
               <v-btn color="error" text @click="$refs.dialog.isActive = false">

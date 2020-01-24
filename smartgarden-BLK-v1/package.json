@@ -6,7 +6,7 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "device": "./tool/esptool.py --chip esp8266 --no-stub chip_id",
-    "dump-config": "./tool/esptool.py --chip esp8266 read_flash 0x3fb000 80 scratch/config-dump.bin && xxd scratch/config-dump.bin",
+    "dump-config": "./tool/esptool.py --chip esp8266 read_flash 0x3fb000 128 scratch/config-dump.bin && xxd scratch/config-dump.bin",
     "dump-flash": "./tool/esptool.py --chip esp8266 read_flash 0x0 4194304 flash-dump.bin",
     "flash-config": "./tool/esptool.py --chip esp8266 write_flash 0x3fb000 flash/config.bin",
     "erase-config": "./tool/esptool.py --chip esp8266 --after no_reset erase_region 0x003fb000 4096",

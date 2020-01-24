@@ -16,6 +16,7 @@ const routes = [
     component: Login,
     meta: {
       title: 'Akses Masuk',
+      isLoginPage: true,
       public: true,
       hideMenu: true // Dont show in sidebar menu
     }
@@ -39,15 +40,15 @@ const routes = [
       icon: 'wifi',
     }
   },
-  {
-    path: '/setting',
-    component: Settings,
-    meta: {
-      title: "Pengaturan Perangkat",
-      label: "Pengaturan",
-      icon: 'settings',
-    }
-  },
+  /*   {
+      path: '/setting',
+      component: Settings,
+      meta: {
+        title: "Pengaturan Perangkat",
+        label: "Pengaturan",
+        icon: 'settings',
+      }
+    }, */
   {
     path: '/about',
     component: About,
@@ -106,7 +107,7 @@ router.beforeEach(async (to, from, next) => {
     }
 
     nextPath = {
-      path: '/',
+      path: routes.find(v => v.meta.isLoginPage).path,
       query: { next }
     }
   }

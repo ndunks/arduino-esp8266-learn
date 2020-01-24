@@ -111,8 +111,6 @@ export function parseSmartGardenConfig(raw: string) {
     // uint8 * VALVE_COUNT
     cfg.valve_gap = Array.prototype.slice.call(buffView, offset, offset + VALVE_COUNT)
     offset += VALVE_COUNT
-    // have one gap in struct??
-    offset++;
     // unsigned long;
     let tmpLong = new Uint32Array(buffView.buffer.slice(offset, offset + 4))
     offset += 4;

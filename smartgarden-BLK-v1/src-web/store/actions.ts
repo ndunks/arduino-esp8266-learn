@@ -1,6 +1,6 @@
 import { ActionTree } from 'vuex'
 import Api from '@/api'
-import Axios, { AxiosInstance } from 'axios'
+import Axios, { AxiosInstance, AxiosError } from 'axios'
 import { urlEncode } from '@/helper';
 import { Popup } from '@/interfaces';
 let ApiNoLoading: AxiosInstance;
@@ -10,36 +10,40 @@ const actions: ActionTree<State, any> = {
         ApiNoLoading = Axios.create(Api.defaults);
         // Validating password
         if (Api.password) {
-            await Api.get('ping').then(
-                resp => {
+            await this.dispatch('settings').then(
+                () => {
                     context.commit('login', true)
-                    // auto load setttings too
-                    return this.dispatch('settings')
                 }
             ).catch(
-                e => {
-                    console.log(e)
-                    Api.password = null
+                (e: AxiosError) => {
+                    if (e.isAxiosError && e.response) {
+                        Api.password = null
+                    }
                 }
             )
         }
         // Load full status
-        let tryCount = 0;
-        let error = null
+        let tryCount = 0
+        let error: AxiosError
         do {
             error = null
             tryCount++
             await context.dispatch('config').catch(e => error = e)
             if (error) {
-                console.log('Try', tryCount, error, error.data, error.response);
-            }
-            if (tryCount > 5) {
-                console.warn("Tired retrying..");
-                context.commit('popup', {
-                    message: 'Gagal terhubung ke perangkat',
-                    color: 'error'
-                } as Popup)
-                break;
+                // break when network error
+                if (error.message.match(/network/i)) {
+                    break;
+                }
+                console.log('Error', error.message);
+
+                if (tryCount > 5) {
+                    console.warn("Tired retrying..");
+                    context.commit('popup', {
+                        message: 'Gagal terhubung ke perangkat',
+                        color: 'error'
+                    } as Popup)
+                    break;
+                }
             }
         } while (error)
         if (!error) {
@@ -50,15 +54,15 @@ const actions: ActionTree<State, any> = {
         // Dont update loading state
         return ApiNoLoading.get("status").then(
             response => context.commit('status', response.data)
-        )
+        ).catch(e => console.warn('status check fail'))
     },
     settings(context) {
-        return Api.get("settings").then(
+        return ApiNoLoading.get("settings").then(
             response => context.commit('settings', response.data)
         )
     },
     config(context) {
-        return Api.get("config").then(
+        return ApiNoLoading.get("config").then(
             response => context.commit('status', response.data)
         )
     },

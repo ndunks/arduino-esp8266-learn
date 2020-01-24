@@ -1,4 +1,4 @@
-import Axios, { AxiosInstance } from "axios"
+import Axios, { AxiosInstance, AxiosResponse, AxiosError } from "axios"
 import store from '@/store';
 const isProduction = process.env.NODE_ENV == 'production';
 
@@ -38,10 +38,9 @@ Api.password = window['localStorage'] && localStorage.getItem && localStorage.ge
 // PR not being merged: https://github.com/Alanscut/axios/commit/e8f54ad115fb63ae482c18951095fa7496d57501
 Api.getUrl = function (this: ApiAxios, path: string) {
     return this.defaults.baseURL.replace(/\/+$/, '') + '/' + path.replace(/^\/+/, '')
-};
+}
 
-
-function ApiErrorHandler(error) {
+function ApiErrorHandler(error: AxiosError) {
     store.commit('loading', false);
 
     store.commit('popup', {
@@ -51,9 +50,8 @@ function ApiErrorHandler(error) {
         color: 'error'
     })
 
-
     // Error consumed here
-    return Promise.reject(error.isAxiosError ? error.response : error)
+    return Promise.reject(error)
 }
 Api.interceptors.request.use(
     config => {

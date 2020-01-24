@@ -8,21 +8,21 @@ extern IPAddress local_IP;
 struct SmartGardenConfig
 {
     // Boot status flag
-    uint8 flag;
+    uint8_t flag;
     // Delay membaca sensor analog
-    uint8 sensor_delay;
+    uint8_t sensor_delay;
     // max temperatur to trigger sprayer in celcius
-    uint8 temperature_max;
+    uint8_t temperature_max;
     // Delay valve in second
-    uint8 valve_delay[VALVE_COUNT];
+    uint8_t valve_delay[VALVE_COUNT];
     // minimal kelembaban utk men trigger valve
-    uint8 humidity_minimal[VALVE_COUNT];
+    uint8_t humidity_minimal[VALVE_COUNT];
     // Delay space before next check
-    uint8 valve_gap[VALVE_COUNT];
+    uint8_t valve_gap[VALVE_COUNT];
     // Maksimal pompa menyala (detik)
-    unsigned long maksimal_pompa_hidup;
+    uint32_t maksimal_pompa_hidup;
     // Maksimal pompa mati/istirahat (detik)
-    unsigned long maksimal_pompa_mati;
+    uint32_t maksimal_pompa_mati;
     // Device name / hostname
     char name[21];
     // LCD Text when iddle

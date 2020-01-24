@@ -98,7 +98,7 @@
           block
           rounded
         >
-          Nyalakan
+          Pengembunan
         </v-btn>
       </v-list-item-content>
     </v-list-item>

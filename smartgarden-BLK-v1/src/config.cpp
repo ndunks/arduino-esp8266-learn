@@ -15,8 +15,8 @@ void dump_config()
     P("Config Size %d ~ %d\n", sizeof(SmartGardenConfig), sizeof(config));
     P("name: %s\n", config->name);
     P("Flag: %d\nWeb Password: %s\n", config->flag, config->password);
-    P("maksimal_pompa_hidup: %lu\n", config->maksimal_pompa_hidup);
-    P("maksimal_pompa_mati: %lu\n", config->maksimal_pompa_mati);
+    P("maksimal_pompa_hidup: %u\n", config->maksimal_pompa_hidup);
+    P("maksimal_pompa_mati: %u\n", config->maksimal_pompa_mati);
     P("sensor_delay: %d\n", config->sensor_delay);
     P("temperature_max: %d\n", config->temperature_max);
     P("displayText: %s\n", config->displayText);
@@ -70,7 +70,7 @@ void config_default()
     config->maksimal_pompa_mati = 10;
 #else
     smartgarden_config->maksimal_pompa_hidup = 60 * 30; // 30 menit
-    smartgarden_config->maksimal_pompa_mati = 60;  // 1 menit
+    smartgarden_config->maksimal_pompa_mati = 60;       // 1 menit
 #endif
     for (int no = 0; no < VALVE_COUNT; no++)
     {
@@ -186,6 +186,7 @@ void config_setup()
             String str("Connected to ");
             str += WiFi.SSID();
             status(str.c_str());
+            P("IP %s\n", WiFi.localIP().toString().c_str());
             str.clear();
             delay(1500);
         }

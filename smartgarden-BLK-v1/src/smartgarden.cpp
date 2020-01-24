@@ -17,22 +17,23 @@ uint8_t HUMIDITY = 0;
 int8_t TEMPERATURE = 0;
 
 // Valve yg saat ini sedang on
-int VALVE_CURRENT = -1;
+int8_t VALVE_CURRENT = -1;
 
 // List antrean valve, karena hanya 1 valve yg open dalam satu waktu
-int VALVE_STACK[VALVE_STACK_MAX] = {};
+int8_t VALVE_STACK[VALVE_COUNT] = {};
+uint32_t VALVE_LAST_ON[VALVE_COUNT] = {};
 
-unsigned long valve_next_check = 0;
-unsigned long sensor_next_check = 0;
+uint32_t valve_next_check = 0;
+uint32_t sensor_next_check = 0;
 // Cek setiap sensor setiap:
-unsigned long smartgarden_delay = 1000; // 1 second
+uint32_t smartgarden_delay = 1000; // 1 second
 
-unsigned long pompa_nyala_sejak = 0;
-unsigned long pompa_mati_sampai = 0;
+uint32_t pompa_nyala_sejak = 0;
+uint32_t pompa_mati_sampai = 0;
 
 void smartgarden_setup()
 {
-    std::fill_n(VALVE_STACK, VALVE_STACK_MAX, -1);
+    std::fill_n(VALVE_STACK, VALVE_COUNT, -1);
     pinMode(SERIAL_DATA, OUTPUT);
     pinMode(SERIAL_LOAD, OUTPUT);
     pinMode(SERIAL_CLOCK, OUTPUT);
@@ -49,7 +50,7 @@ void dumpSerial(int start = 0, int end = 15)
 }
 void pompaChecker()
 {
-    unsigned long now = millis();
+    uint32_t now = millis();
     // Jika ada salah satu valve yg on, maka pompa juga harus on
     if (VALVE_CURRENT >= 0)
     {
@@ -86,7 +87,6 @@ void smartgarden_apply()
         digitalWrite(SERIAL_CLOCK, LOW);
     }
     digitalWrite(SERIAL_LOAD, HIGH);
-    //dumpSerial(PinSerial::Valve_0, PinSerial::Sprayer);
 }
 
 void selectAnalog(int no)
@@ -104,6 +104,7 @@ void readAllAnalog()
     {
         selectAnalog(i);
         ANALOG_SENSOR[i] = static_cast<int>((system_adc_read() / 4) * (100.0f / 256.0f));
+        yield();
     }
 }
 void valveDump(const char *prefix)
@@ -123,7 +124,7 @@ bool valvePush(int no, bool clearOther = false)
     if (clearOther)
     {
         P("valvePush Clear other %d\n", no);
-        while (VALVE_STACK[++i] >= 0 && i <= VALVE_STACK_MAX)
+        while (VALVE_STACK[++i] >= 0 && i <= VALVE_COUNT)
         {
             VALVE_STACK[i] = -1;
         }
@@ -131,7 +132,7 @@ bool valvePush(int no, bool clearOther = false)
     }
     else
     {
-        while (VALVE_STACK[++i] >= 0 && i <= VALVE_STACK_MAX)
+        while (VALVE_STACK[++i] >= 0 && i <= VALVE_COUNT)
         {
             if (VALVE_STACK[i] == no)
             {
@@ -139,14 +140,18 @@ bool valvePush(int no, bool clearOther = false)
                 return false;
             }
         }
-        if (i == VALVE_STACK_MAX)
+        if (i == VALVE_COUNT)
         {
 
             Serial.println("[!] Valve stack is full");
             return false;
         }
     }
-    VALVE_STACK[i] = no;
+    // if no < 0, mean turn off
+    if (no >= 0)
+    {
+        VALVE_STACK[i] = no;
+    }
     valveDump("pushed");
     return true;
 }
@@ -160,7 +165,7 @@ void valvePop()
     else
     {
         // unshift array
-        for (int i = 1; i < VALVE_STACK_MAX; i++)
+        for (int i = 1; i < VALVE_COUNT; i++)
         {
             if (0 > (VALVE_STACK[i - 1] = VALVE_STACK[i]))
                 break;
@@ -174,18 +179,17 @@ void valvePop()
 void valveSwitcher(bool force = false)
 {
     int no;
-    if (VALVE_CURRENT >= 0 /* && VALVE_CURRENT != VALVE_STACK[0] */)
+    if (VALVE_CURRENT >= 0)
     {
         SERIAL_REG[VALVE_START + VALVE_CURRENT] = LOW;
         P("Turn Off %d\n", VALVE_CURRENT);
-        valve_next_check = millis() + 100;
+        valve_next_check = millis() + config->valve_gap[VALVE_CURRENT] * 1000UL;
         VALVE_CURRENT = -1;
     }
     // Stillhave in stack?
     if (VALVE_STACK[0] >= 0)
     {
         no = VALVE_STACK[0];
-        P("valveSwitcher: %d\n", no);
         bool turnItOn = false;
 
         // Forced on by remote ir or web
@@ -202,8 +206,11 @@ void valveSwitcher(bool force = false)
         {
             SERIAL_REG[VALVE_START + no] = HIGH;
             VALVE_CURRENT = no;
-            valve_next_check = millis() + config->valve_delay[no] * 1000UL;
-            P("Turn On %d for %d second\n", no, config->valve_delay[no]);
+            VALVE_LAST_ON[VALVE_CURRENT] = millis();
+            valve_next_check = VALVE_LAST_ON[VALVE_CURRENT] + config->valve_delay[no] * 1000UL;
+            P("Turn On %s for %d second\n",
+              PinSerialNames[VALVE_START + VALVE_CURRENT],
+              config->valve_delay[no]);
         }
         valvePop();
     }
@@ -273,7 +280,7 @@ void handle_ir_remote()
 }
 void smartgarden_loop()
 {
-    unsigned long now = millis();
+    uint32_t now = millis();
     // check pressed button
     if (currentButton)
     {
@@ -296,7 +303,8 @@ void smartgarden_loop()
             P("POMPA ON\n");
             // SERIAL_REG[PinSerial::Pompa] = ON;
             pompa_nyala_sejak = now;
-            if(VALVE_CURRENT >= 0){
+            if (VALVE_CURRENT >= 0)
+            {
                 // turn back on
                 SERIAL_REG[VALVE_START + VALVE_CURRENT] = HIGH;
             }
@@ -336,12 +344,7 @@ void smartgarden_loop()
     {
         valveChecker();
         valveSwitcher();
-        //valveDump("Valve ");
         pompaChecker();
         smartgarden_apply();
-        //P("%dC %d%% %s\n", TEMPERATURE, HUMIDITY, BLUE("--------------------------\n"));
-    } /* else{
-        P("NOT YET\n");
-        dumpSerial(PinSerial::Pompa, PinSerial::Pompa);
-    } */
+    }
 }

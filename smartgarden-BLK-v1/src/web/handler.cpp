@@ -35,8 +35,6 @@ bool Handler::handle(ESP8266WebServer &server, HTTPMethod method, String path)
 
     while (matched < routeEnd)
     {
-        // Serial.printf("  > %d %d %d %d\n", !matched, (uint)matched, sizeof(matched), sizeof(matched->function));
-        // Serial.printf("    %s = %d\n", matched->path, subPath.equals(matched->path));
         if (subPath.equals(matched->path))
         {
             if (matched->mustLogin && !server_guard())
@@ -50,6 +48,7 @@ bool Handler::handle(ESP8266WebServer &server, HTTPMethod method, String path)
                 server.send(200, "text/plain", response);
             } // no response mean handled directly
             response.clear();
+            yield();
             return true;
         }
         matched++;

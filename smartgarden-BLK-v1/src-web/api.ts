@@ -13,7 +13,7 @@ type ApiAxios = AxiosInstance & {
 }
 
 const Api: ApiAxios = Axios.create({
-    baseURL: process.env.VUE_APP_API || '/',
+    baseURL: process.env.VUE_APP_API || '/api/',
     timeout: 5000
 })
 const ApiNoLoading = Axios.create(Api.defaults);

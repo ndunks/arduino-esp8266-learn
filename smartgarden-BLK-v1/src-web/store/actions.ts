@@ -52,7 +52,14 @@ const actions: ActionTree<State, any> = {
     status(context) {
         // Dont update loading state
         return ApiNoLoading.get("status").then(
-            response => context.commit('status', response.data)
+            response => {
+                const oldStatusMode = `${context.state.status.status}${context.state.status.mode}`
+                context.commit('status', response.data)
+                // If mode or status changed, load full status config
+                if (oldStatusMode != `${context.state.status.status}${context.state.status.mode}`) {
+                    this.dispatch('config')
+                }
+            }
         ).catch(e => console.warn('status check fail'))
     },
     settings(context) {

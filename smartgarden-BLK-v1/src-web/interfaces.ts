@@ -12,8 +12,9 @@ export interface Wifi {
 }
 export interface ActionDialogObject {
     label: string
-    action?: (inputValue?: string) => void
+    action?: (inputValue?: string) => void | boolean | Promise<any>
     color?: string
+    isSubmitAction?: boolean
 }
 
 export type ActionDialog = ActionDialogObject | string

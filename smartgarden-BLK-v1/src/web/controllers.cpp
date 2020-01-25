@@ -259,11 +259,11 @@ void handle_reboot(String &response, HTTPMethod method)
         ESP.restart();
     }
 }
-const char F_CONNECT[] PROGMEM = "connect";
-const char F_DISCONNECT[] PROGMEM = "disconnect";
 void handle_wifi(String &response, HTTPMethod method)
 {
-
+    const String F_CONNECT("connect");
+    const String F_DISCONNECT("disconnect");
+    P("Handle Wifi\n");
     if (server.hasArg(F_CONNECT))
     {
         int id = server.arg(F_CONNECT).toInt();
@@ -278,15 +278,17 @@ void handle_wifi(String &response, HTTPMethod method)
         response = WiFi.disconnect(false);
         WiFi.persistent(true);
     }
-    else if (server.hasArg(F("ap")))
+    else if (server.hasArg("ap"))
     {
-        response = WiFi.enableAP(server.arg(F("ap")).equals(F("true")));
+        response = WiFi.enableAP(server.arg("ap").equals("true"));
     }
-    else if (server.hasArg(F("sta")))
+    else if (server.hasArg("sta"))
     {
+        P("SET STA MODE %s\n", server.arg("sta").c_str());
+        delay(100);
         if (WiFi.disconnect(true))
         {
-            response = WiFi.enableSTA(server.arg(F("sta")).equals(F("true")));
+            response = "OK";
         }
         else
         {

@@ -28,13 +28,13 @@
             text
             @click="setStaMode(false)"
           >
-            Disconnect
+            Putuskan
           </v-btn>
         </v-list-item-action>
       </v-list-item>
       <v-list-item v-if="status.isConnected">
         <v-list-item-content>
-          <v-list-item-title>Signal</v-list-item-title>
+          <v-list-item-title>Sinyal</v-list-item-title>
           <v-list-item-subtitle>
             <v-progress-circular :value="status.signal" color="primary">
               {{ status.signal }}
@@ -63,14 +63,14 @@
       <template #activator="{on}">
         <v-list-item v-on="on">
           <v-list-item-content>
-            <v-list-item-title>Connect to WiFi</v-list-item-title>
+            <v-list-item-title>Hubungkan WiFi</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
       </template>
       <WidgetConnect @done="$refs.connectDialog.isActive = false" />
     </v-dialog>
 
-    <v-subheader>Access Point Info</v-subheader>
+    <v-subheader>Info AP</v-subheader>
     <template v-if="status.isApMode">
       <v-list-item>
         <v-list-item-content>
@@ -81,7 +81,7 @@
         </v-list-item-content>
         <v-list-item-action>
           <v-btn color="error" text @click="setApMode(false)">
-            Disable
+            Matikan
           </v-btn>
         </v-list-item-action>
       </v-list-item>
@@ -95,15 +95,15 @@
       </v-list-item>
       <v-list-item>
         <v-list-item-content>
-          <v-list-item-title>Password</v-list-item-title>
+          <v-list-item-title>Katasandi</v-list-item-title>
           <v-list-item-subtitle>
-            {{ status.ap_psk || "(No Password)" }}
+            {{ status.ap_psk || "(Kosong)" }}
           </v-list-item-subtitle>
         </v-list-item-content>
       </v-list-item>
       <v-list-item>
         <v-list-item-content>
-          <v-list-item-title>Connected Clients</v-list-item-title>
+          <v-list-item-title>Perangkat Terhubung</v-list-item-title>
           <v-list-item-subtitle>
             {{ status.ap_clients }}
           </v-list-item-subtitle>
@@ -113,7 +113,7 @@
     <v-list-item v-else @click="setApMode(true)">
       <v-list-item-content>
         <v-list-item-title class="success--text"
-          >Disabled (Click to Enable)</v-list-item-title
+          >Dimatikan (Klik untuk nyalakan)</v-list-item-title
         >
       </v-list-item-content>
     </v-list-item>
@@ -144,24 +144,24 @@ export default class WidgetWifi extends Vue {
     const action = () => {
       Api.get('wifi', {
         params: {
-          sta: true
+          sta: enable
         }
-      }).then(response => this.$store.dispatch('status'))
+      })
     }
     if (enable) {
       // No confirmation
       return action();
     }
 
-    this.dialogMessage = "You may lost connection to this device.";
+    this.dialogMessage = "Anda mungkin akan kehilangan koneksi perangkat.";
     this.dialogActions = [
       {
-        label: 'Cancel',
+        label: 'Batal',
         color: 'success'
       },
       'spacer',
       {
-        label: "OK, Disconnect it",
+        label: "Ya, putuskan",
         color: "error",
         action
       }

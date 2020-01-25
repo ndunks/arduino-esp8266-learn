@@ -10,6 +10,7 @@
           v-model="inputValue"
           :type="inputType"
           :label="inputMessage"
+          @keydown.enter="submit"
         />
       </v-card-text>
       <v-card-actions v-if="visible">
@@ -32,7 +33,7 @@
 import Vue from 'vue'
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
-import { ActionDialog } from '../interfaces';
+import { ActionDialog, ActionDialogObject } from '../interfaces';
 
 @Component
 export default class DialogConfirm extends Vue {
@@ -62,10 +63,30 @@ export default class DialogConfirm extends Vue {
     return 'string' == typeof this.inputMessage && this.inputMessage.length > 0
   }
 
-  doAction(action: (inputValue: any) => boolean) {
-    if ('undefined' == typeof action || action(this.inputValue) !== false) {
-      this.$emit('input', null)
+  async doAction(action: (inputValue: any) => void | boolean | Promise<any>) {
+    if ('undefined' == typeof action) {
+      return this.$emit('input', null)
     }
+    let result = action(this.inputValue);
+    if (result instanceof Promise) {
+      console.log('Confirm wait action');
+
+      result = await result;
+    }
+    console.log('Confirm result', result);
+    if (result !== false) {
+      // Close the dialog
+      return this.$emit('input', null)
+    }
+
+  }
+  submit() {
+    const act =
+      this.value.find((v: ActionDialogObject) => v.isSubmitAction) as ActionDialogObject
+    if (act) {
+      this.doAction(act.action as any)
+    }
+
   }
 }
 </script>

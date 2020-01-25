@@ -40,7 +40,7 @@
 import Vue from 'vue'
 import Component from 'vue-class-component';
 import { Wifi, Status, ActionDialog } from '@/interfaces';
-import Api from '@/api';
+import Api, { ApiNoLoading } from '@/api';
 import { mapState } from 'vuex';
 import DialogConfirm from "@/dialog/DialogConfirm.vue";
 
@@ -62,7 +62,9 @@ export default class WidgetConnect extends Vue {
   }
 
   scan() {
-    Api.get("scan").then(
+    Api.get("scan", {
+      timeout: 20000
+    }).then(
       response => {
         this.wifiList.splice(0)
         const data = response.data as string;
@@ -92,20 +94,17 @@ export default class WidgetConnect extends Vue {
     }
   }
   connect(wifi: Wifi) {
-    const action = async (pass?: string) => {
-      await Api.get('wifi', {
+    const action = (pass?: string) => {
+
+      ApiNoLoading.get('wifi', {
         params: {
           connect: wifi.id,
           pass
-        }
+        },
+        timeout: 10000
       })
-      this.$store.commit('loading', true);
-      setTimeout(() => {
-        this.$store.dispatch('status')
-        this.$store.commit('loading', false);
-        this.$emit('done');
-      }, 3000)
-
+      this.$store.commit('popup', `Menghubungkan ke ${wifi.ssid}`)
+      this.$emit('done');
     }
 
     if (!this.status.isConnected && wifi.security == 'none') {
@@ -127,6 +126,7 @@ export default class WidgetConnect extends Vue {
       {
         label: `OK, Connect to ${wifi.ssid}`,
         color: "success",
+        isSubmitAction: true,
         action
       }
     ]
@@ -145,7 +145,7 @@ export default class WidgetConnect extends Vue {
       {
         label: "OK, Disconnect it",
         color: "error",
-        async action() {
+        action: async () => {
           await Api.get('wifi', { params: { disconnect: true } })
           this.$store.dispatch('status')
           this.$emit('done');

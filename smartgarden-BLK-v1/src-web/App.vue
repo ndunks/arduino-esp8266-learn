@@ -114,15 +114,8 @@ export default class App extends Vue {
     this.$store.commit('login', false)
     this.$router.push('/')
   }
-  // Watch wifi connection status, reload config if changed
-  @Watch('status.status')
-  statusChanged(newStatus, oldStatus) {
-    if ('undefined' == typeof oldStatus) return;
-    // if status changed, load full config
-    this.$store.dispatch('config')
-  }
 
-  @Watch('login')
+@Watch('login')
   loginChanged(newLogin, oldLogin) {
     console.log('Login changed', this.login);
     if (this.login) {

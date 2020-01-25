@@ -4,7 +4,7 @@
 void setup()
 {
   Serial.begin(115200);
-  detik_setup();
+  //detik_setup();
   display_setup();
   config_setup();
   smartgarden_setup();

@@ -1,32 +1,55 @@
 <template>
   <v-card>
-    <v-progress-linear absolute v-if="loading" indeterminate />
     <v-toolbar short flat>
-      <v-toolbar-title>Available WiFi Networks</v-toolbar-title>
+      <v-toolbar-title>Jaringan WiFi</v-toolbar-title>
       <v-spacer />
-      <v-btn @click="scan" :disabled="loading" text icon color="primary">
+      <v-progress-circular
+        v-if="loading"
+        color="warning"
+        indeterminate
+        class="mx-auto"
+      />
+      <v-btn @click="scan" v-else text icon color="primary">
         <v-icon>refresh</v-icon>
       </v-btn>
     </v-toolbar>
-    <v-list-item
-      v-for="wifi in wifiList"
-      :key="wifi.ssid"
-      :disabled="loading"
-      @click="click(wifi)"
-    >
-      <v-list-item-avatar>
-        <v-progress-circular :value="wifi.signal" color="primary">
-          {{ wifi.signal }}
-        </v-progress-circular>
-      </v-list-item-avatar>
+    <v-list-item v-if="isScanning">
       <v-list-item-content>
-        <v-list-item-title v-text="wifi.ssid" />
-        <v-list-item-subtitle v-text="wifi.security" />
+        <v-list-item-title class="grey--text">
+          Memindai jaringan WiFi..
+        </v-list-item-title>
       </v-list-item-content>
-      <v-list-item-action v-if="isConnected(wifi)" class="success--text">
-        Connected
-      </v-list-item-action>
     </v-list-item>
+    <template v-else>
+      <template v-if="wifiList.length">
+        <v-list-item
+          v-for="wifi in wifiList"
+          :key="wifi.ssid"
+          :disabled="loading"
+          @click="click(wifi)"
+        >
+          <v-list-item-avatar>
+            <v-progress-circular :value="wifi.signal" color="primary">
+              {{ wifi.signal }}
+            </v-progress-circular>
+          </v-list-item-avatar>
+          <v-list-item-content>
+            <v-list-item-title v-text="wifi.ssid" />
+            <v-list-item-subtitle v-text="wifi.security" />
+          </v-list-item-content>
+          <v-list-item-action v-if="isConnected(wifi)" class="success--text">
+            Connected
+          </v-list-item-action>
+        </v-list-item>
+      </template>
+      <v-list-item v-else>
+        <v-list-item-content>
+          <v-list-item-title class="grey--text">
+            Tidak ada jaringan WiFi ditemukan..
+          </v-list-item-title>
+        </v-list-item-content>
+      </v-list-item>
+    </template>
     <DialogConfirm
       :message="dialogMessage"
       :title="dialogTitle"
@@ -54,12 +77,14 @@ export default class WidgetConnect extends Vue {
   wifiList: Wifi[] = []
   // Typing helper
   status: Status
+  isScanning = false
 
   isConnected(wifi: Wifi) {
     return this.status.isConnected && this.status.ssid == wifi.ssid
   }
 
   scan() {
+    this.isScanning = true
     Api.get("scan", {
       timeout: 20000
     }).then(
@@ -81,7 +106,7 @@ export default class WidgetConnect extends Vue {
           }
         )
       }
-    )
+    ).finally(() => this.isScanning = false)
   }
 
   click(wifi: Wifi) {

@@ -1,16 +1,18 @@
 #include "web.h"
 
-
 void handle_scan(String &response, HTTPMethod method)
 {
     int found = WiFi.scanNetworks();
-
-    if (found == WIFI_SCAN_FAILED)
+    switch (found)
     {
-        response += "FAILED";
-    }
-    else
-    {
+    case WIFI_SCAN_FAILED:
+        /* code */
+        response = "FAILED";
+        break;
+    case 0:
+        response = "\n";
+        break;
+    default:
         for (int i = 0; i < found; i++)
         {
             response += String(WiFi.RSSI(i)) + "\t";
@@ -35,7 +37,8 @@ void handle_scan(String &response, HTTPMethod method)
             response += "\t" + WiFi.SSID(i);
             response += "\n";
         }
-    };
+        break;
+    }
 }
 
 void handle_wifi(String &response, HTTPMethod method)

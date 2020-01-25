@@ -62,12 +62,11 @@ export function parseSensorRaw(raw: SensorsRaw, newStatus: Status) {
         v => parseInt(v)
     )
 
-    //newStatus.valve = [];
     newStatus.temp = parseInt(raw.temp)
     newStatus.hum = parseInt(raw.hum)
     newStatus.cur = parseInt(raw.cur)
-    // loop all valves without sprayer
-    for (let i = 0; i < VALVE_COUNT - 1; i++) {
+    // loop all valves including sprayer
+    for (let i = 0; i < VALVE_COUNT; i++) {
         newStatus.valve[i] = newStatus.cur == i
 
     }
@@ -79,6 +78,14 @@ export function parseSensorRaw(raw: SensorsRaw, newStatus: Status) {
     } else {
         newStatus.pompa_off = parseInt(raw.pompa_off);
     }
+    // Parse states
+    let state = parseInt(raw.state)
+    for (let i = 0; i < VALVE_COUNT; i++) {
+        newStatus.needWater[i] = (state >> i & 1) > 0;
+    }
+    raw.laston.trim().split(' ').forEach(
+        (v, i) => newStatus.laston[i] = parseInt(v)
+    )
 }
 
 export function parseSmartGardenConfig(raw: string) {

@@ -137,6 +137,10 @@ export interface SensorsRaw {
     pompa_on?: string
     /** Sisa pompa off */
     pompa_off?: string
+    /** store all valve conditions, if bit set 1 mean need water */
+    state: string
+    /** last valve on */
+    laston: string
 }
 
 export interface Sensors extends Pick<SensorsRaw, 'in'> {
@@ -153,6 +157,10 @@ export interface Sensors extends Pick<SensorsRaw, 'in'> {
     pompa_on?: number
     /** Sisa pompa off */
     pompa_off?: number
+    /** store all valve conditions, true mean need water */
+    needWater: boolean[]
+    /** last valve on */
+    laston: number[]
 }
 
 export interface Settings {

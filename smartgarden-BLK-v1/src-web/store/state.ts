@@ -14,10 +14,15 @@ const state: {
     loading: false,
     title: 'Smart Device..',
     popups: [],
+    ///@ts-ignore
     status: {
-        valve: []
-    } as any,
-    settings: {} as any
+        valve: [],
+        sensorTanah: [],
+        needWater: [],
+        laston: []
+    },
+    ///@ts-ignore
+    settings: {}
 }
 
 export default state

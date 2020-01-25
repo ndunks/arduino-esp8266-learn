@@ -5,4 +5,5 @@
 #include "display.h"
 #include "ir_remote.h"
 #include "smartgarden.h"
+#include "detik.h"
 

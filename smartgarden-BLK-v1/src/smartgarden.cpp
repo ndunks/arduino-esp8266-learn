@@ -21,6 +21,7 @@ int8_t VALVE_CURRENT = -1;
 
 // List antrean valve, karena hanya 1 valve yg open dalam satu waktu
 int8_t VALVE_STACK[VALVE_COUNT] = {};
+// Last valve turned on, in second
 uint32_t VALVE_LAST_ON[VALVE_COUNT] = {};
 
 uint32_t valve_next_check = 0;

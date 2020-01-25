@@ -14,9 +14,20 @@
               >Pengaturan Suhu &amp; Kelembaban Ruangan</v-card-title
             >
             <v-card-text>
+              <div class="pb-2">
+                <v-switch
+                  label="Mode Manual"
+                  v-model="edit.manual"
+                  dense
+                  color="warning"
+                  :persistent-hint="edit.manual"
+                  hint="Pengembunan tidak akan menyala otomatis berdasarkan suhu &amp; kelembaban ruangan"
+                />
+              </div>
               <v-text-field
                 label="Maksimal Suhu"
                 type="number"
+                :disabled="edit.manual"
                 v-model="edit.temp"
                 filled
                 persistent-hint
@@ -30,6 +41,7 @@
               <v-text-field
                 label="Minimal Kelembaban"
                 type="number"
+                :disabled="edit.manual"
                 v-model="edit.humidity"
                 filled
                 persistent-hint
@@ -129,7 +141,8 @@ export default class WidgetRuangan extends Vue {
     temp: 0,
     humidity: 0,
     delay: 0,
-    gap: 0
+    gap: 0,
+    manual: false
   }
 
   // Typing helper
@@ -145,11 +158,16 @@ export default class WidgetRuangan extends Vue {
     this.edit.humidity = this.settings.humidity_minimal[this.no]
     this.edit.delay = this.settings.valve_delay[this.no]
     this.edit.gap = this.settings.valve_gap[this.no]
+    this.edit.manual = this.settings.valve_manual[this.no]
     this.edit.temp = this.settings.temperature_max
   }
 
   get statusText() {
-    return 'Sprayer: ' + ((this.status.sprayer && this.status.pompa) ? 'On' : 'Off')
+    if (this.settings.valve_manual[this.no] && !this.status.sprayer) {
+      return 'manual'
+    } else {
+      return 'Sprayer: ' + ((this.status.sprayer && this.status.pompa) ? 'On' : 'Off')
+    }
   }
 
   get statusColor() {

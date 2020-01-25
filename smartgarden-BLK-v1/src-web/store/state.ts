@@ -20,7 +20,7 @@ const state: {
         valve: [],
         sensorTanah: [],
         needWater: [],
-        lastOn: []
+        lastOn: [],
     },
     ///@ts-ignore
     settings: {},

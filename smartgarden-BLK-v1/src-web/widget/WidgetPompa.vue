@@ -65,9 +65,9 @@
         <v-list-item-subtitle> {{ status.pompa_on }} </v-list-item-subtitle>
       </v-list-item-content>
     </v-list-item>
-    <v-list-item v-if="status.pompa_off !== null">
+    <v-list-item v-if="status.pompa_off">
       <v-list-item-content>
-        <v-list-item-title>Akan Hidup Setelah</v-list-item-title>
+        <v-list-item-title>Off</v-list-item-title>
         <v-list-item-subtitle> {{ status.pompa_off }} </v-list-item-subtitle>
       </v-list-item-content>
     </v-list-item>

@@ -5,6 +5,7 @@
 #include "sensorsuhu.h"
 #include "config.h"
 #include "display.h"
+#define isValveManual(i) ((config->valve_manual >> i) & 0x1)
 
 // Serial registers
 uint8_t SERIAL_REG[16] = {};
@@ -145,16 +146,24 @@ int8_t findValveThatNeedWater()
     int8_t needWater = -1;
     for (int i = 0; i < VALVE_COUNT - 1; i++)
     {
-        VALVE_STATE |= (ANALOG_SENSOR[i] <= config->humidity_minimal[i]) << i;
+        // check if is not manual mode
+        if (!isValveManual(i))
+        {
+            VALVE_STATE |= (ANALOG_SENSOR[i] <= config->humidity_minimal[i]) << i;
+        }else{
+            P("Manual %d\n", i);
+        }
     }
-
-    if (TEMPERATURE >= config->temperature_max)
+    if (!isValveManual(SPRAYER_NO))
     {
-        VALVE_STATE |= 1 << SPRAYER_NO;
-    }
-    else if (HUMIDITY < config->humidity_minimal[SPRAYER_NO])
-    {
-        VALVE_STATE |= 1 << SPRAYER_NO;
+        if (TEMPERATURE >= config->temperature_max)
+        {
+            VALVE_STATE |= 1 << SPRAYER_NO;
+        }
+        else if (HUMIDITY < config->humidity_minimal[SPRAYER_NO])
+        {
+            VALVE_STATE |= 1 << SPRAYER_NO;
+        }
     }
     if (VALVE_STATE > 0)
     {
@@ -171,12 +180,12 @@ int8_t findValveThatNeedWater()
                 }
             }
         }
-        // dumpValveState();
-        // P("Should ON %s\n", PinSerialNames[VALVE_START + needWater]);
+        dumpValveState();
+        P("Should ON %s\n", PinSerialNames[VALVE_START + needWater]);
     }
     else
     {
-        // P("Nothing that need water\n");
+        P("Nothing that need water\n");
     }
     return needWater;
 }

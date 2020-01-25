@@ -106,6 +106,7 @@ export function parseSmartGardenConfig(raw: string) {
     let offset = 0
     cfg.valve_delay = []
     cfg.humidity_minimal = []
+    cfg.valve_manual = []
 
     // uint8
     cfg.flag = buffView[offset++]
@@ -141,6 +142,12 @@ export function parseSmartGardenConfig(raw: string) {
     // char password[9];
     cfg.password = readNullString(buffView, offset, 9)
     offset += 9
+    // uint8_t 
+    let manual = buffView[offset++]
+    for (let i = 0; i < VALVE_COUNT; i++) {
+        cfg.valve_manual[i] = ((manual >> i) & 1) > 0
+    }
+
     console.log(cfg)
 
     return cfg

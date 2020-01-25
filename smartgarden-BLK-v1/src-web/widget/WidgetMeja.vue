@@ -11,11 +11,23 @@
         <v-form @submit.prevent="submit" ref="form">
           <v-card>
             <v-card-title>Pengaturan Meja {{ no + 1 }}</v-card-title>
+
             <v-card-text>
+              <div class="pb-2">
+                <v-switch
+                  label="Mode Manual"
+                  v-model="edit.manual"
+                  dense
+                  color="warning"
+                  :persistent-hint="edit.manual"
+                  hint="Penyiraman tidak akan menyala otomatis berdasarkan kelembaban tanah"
+                />
+              </div>
               <v-text-field
                 label="Minimal Kelembaban"
                 type="number"
                 v-model="edit.humidity"
+                :disabled="edit.manual"
                 filled
                 persistent-hint
                 hint="Jika kelembaban kurang dari nilai diatas, maka penyiraman akan menyala otomatis"
@@ -133,7 +145,8 @@ export default class WidgetMeja extends Vue {
     no: 0,
     humidity: 0,
     delay: 0,
-    gap: 0
+    gap: 0,
+    manual: false
   }
   _required = v => !!v || 'Harus di isi.'
   $refs: {
@@ -146,10 +159,15 @@ export default class WidgetMeja extends Vue {
     this.edit.humidity = this.settings.humidity_minimal[this.no]
     this.edit.delay = this.settings.valve_delay[this.no]
     this.edit.gap = this.settings.valve_gap[this.no]
+    this.edit.manual = this.settings.valve_manual[this.no]
   }
 
   get statusText() {
-    return (this.status.valve[this.no] && this.status.pompa) ? 'On' : 'Off'
+    if (this.settings.valve_manual[this.no] && !this.status.valve[this.no]) {
+      return 'manual'
+    } else {
+      return (this.status.valve[this.no] && this.status.pompa) ? 'On' : 'Off'
+    }
   }
 
   get statusColor() {

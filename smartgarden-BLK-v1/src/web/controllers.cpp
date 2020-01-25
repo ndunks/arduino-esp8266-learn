@@ -10,8 +10,21 @@ void handle_valve_patch(String &response, HTTPMethod method)
     int no = server.arg("no").toInt();
     int delay = server.arg("delay").toInt();
     int humidity = server.arg("humidity").toInt();
+    if (server.arg("manual").equals("true"))
+    {
+        config->valve_manual |= (1 << no);
+        P("SET MANUAL\n");
+    }
+    else
+    {
+        config->valve_manual &= ~(1 << no);
+        P("CLR MANUAL\n");
+    }
+    P("MANUAL %d\n", config->valve_manual);
+
     config->humidity_minimal[no] = static_cast<uint8>(humidity);
     config->valve_delay[no] = static_cast<uint8>(delay);
+
     if (no == SPRAYER_NO)
     {
         config->temperature_max = static_cast<uint8>(server.arg("temp").toInt());

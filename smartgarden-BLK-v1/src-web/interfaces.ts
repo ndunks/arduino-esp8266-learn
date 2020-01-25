@@ -174,6 +174,8 @@ export interface Settings {
     valve_delay: number[]
     // Delay space before next check
     valve_gap: number[]
+    // manual mode valve
+    valve_manual: boolean[]
     // minimal kelembaban utk men trigger valve
     humidity_minimal: number[]
     // Maksimal pompa menyala (detik)

@@ -29,6 +29,8 @@ struct SmartGardenConfig
     char displayText[21];
     // Web Password
     char password[9];
+    // 8 bit manual mode flag valve
+    uint8_t valve_manual;
 };
 
 // Default config will set on smartgarden_setup()

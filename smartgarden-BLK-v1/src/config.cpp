@@ -32,6 +32,10 @@ void dump_config()
     {
         P("humidity_minimal[%d]: %d\n", no, config->humidity_minimal[no]);
     }
+    for (int no = 0; no < VALVE_COUNT; no++)
+    {
+        P("valve_manual[%d]: %d\n", no, (config->valve_manual >> no) & 0x1);
+    }
     P("Hostname: %s\nSSID: %s\nConnected: %d\n", WiFi.hostname().c_str(), WiFi.SSID().c_str(), WiFi.isConnected());
     P("MacAddr: %s\n", WiFi.macAddress().c_str());
     P("---------------\n");
@@ -61,8 +65,10 @@ void config_default()
     memcpy(config->name, name.c_str(), name.length());
 
     // Default DHT sensor max heat
-    config->temperature_max = (uint8_t)27;
-    config->sensor_delay = (uint8_t)5;
+    config->temperature_max = 27;
+    config->sensor_delay = 5;
+    // All valves manual
+    config->valve_manual = 0;
     memcpy(config->displayText, "    BLKP KLAMPOK", 17);
 
 #ifdef SMARTGARDEN_DEBUG

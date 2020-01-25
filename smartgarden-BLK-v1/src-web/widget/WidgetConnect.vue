@@ -42,10 +42,8 @@ import Component from 'vue-class-component';
 import { Wifi, Status, ActionDialog } from '@/interfaces';
 import Api, { ApiNoLoading } from '@/api';
 import { mapState } from 'vuex';
-import DialogConfirm from "@/dialog/DialogConfirm.vue";
 
 @Component({
-  components: { DialogConfirm },
   computed: mapState(['loading', 'status'])
 })
 export default class WidgetConnect extends Vue {

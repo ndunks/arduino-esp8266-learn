@@ -42,9 +42,9 @@ void status(const char *txt, ...)
   {
     memset(&statusBuffer[len], ' ', 20 - len);
   }
-  statusBuffer[20] = 0; // make sure is null terminated
   if (LCD_OK)
   {
+    statusBuffer[20] = 0; // make sure is null terminated
     lcd.setCursor(0, 3);
     lcd.print(statusBuffer);
   }

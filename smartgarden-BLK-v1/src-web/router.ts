@@ -2,7 +2,6 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Dashboard from '@/views/Dashboard.vue'
 import Settings from '@/views/Settings.vue'
-import Wifi from '@/views/Wifi.vue'
 import About from '@/views/About.vue'
 import Login from '@/views/Login.vue'
 import store from '@/store'
@@ -32,23 +31,14 @@ const routes = [
     }
   },
   {
-    path: '/wifi',
-    component: Wifi,
+    path: '/setting',
+    component: Settings,
     meta: {
-      title: "WiFi",
-      label: "WiFi",
-      icon: 'wifi',
+      title: "Pengaturan Perangkat",
+      label: "Pengaturan",
+      icon: 'settings',
     }
   },
-    {
-      path: '/setting',
-      component: Settings,
-      meta: {
-        title: "Pengaturan Perangkat",
-        label: "Pengaturan",
-        icon: 'settings',
-      }
-    },
   {
     path: '/about',
     component: About,

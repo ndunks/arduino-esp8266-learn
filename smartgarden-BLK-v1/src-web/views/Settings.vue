@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid>
+  <v-container>
     <v-row>
       <v-col>
         <v-form lazy-validation ref="password" @submit.prevent="submitPassword">
@@ -51,6 +51,11 @@
         </v-card>
       </v-col>
     </v-row>
+    <v-row>
+      <v-col>
+        <widget-wifi />
+      </v-col>
+    </v-row>
     <DialogConfirm
       :message="dialogMessage"
       :title="dialogTitle"
@@ -64,11 +69,12 @@ import Component from 'vue-class-component';
 import { mapState } from 'vuex';
 import { Settings, Popup, ActionDialog } from '@/interfaces';
 import Api from '@/api';
-import DialogConfirm from "@/dialog/DialogConfirm.vue";
+
+import WidgetWifi from "@/widget/WidgetWifi.vue";
 
 @Component({
   computed: mapState(['settings']),
-  components: { DialogConfirm }
+  components: { WidgetWifi }
 })
 export default class Dashboard extends Vue {
   password = {

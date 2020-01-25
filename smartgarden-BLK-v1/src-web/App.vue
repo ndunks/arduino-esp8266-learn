@@ -28,22 +28,9 @@
       <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
       <v-toolbar-title> {{ title }} </v-toolbar-title>
       <v-spacer />
-      <v-toolbar-items v-if="login">
-        <v-dialog max-width="500" ref="connectDialog">
-          <template #activator="{on}">
-            <v-btn
-              v-on="on"
-              text
-              :color="status.isConnected ? 'success' : 'error'"
-            >
-              {{ status.isConnected ? status.ssid || "Connected" : "Connect" }}
-              <v-icon right>
-                {{ status.isConnected ? "wifi" : "signal_wifi_4_bar" }}
-              </v-icon>
-            </v-btn>
-          </template>
-          <WidgetConnect @done="$refs.connectDialog.isActive = false" />
-        </v-dialog>
+      <v-toolbar-items v-if="hasCurrent" >
+        <v-alert tile class="ma-0" dark :color="currentColor" v-text="currentOn">
+        </v-alert>
       </v-toolbar-items>
     </v-app-bar>
 
@@ -87,6 +74,7 @@ import { Watch } from "vue-property-decorator";
 import { mapState } from 'vuex';
 import Api from '@/api';
 import { Status } from '@/interfaces';
+import { VALVE_NAMES } from '@/constant';
 import WidgetConnect from "@/widget/WidgetConnect.vue";
 
 @Component({
@@ -114,6 +102,27 @@ export default class App extends Vue {
     Api.password = null
     this.$store.commit('login', false)
     this.$router.push('/')
+  }
+  get hasCurrent() {
+    return this.status.cur
+  }
+  get currentColor() {
+    if (this.hasCurrent) {
+      if (this.status.pompa) {
+        return 'success'
+      } else {
+        return 'warning'
+      }
+    } else {
+      return 'gray'
+    }
+  }
+  get currentOn() {
+    if (this.status.cur) {
+      return VALVE_NAMES[this.status.cur];
+    } else {
+      return '...'
+    }
   }
 
   @Watch('login')

@@ -1,11 +1,41 @@
 <template>
   <v-card>
-    <v-card-title>
-      WiFi Mode:
-      <span class="subtitle-1">{{ status.modeStr }} </span>
-    </v-card-title>
-    <v-subheader>Station Info</v-subheader>
-    <template v-if="status.isStaMode">
+    <v-card-title>Pengaturan WiFi</v-card-title>
+    <v-list-item>
+      <v-list-item-content>
+        <v-list-item-title>WiFi Mode</v-list-item-title>
+        <v-list-item-subtitle>
+          {{ status.modeStr }}
+        </v-list-item-subtitle>
+      </v-list-item-content>
+    </v-list-item>
+    <v-list-item>
+      <v-list-item-content>
+        <v-list-item-title>Jaringan WiFi</v-list-item-title>
+        <v-list-item-subtitle>
+          <v-chip text :color="status.isConnected ? 'success' : 'gray'">
+            {{
+              status.isConnected
+                ? status.ssid || "Terhubung"
+                : "Tidak Terhubung"
+            }}
+          </v-chip>
+        </v-list-item-subtitle>
+      </v-list-item-content>
+      <v-list-item-action>
+        <v-dialog max-width="500" ref="connectDialog">
+          <template #activator="{on}">
+            <v-btn v-on="on" text rounded color="primary">
+              Pindai WiFi
+              <v-icon right> wifi </v-icon>
+            </v-btn>
+          </template>
+          <WidgetConnect @done="$refs.connectDialog.isActive = false" />
+        </v-dialog>
+      </v-list-item-action>
+    </v-list-item>
+    <template v-if="status.isConnected">
+      <v-subheader>Station Info</v-subheader>
       <v-list-item>
         <v-list-item-content>
           <v-list-item-title>SSID</v-list-item-title>
@@ -22,12 +52,8 @@
           </v-list-item-subtitle>
         </v-list-item-content>
         <v-list-item-action>
-          <v-btn
-            color="error"
-            text
-            @click="setStaMode(false)"
-          >
-            {{ status.isConnected? 'Putuskan' : 'Non-Aktifkan' }}
+          <v-btn color="error" text @click="setStaMode(false)">
+            {{ status.isConnected ? "Putuskan" : "Non-Aktifkan" }}
           </v-btn>
         </v-list-item-action>
       </v-list-item>
@@ -58,16 +84,6 @@
         </v-list-item-content>
       </v-list-item>
     </template>
-    <v-dialog v-else max-width="500" ref="connectDialog">
-      <template #activator="{on}">
-        <v-list-item v-on="on">
-          <v-list-item-content>
-            <v-list-item-title>Hubungkan WiFi</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-      </template>
-      <WidgetConnect @done="$refs.connectDialog.isActive = false" />
-    </v-dialog>
 
     <v-subheader>Info AP</v-subheader>
     <template v-if="status.isApMode">
@@ -125,11 +141,10 @@ import Component from 'vue-class-component';
 import { Status, ActionDialog } from '@/interfaces';
 import { mapState } from 'vuex';
 import WidgetConnect from "./WidgetConnect.vue";
-import DialogConfirm from "@/dialog/DialogConfirm.vue";
 import Api from '@/api';
 
 @Component({
-  components: { WidgetConnect, DialogConfirm },
+  components: { WidgetConnect },
   computed: mapState(['loading', 'status'])
 })
 export default class WidgetWifi extends Vue {

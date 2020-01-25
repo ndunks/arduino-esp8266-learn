@@ -29,8 +29,7 @@ void statusSmall(const char *txt)
 // maks 20 huruf
 void status(const char *txt, ...)
 {
-  if (!LCD_OK)
-    return;
+
   va_list args;
   va_start(args, txt);
   int len = vsprintf(statusBuffer, txt, args);
@@ -44,8 +43,12 @@ void status(const char *txt, ...)
     memset(&statusBuffer[len], ' ', 20 - len);
   }
   statusBuffer[20] = 0; // make sure is null terminated
-  lcd.setCursor(0, 3);
-  lcd.print(statusBuffer);
+  if (LCD_OK)
+  {
+    lcd.setCursor(0, 3);
+    lcd.print(statusBuffer);
+  }
+  P("%s\n", GREEN(statusBuffer));
 }
 
 void display_setup()

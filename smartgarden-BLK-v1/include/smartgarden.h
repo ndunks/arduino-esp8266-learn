@@ -17,12 +17,12 @@ extern uint8_t HUMIDITY;
 // in celcius
 extern int8_t TEMPERATURE;
 extern int8_t VALVE_CURRENT;
-extern uint32_t pompa_nyala_sejak;
-extern uint32_t pompa_mati_sampai;
+// extern uint32_t pompa_nyala_sejak;
+// extern uint32_t pompa_mati_sampai;
 
 // Setup pin and start ticker
 void smartgarden_setup();
 void smartgarden_loop();
-void valveForceOn(int8 no, int forceOffSeconds = 0);
+void valveOn(int8 no);
 // Apply REG to Serial Pararel Chained IC 595
 void smartgarden_apply();

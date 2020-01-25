@@ -141,7 +141,7 @@ export default class WidgetMeja extends Vue {
   }
 
   get statusText() {
-    return this.status.valve[this.no] ? 'On' : 'Off'
+    return (this.status.valve[this.no] && this.status.pompa) ? 'On' : 'Off'
   }
 
   get statusColor() {

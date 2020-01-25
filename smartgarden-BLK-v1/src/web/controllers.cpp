@@ -51,17 +51,10 @@ void handle_valve(String &response, HTTPMethod method)
     else if (server.args())
     {
         int no = server.arg("no").toInt();
-        if (no < 0)
-        {
-            P("WEB ON ALL OFF\n");
-            valveForceOn(no, server.arg("off").toInt());
-            // Send current sensor state
-            handle_sensor(response, method);
-        }
-        else if (no < VALVE_COUNT)
+        if (no < VALVE_COUNT)
         {
             P("WEB ON %d\n", no);
-            valveForceOn(no);
+            valveOn(no);
             // Send current sensor state
             handle_sensor(response, method);
         }
@@ -113,7 +106,7 @@ void handle_sensor(String &response, HTTPMethod method)
     response += '\n';
     response += "pompa\t";
     response += SERIAL_REG[PinSerial::Pompa];
-    response += '\n';
+    /* response += '\n';
     if (SERIAL_REG[PinSerial::Pompa])
     {
         response += "pompa_on\t";
@@ -132,7 +125,7 @@ void handle_sensor(String &response, HTTPMethod method)
             response += 0;
         }
         response += '\n';
-    }
+    } */
 }
 void handle_index(String &response, HTTPMethod method)
 {

@@ -141,7 +141,7 @@ export default class WidgetRuangan extends Vue {
   }
 
   get statusText() {
-    return 'Sprayer: ' + (this.status.sprayer ? 'On' : 'Off')
+    return 'Sprayer: ' + ((this.status.sprayer && this.status.pompa) ? 'On' : 'Off')
   }
 
   get statusColor() {

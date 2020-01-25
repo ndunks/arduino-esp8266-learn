@@ -3,7 +3,7 @@
 
 DHT_MODEL_t sensorsuhu_model = DHT22;
 DHT_ERROR_t sensorsuhu_error = ERROR_NONE;
-unsigned long lastReadTime = millis() - 3000;
+// unsigned long lastReadTime = millis() - 3000;
 
 void sensorsuhu_read()
 {
@@ -11,11 +11,11 @@ void sensorsuhu_read()
     // - Max sample rate DHT11 is 1 Hz   (duty cicle 1000 ms)
     // - Max sample rate DHT22 is 0.5 Hz (duty cicle 2000 ms)
     unsigned long startTime = millis();
-    if ((unsigned long)(startTime - lastReadTime) < (sensorsuhu_model == DHT11 ? 999L : 1999L))
-    {
-        return;
-    }
-    lastReadTime = startTime;
+    // if ((unsigned long)(startTime - lastReadTime) < (sensorsuhu_model == DHT11 ? 999L : 1999L))
+    // {
+    //     return;
+    // }
+    // lastReadTime = startTime;
     TEMPERATURE = 0;
     HUMIDITY = 0;
 

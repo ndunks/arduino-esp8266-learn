@@ -6,6 +6,19 @@
 #include "config.h"
 #include "display.h"
 
+#define setValve(no, state) SERIAL_REG[VALVE_START + no] = state
+#define getValve(no) SERIAL_REG[VALVE_START + no]
+#define valveName(no) PinSerialNames[VALVE_START + no]
+#define hasValveOn VALVE_CURRENT >= 0
+
+enum WaitingState : uint8_t
+{
+    WAIT_NONE,
+    WAIT_PUMP_AUTOOFF,
+    WAIT_VALVE,
+    WAIT_VALVE_GAP
+};
+
 // Serial registers
 uint8_t SERIAL_REG[16] = {};
 
@@ -18,12 +31,14 @@ int8_t TEMPERATURE = 0;
 
 // Valve yg saat ini sedang on
 int8_t VALVE_CURRENT = -1;
+int8_t VALVE_NEXT = -1;
+// store all valve conditions, if bit set mean need water
+uint8_t VALVE_STATE = 0;
 
-// List antrean valve, karena hanya 1 valve yg open dalam satu waktu
-int8_t VALVE_STACK[VALVE_COUNT] = {};
 // Last valve turned on, in second
 uint32_t VALVE_LAST_ON[VALVE_COUNT] = {};
-
+uint32_t LAST_LOOP = 0;
+/* 
 uint32_t valve_next_check = 0;
 uint32_t sensor_next_check = 0;
 // Cek setiap sensor setiap:
@@ -31,59 +46,9 @@ uint32_t smartgarden_delay = 1000; // 1 second
 
 uint32_t pompa_nyala_sejak = 0;
 uint32_t pompa_mati_sampai = 0;
-
-void smartgarden_setup()
-{
-    std::fill_n(VALVE_STACK, VALVE_COUNT, -1);
-    pinMode(SERIAL_DATA, OUTPUT);
-    pinMode(SERIAL_LOAD, OUTPUT);
-    pinMode(SERIAL_CLOCK, OUTPUT);
-    pinMode(SENSOR_SUHU_PIN, INPUT);
-}
-
-void dumpSerial(int start = 0, int end = 15)
-{
-    P(MAGENTA("--- dumpSerial %d - %d ---\n"), start, end);
-    for (int i = start; i <= end; i++)
-    {
-        P(" > %11s : %s\n", PinSerialNames[i], ONOFF(SERIAL_REG[i] & B1));
-    }
-}
-void pompaChecker()
-{
-    // Jika ada salah satu valve yg on, maka pompa juga harus on
-    if (VALVE_CURRENT >= 0)
-    {
-        if (SERIAL_REG[PinSerial::Pompa] == HIGH)
-        {
-            uint lamaPompaNyala = static_cast<uint>((millis() - pompa_nyala_sejak) / 1000);
-            if (lamaPompaNyala >= config->maksimal_pompa_hidup)
-            {
-                P("Pompa auto off %i >= %i\n", lamaPompaNyala, config->maksimal_pompa_hidup);
-                //valveForceOn(-1, config->maksimal_pompa_mati);
-                pompa_mati_sampai = millis() + config->maksimal_pompa_mati * 1000UL;
-                SERIAL_REG[PinSerial::Pompa] = LOW;
-                SERIAL_REG[VALVE_START + VALVE_CURRENT] = LOW;
-                VALVE_CURRENT = -1;
-                valve_next_check += config->maksimal_pompa_mati * 1000UL;
-            }
-        }
-        else // Nyalakan pompa sekarang
-        {
-            SERIAL_REG[PinSerial::Pompa] = HIGH;
-            pompa_nyala_sejak = millis();
-        }
-    }
-    else if (SERIAL_REG[PinSerial::Pompa] == HIGH)
-    {
-        // all off
-        SERIAL_REG[PinSerial::Pompa] = LOW;
-        pompa_nyala_sejak = 0;
-        status(config->displayText);
-    }
-}
+ */
 /** Apply REG value to 2 chained IC 595 */
-void smartgarden_apply()
+void serialApply()
 {
     digitalWrite(SERIAL_LOAD, LOW);
     for (int i = 15; i >= 0; i--)
@@ -94,186 +59,59 @@ void smartgarden_apply()
     }
     digitalWrite(SERIAL_LOAD, HIGH);
 }
-
-void selectAnalog(int no)
+void sensorUpdate()
 {
-    // Set bit switches on IC 4051
-    SERIAL_REG[PinSerial::IC4051_SC] = (no >> 2) & 0x1;
-    SERIAL_REG[PinSerial::IC4051_SB] = (no >> 1) & 0x1;
-    SERIAL_REG[PinSerial::IC4051_SA] = (no >> 0) & 0x1;
-    smartgarden_apply();
-}
+    // Sensor Suhu
+    sensorsuhu_read();
 
-void readAllAnalog()
-{
+    // readAllAnalog
     for (int i = 0; i < (VALVE_COUNT - 1); i++)
     {
-        selectAnalog(i);
+        // Set bit switches on IC 4051
+        SERIAL_REG[PinSerial::IC4051_SC] = (i >> 2) & 0x1;
+        SERIAL_REG[PinSerial::IC4051_SB] = (i >> 1) & 0x1;
+        SERIAL_REG[PinSerial::IC4051_SA] = (i >> 0) & 0x1;
+        serialApply();
         ANALOG_SENSOR[i] = static_cast<int>((system_adc_read() / 4) * (100.0f / 256.0f));
-        yield();
     }
 }
-void valveDump(const char *prefix)
+void smartgarden_setup()
 {
-    Serial.printf("%s: ", prefix);
-    int i = 0;
-    while (i < VALVE_COUNT && VALVE_STACK[i] >= 0)
-    {
-        Serial.printf("%d ", VALVE_STACK[i++]);
-    }
-    Serial.print('\n');
-}
-// Add valve to on when applied
-bool valvePush(int no, bool clearOther = false)
-{
-    int i = -1;
-    if (clearOther)
-    {
-        while (VALVE_STACK[++i] >= 0 && i <= VALVE_COUNT)
-        {
-            VALVE_STACK[i] = -1;
-        }
-        i = 0;
-    }
-    else
-    {
-        while (VALVE_STACK[++i] >= 0 && i <= VALVE_COUNT)
-        {
-            if (VALVE_STACK[i] == no)
-            {
-                return false;
-            }
-        }
-        if (i == VALVE_COUNT)
-        {
-            Serial.println("[!] Valve stack is full");
-            return false;
-        }
-    }
-    // if no < 0, mean turn off
-    if (no >= 0)
-    {
-        VALVE_STACK[i] = no;
-    }
-    valveDump("pushed");
-    return true;
+    pinMode(SERIAL_DATA, OUTPUT);
+    pinMode(SERIAL_LOAD, OUTPUT);
+    pinMode(SERIAL_CLOCK, OUTPUT);
+    pinMode(SENSOR_SUHU_PIN, INPUT);
+    // update initial sensors
+    sensorUpdate();
 }
 
-void valvePop()
+void dumpSerial(int start = 0, int end = 15)
 {
-    if (VALVE_STACK[0] < 0)
+    P(MAGENTA("--- dumpSerial %d - %d ---\n"), start, end);
+    for (int i = start; i <= end; i++)
     {
-        P("valvePop: No valve in stack\n");
-    }
-    else
-    {
-        // unshift array
-        for (int i = 1; i < VALVE_COUNT; i++)
-        {
-            if (0 > (VALVE_STACK[i - 1] = VALVE_STACK[i]))
-                break;
-            else
-                VALVE_STACK[i] = -1;
-        }
-        valveDump("popped");
+        P(" > %11s : %s\n", PinSerialNames[i], ONOFF(SERIAL_REG[i] & B1));
     }
 }
 
-void valveSwitcher(bool force = false)
-{
-    int no;
-    if (VALVE_CURRENT >= 0)
-    {
-        SERIAL_REG[VALVE_START + VALVE_CURRENT] = LOW;
-        P("Turn Off %d\n", VALVE_CURRENT);
-        if (VALVE_CURRENT == VALVE_STACK[0])
-        {
-            valve_next_check = millis() + config->valve_gap[VALVE_CURRENT] * 1000UL;
-            VALVE_CURRENT = -1;
-            return;
-        }
-        else
-        {
-            valve_next_check = 0;
-            VALVE_CURRENT = -1;
-        }
-    }
-    // Stillhave in stack?
-    if (VALVE_STACK[0] >= 0)
-    {
-        no = VALVE_STACK[0];
-        bool turnItOn = false;
 
-        // Forced on by remote ir or web
-        if (force || no == SPRAYER_NO)
-        {
-            turnItOn = true;
-        }
-        // check again if it still need water, except from DHT22
-        else
-        {
-            turnItOn = ANALOG_SENSOR[no] <= config->humidity_minimal[no];
-        }
-        if (turnItOn)
-        {
-            SERIAL_REG[VALVE_START + no] = HIGH;
-            VALVE_CURRENT = no;
-            VALVE_LAST_ON[VALVE_CURRENT] = millis();
-            valve_next_check = VALVE_LAST_ON[VALVE_CURRENT] + config->valve_delay[no] * 1000UL;
-            P("Turn On %s for %d second\n",
-              PinSerialNames[VALVE_START + VALVE_CURRENT],
-              config->valve_delay[no]);
-        }
-        valvePop();
-    }
-}
-
-void valveChecker()
+// no -1 mean turn off all
+void valveOn(int8 no)
 {
-    bool shouldOn = false;
+    // Turn off all except one
     for (int i = 0; i < VALVE_COUNT; i++)
     {
-        // Skip check for sprayer
-        if (i == SPRAYER_NO)
-            continue;
-
-        shouldOn = ANALOG_SENSOR[i] <= config->humidity_minimal[i];
-        //P("Sensor_%d: %d = %d\n", i, ANALOG_SENSOR[i], shouldOn);
-        if (shouldOn)
-        {
-            valvePush(i);
-        }
+        setValve(no, i == no);
     }
-
-    if (TEMPERATURE >= config->temperature_max)
+    if (no >= 0)
     {
-        //P("Suhu panas (%s >= %d)\n", YELLOW(TEMPERATURE), config->temperature_max);
-        valvePush(SPRAYER_NO);
+        VALVE_LAST_ON[no] = DETIK;
     }
-    else if (HUMIDITY < config->humidity_minimal[SPRAYER_NO])
-    {
-        //P("Kelembaban kurang (%s < %d)\n", YELLOW(HUMIDITY), config->humidity_minimal[SPRAYER_NO]);
-        valvePush(SPRAYER_NO);
-    }
-}
-
-void valveForceOn(int8 no, int forceOffSeconds)
-{
-    valvePush(no, true);
-    valveSwitcher(true);
-    if (no < 0)
-    {
-        // Force All Off
-        pompa_mati_sampai = millis() + forceOffSeconds * 1000UL;
-        valve_next_check = pompa_mati_sampai;
-    }
-    else if (VALVE_CURRENT >= 0 && pompa_mati_sampai > 0)
-    {
-        // force on
-        pompa_mati_sampai = 0;
-        pompaChecker();
-    }
-    smartgarden_apply();
+    // turn pompa on
+    SERIAL_REG[PinSerial::Pompa] = no >= 0;
+    VALVE_CURRENT = no;
+    status("%s ON %d dtk*", valveName(VALVE_CURRENT), config->valve_delay[no]);
+    serialApply();
 }
 
 void handle_ir_remote()
@@ -292,26 +130,133 @@ void handle_ir_remote()
     }
     if (forcedValve >= 0)
     {
-        //valve_next_check = 0;
-        valveForceOn(forcedValve);
+        VALVE_CURRENT = forcedValve;
+        valveOn(VALVE_CURRENT);
     }
 }
+
+void dumpValveState()
+{
+    P(RED("VALVE STATE:\n"));
+    for (int i = 0; i < VALVE_COUNT; i++)
+    {
+        P("%s\t%d\n",
+          valveName(i),
+          (VALVE_STATE >> i) & 1);
+    }
+}
+// Check valve that need to turn on
+int8_t findValveThatNeedWater()
+{
+    // reset state
+    VALVE_STATE = 0;
+    // 1 111 111
+    // All Analog sensors, except DHT22
+    int8_t needWater = -1;
+    for (int i = 0; i < VALVE_COUNT - 1; i++)
+    {
+        VALVE_STATE |= (ANALOG_SENSOR[i] <= config->humidity_minimal[i]) << i;
+    }
+
+    if (TEMPERATURE >= config->temperature_max)
+    {
+        VALVE_STATE |= 1 << SPRAYER_NO;
+    }
+    else if (HUMIDITY < config->humidity_minimal[SPRAYER_NO])
+    {
+        VALVE_STATE |= 1 << SPRAYER_NO;
+    }
+    if (VALVE_STATE > 0)
+    {
+        // Find that oldest start
+        for (int i = 0; i < VALVE_COUNT; i++)
+        {
+            if (VALVE_STATE & 1 << i)
+            {
+                if (needWater < 0 ||
+                    // whois oldest
+                    VALVE_LAST_ON[i] < VALVE_LAST_ON[needWater])
+                {
+                    needWater = i;
+                }
+            }
+        }
+        dumpValveState();
+        P("Should ON %s\n", PinSerialNames[VALVE_START + needWater]);
+    }
+    else
+    {
+        P("Nothing that need water\n");
+    }
+    return needWater;
+}
+
 void smartgarden_loop()
 {
-    uint32_t now = millis();
     // check pressed button
     if (currentButton)
     {
         handle_ir_remote();
     }
-
-    if (sensor_next_check < now)
+    // Masih di detik yg sama, abaikan
+    if (DETIK - LAST_LOOP <= 0)
     {
-        sensorsuhu_read();
-        readAllAnalog();
-        sensor_next_check = now + config->sensor_delay * 1000UL;
+        return;
     }
 
+    // Update last loop
+    LAST_LOOP = DETIK;
+
+    if ((DETIK % config->sensor_delay) == 0)
+    {
+        P(YELLOW("sensorUpdate\n"));
+        sensorUpdate();
+    }
+
+    // have valve that still on
+    if (hasValveOn)
+    {
+        int remain = config->valve_delay[VALVE_CURRENT] - (DETIK - VALVE_LAST_ON[VALVE_CURRENT]);
+        if (remain > 0)
+        {
+            status("%s ON %d dtk", valveName(VALVE_CURRENT), remain);
+            // no need more time
+            return;
+        }
+    }
+    int8_t needWater = findValveThatNeedWater();
+    if (needWater >= 0)
+    {
+        // same valve need water, check the gap period
+        if (needWater == VALVE_CURRENT)
+        {
+            int nextOn = VALVE_LAST_ON[VALVE_CURRENT] + config->valve_delay[VALVE_CURRENT] + config->valve_gap[VALVE_CURRENT];
+            int gap_remain = nextOn - DETIK;
+            if (gap_remain > 0)
+            {
+                if (getValve(VALVE_CURRENT) == HIGH)
+                {
+                    // still high, need to turn it off
+                    setValve(VALVE_CURRENT, LOW);
+                    SERIAL_REG[PinSerial::Pompa] = LOW;
+                    dumpSerial(PinSerial::Pompa, VALVE_START+VALVE_CURRENT);
+                    serialApply();
+                }
+                status("%s wait %3d dtk", valveName(VALVE_CURRENT), gap_remain);
+                return;
+            }
+        }
+        /* else
+        {
+            valveOn(needWater)
+        } */
+    }
+    else
+    {
+    }
+    valveOn(needWater);
+
+    /* 
     if (pompa_mati_sampai > 0)
     {
         if (now >= pompa_mati_sampai)
@@ -327,7 +272,7 @@ void smartgarden_loop()
                 SERIAL_REG[VALVE_START + VALVE_CURRENT] = HIGH;
             }
             pompaChecker();
-            smartgarden_apply();
+            serialApply();
         }
         else
         {
@@ -364,6 +309,6 @@ void smartgarden_loop()
         valveChecker();
         valveSwitcher();
         pompaChecker();
-        smartgarden_apply();
-    }
+        serialApply();
+    } */
 }

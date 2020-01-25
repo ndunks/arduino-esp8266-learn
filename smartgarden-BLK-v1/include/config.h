@@ -9,7 +9,7 @@ struct SmartGardenConfig
 {
     // Boot status flag
     uint8_t flag;
-    // Delay membaca sensor analog
+    // Delay membaca sensor analog dalam detik
     uint8_t sensor_delay;
     // max temperatur to trigger sprayer in celcius
     uint8_t temperature_max;
@@ -17,7 +17,7 @@ struct SmartGardenConfig
     uint8_t valve_delay[VALVE_COUNT];
     // minimal kelembaban utk men trigger valve
     uint8_t humidity_minimal[VALVE_COUNT];
-    // Delay space before next check
+    // Delay space before next check in second
     uint8_t valve_gap[VALVE_COUNT];
     // Maksimal pompa menyala (detik)
     uint32_t maksimal_pompa_hidup;
@@ -35,4 +35,5 @@ struct SmartGardenConfig
 extern SmartGardenConfig *config;
 void config_setup();
 bool config_save();
+// hapus semua data
 void config_reset();

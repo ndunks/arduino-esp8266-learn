@@ -16,7 +16,8 @@
           <v-list-item-content>
             <v-list-item-title>Perangkat Nyala Sejak</v-list-item-title>
             <v-list-item-subtitle>
-              {{ $store.state.deviceOn.toLocaleString() }}
+              {{ $store.state.deviceOn.toLocaleString() }} -
+              {{ $store.state.deviceOn | since }}
             </v-list-item-subtitle>
           </v-list-item-content>
         </v-list-item>
@@ -41,7 +42,6 @@ import { mapState } from 'vuex';
   computed: mapState(['status'])
 })
 export default class About extends Vue {
-
 }
 </script>
 

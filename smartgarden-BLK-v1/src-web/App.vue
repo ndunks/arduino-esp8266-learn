@@ -28,8 +28,14 @@
       <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
       <v-toolbar-title> {{ title }} </v-toolbar-title>
       <v-spacer />
-      <v-toolbar-items v-if="hasCurrent" >
-        <v-alert tile class="ma-0" dark :color="currentColor" v-text="currentOn">
+      <v-toolbar-items v-if="hasCurrent">
+        <v-alert
+          tile
+          class="ma-0"
+          dark
+          :color="currentColor"
+          v-text="currentOn"
+        >
         </v-alert>
       </v-toolbar-items>
     </v-app-bar>
@@ -119,7 +125,12 @@ export default class App extends Vue {
   }
   get currentOn() {
     if (this.status.cur) {
-      return VALVE_NAMES[this.status.cur];
+      if (this.status.pompa_off) {
+        return 'Pompa Off'
+      } else {
+        return VALVE_NAMES[this.status.cur]
+
+      }
     } else {
       return '...'
     }
@@ -127,15 +138,6 @@ export default class App extends Vue {
 
   @Watch('login')
   async loginChanged(newLogin, oldLogin) {
-    /* if (!this.bootComplete) {
-      console.log('Login changed waiting boot');
-      const waiters = this.$store.watch((s) => s.bootComplete,
-      (n, o) => {
-        // unwatch
-        waiters()
-      })
-    } */
-    console.log('Login changed', this.login);
     if (this.login) {
       this.statusChecker();
     } else if (this.$data._timer) {

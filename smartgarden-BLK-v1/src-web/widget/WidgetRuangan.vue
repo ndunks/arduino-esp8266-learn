@@ -145,7 +145,9 @@ export default class WidgetRuangan extends Vue {
   }
 
   get statusColor() {
-    return this.status.sprayer ? 'green' : 'gray'
+    if (this.status.sprayer) {
+      return this.status.pompa ? 'success' : 'warning'
+    } else return 'gray'
   }
   submit() {
     if (!this.$refs.form.validate()) {

@@ -57,6 +57,10 @@ void handle_valve(String &response, HTTPMethod method)
             valveOn(no);
             // Send current sensor state
             handle_sensor(response, method);
+            if (no < 0 && server.hasArg("off"))
+            {
+                pompa_mati_sampai = DETIK + server.arg("off").toInt();
+            }
         }
         else
         {
@@ -78,22 +82,6 @@ void handle_sensor(String &response, HTTPMethod method)
         response += ' ';
     }
     response += '\n';
-    // 8 bit state
-    // 0 - 5 : valve
-    /* tmp = 0;
-    tmp |= SERIAL_REG[PinSerial::Valve_0] << 0;
-    tmp |= SERIAL_REG[PinSerial::Valve_1] << 1;
-    tmp |= SERIAL_REG[PinSerial::Valve_2] << 2;
-    tmp |= SERIAL_REG[PinSerial::Valve_3] << 3;
-    tmp |= SERIAL_REG[PinSerial::Valve_4] << 4;
-    tmp |= SERIAL_REG[PinSerial::Valve_5] << 5;
-    // 6     : sprayer
-    tmp |= SERIAL_REG[PinSerial::Sprayer] << 6;
-    // 7     : pump
-    tmp |= SERIAL_REG[PinSerial::Pompa] << 7;
-    response += "out\t";
-    response += tmp;
-    response += '\n'; */
     // Suhu & kelemebaban
     response += "temp\t";
     response += TEMPERATURE;
@@ -106,11 +94,11 @@ void handle_sensor(String &response, HTTPMethod method)
     response += '\n';
     response += "pompa\t";
     response += SERIAL_REG[PinSerial::Pompa];
-    /* response += '\n';
+    response += '\n';
     if (SERIAL_REG[PinSerial::Pompa])
     {
         response += "pompa_on\t";
-        response += (millis() - pompa_nyala_sejak) / 1000;
+        response += DETIK - pompa_nyala_sejak;
         response += '\n';
     }
     else
@@ -118,15 +106,26 @@ void handle_sensor(String &response, HTTPMethod method)
         response += "pompa_off\t";
         if (pompa_mati_sampai > 0)
         {
-            response += (pompa_mati_sampai - millis()) / 1000 + 1;
+            response += pompa_mati_sampai - DETIK;
         }
         else
         {
             response += 0;
         }
         response += '\n';
-    } */
+    }
+    response += "state\t";
+    response += VALVE_STATE;
+    response += '\n';
+    response += "laston\t";
+    for (tmp = 0; tmp < VALVE_COUNT; tmp++)
+    {
+        response += VALVE_LAST_ON[tmp];
+        response += ' ';
+    }
+    response += '\n';
 }
+
 void handle_index(String &response, HTTPMethod method)
 {
     //digitalWrite(ledPin, LOW);

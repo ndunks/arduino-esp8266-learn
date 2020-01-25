@@ -6,19 +6,6 @@
 #include "config.h"
 #include "display.h"
 
-#define setValve(no, state) SERIAL_REG[VALVE_START + no] = state
-#define getValve(no) SERIAL_REG[VALVE_START + no]
-#define valveName(no) PinSerialNames[VALVE_START + no]
-#define hasValveOn VALVE_CURRENT >= 0
-
-enum WaitingState : uint8_t
-{
-    WAIT_NONE,
-    WAIT_PUMP_AUTOOFF,
-    WAIT_VALVE,
-    WAIT_VALVE_GAP
-};
-
 // Serial registers
 uint8_t SERIAL_REG[16] = {};
 
@@ -32,21 +19,15 @@ int8_t TEMPERATURE = 0;
 // Valve yg saat ini sedang on
 int8_t VALVE_CURRENT = -1;
 int8_t VALVE_NEXT = -1;
-// store all valve conditions, if bit set mean need water
+
 uint8_t VALVE_STATE = 0;
 
 // Last valve turned on, in second
 uint32_t VALVE_LAST_ON[VALVE_COUNT] = {};
 uint32_t LAST_LOOP = 0;
-/* 
-uint32_t valve_next_check = 0;
-uint32_t sensor_next_check = 0;
-// Cek setiap sensor setiap:
-uint32_t smartgarden_delay = 1000; // 1 second
 
 uint32_t pompa_nyala_sejak = 0;
 uint32_t pompa_mati_sampai = 0;
- */
 /** Apply REG value to 2 chained IC 595 */
 void serialApply()
 {
@@ -94,7 +75,6 @@ void dumpSerial(int start = 0, int end = 15)
     }
 }
 
-
 // no -1 mean turn off all
 void valveOn(int8 no)
 {
@@ -106,9 +86,20 @@ void valveOn(int8 no)
     if (no >= 0)
     {
         VALVE_LAST_ON[no] = DETIK;
+        // if pompa off, save state off high now
+        if (getPompa() == LOW)
+        {
+            pompa_nyala_sejak = DETIK;
+            pompa_mati_sampai = 0;
+            setPompa(HIGH);
+        }
     }
-    // turn pompa on
-    SERIAL_REG[PinSerial::Pompa] = no >= 0;
+    else
+    {
+        setPompa(LOW);
+        pompa_nyala_sejak = 0;
+    }
+
     VALVE_CURRENT = no;
     status("%s ON %d dtk*", valveName(VALVE_CURRENT), config->valve_delay[no]);
     serialApply();
@@ -130,7 +121,6 @@ void handle_ir_remote()
     }
     if (forcedValve >= 0)
     {
-        VALVE_CURRENT = forcedValve;
         valveOn(VALVE_CURRENT);
     }
 }
@@ -181,18 +171,34 @@ int8_t findValveThatNeedWater()
                 }
             }
         }
-        dumpValveState();
-        P("Should ON %s\n", PinSerialNames[VALVE_START + needWater]);
+        // dumpValveState();
+        // P("Should ON %s\n", PinSerialNames[VALVE_START + needWater]);
     }
     else
     {
-        P("Nothing that need water\n");
+        // P("Nothing that need water\n");
     }
     return needWater;
 }
 
+void forceTempOff(const char *reason)
+{
+    setValve(VALVE_CURRENT, LOW);
+    SERIAL_REG[PinSerial::Pompa] = LOW;
+    serialApply();
+    P(RED("forceTempOff: %s\n"), reason);
+}
+void forceTempOn(const char *reason)
+{
+    setValve(VALVE_CURRENT, HIGH);
+    SERIAL_REG[PinSerial::Pompa] = HIGH;
+    serialApply();
+    P(BLUE("forceTempOn: %s\n"), reason);
+}
+
 void smartgarden_loop()
 {
+    int remain;
     // check pressed button
     if (currentButton)
     {
@@ -209,26 +215,54 @@ void smartgarden_loop()
 
     if ((DETIK % config->sensor_delay) == 0)
     {
-        P(YELLOW("sensorUpdate\n"));
         sensorUpdate();
+    }
+    if (pompa_mati_sampai > 0)
+    {
+        remain = pompa_mati_sampai - DETIK;
+        if (remain > 0)
+        {
+            status("Pompa off %d detik", remain);
+            return;
+        }
+        if (hasValveCurrent)
+        {
+            VALVE_LAST_ON[VALVE_CURRENT] += config->maksimal_pompa_mati;
+        }
+
+        pompa_nyala_sejak = 0;
+        pompa_mati_sampai = 0;
+        /* else
+        {
+        } */
     }
 
     // have valve that still on
-    if (hasValveOn)
+    if (hasValveCurrent && getPompa() == HIGH)
     {
-        int remain = config->valve_delay[VALVE_CURRENT] - (DETIK - VALVE_LAST_ON[VALVE_CURRENT]);
+        // Berapa lama lagi pompa boleh nyala
+        remain = pompa_nyala_sejak + config->maksimal_pompa_hidup - DETIK;
+        if (remain < 0)
+        {
+            pompa_mati_sampai = DETIK + config->maksimal_pompa_mati;
+            forceTempOff("POMPA AUTO OFF");
+            status("Pompa off %d detik*", config->maksimal_pompa_mati);
+            return;
+        }
+        remain = config->valve_delay[VALVE_CURRENT] - (DETIK - VALVE_LAST_ON[VALVE_CURRENT]);
         if (remain > 0)
         {
-            status("%s ON %d dtk", valveName(VALVE_CURRENT), remain);
-            // no need more time
+            status("%s ON %d detik", valveName(VALVE_CURRENT), remain);
+            P("%d\n", getValve(VALVE_CURRENT));
             return;
         }
     }
+
     int8_t needWater = findValveThatNeedWater();
     if (needWater >= 0)
     {
         // same valve need water, check the gap period
-        if (needWater == VALVE_CURRENT)
+        if (needWater == VALVE_CURRENT && getPompa() == HIGH)
         {
             int nextOn = VALVE_LAST_ON[VALVE_CURRENT] + config->valve_delay[VALVE_CURRENT] + config->valve_gap[VALVE_CURRENT];
             int gap_remain = nextOn - DETIK;
@@ -236,79 +270,15 @@ void smartgarden_loop()
             {
                 if (getValve(VALVE_CURRENT) == HIGH)
                 {
+                    pompa_mati_sampai = DETIK + config->valve_gap[VALVE_CURRENT];
                     // still high, need to turn it off
-                    setValve(VALVE_CURRENT, LOW);
-                    SERIAL_REG[PinSerial::Pompa] = LOW;
-                    dumpSerial(PinSerial::Pompa, VALVE_START+VALVE_CURRENT);
-                    serialApply();
+                    forceTempOff("VALVE_GAP");
                 }
-                status("%s wait %3d dtk", valveName(VALVE_CURRENT), gap_remain);
+                status("%s delay %d dtk", valveName(VALVE_CURRENT), gap_remain);
                 return;
             }
         }
-        /* else
-        {
-            valveOn(needWater)
-        } */
     }
-    else
-    {
-    }
+
     valveOn(needWater);
-
-    /* 
-    if (pompa_mati_sampai > 0)
-    {
-        if (now >= pompa_mati_sampai)
-        {
-            pompa_mati_sampai = 0;
-            //status("Pompa ON");
-            P("POMPA ON\n");
-            // SERIAL_REG[PinSerial::Pompa] = ON;
-            pompa_nyala_sejak = now;
-            if (VALVE_CURRENT >= 0)
-            {
-                // turn back on
-                SERIAL_REG[VALVE_START + VALVE_CURRENT] = HIGH;
-            }
-            pompaChecker();
-            serialApply();
-        }
-        else
-        {
-            uint remaining = (pompa_mati_sampai - now) / 1000;
-            if (remaining >= 0)
-            {
-                status("Auto Off %5d detik", remaining + 1);
-            }
-        }
-    }
-    else if (VALVE_CURRENT >= 0)
-    {
-        uint8_t remaining = 0;
-        if (now < valve_next_check)
-        {
-            remaining = static_cast<uint8_t>((valve_next_check - now) / 1000);
-        }
-        if (VALVE_CURRENT == SPRAYER_NO)
-        {
-            status("Sprayer ON %3d detik", remaining + 1);
-        }
-        else
-        {
-            status("No %d ON %6d detik", VALVE_CURRENT + 1, remaining + 1);
-        }
-    }
-    else
-    {
-        status(config->displayText);
-    }
-
-    if (valve_next_check <= now)
-    {
-        valveChecker();
-        valveSwitcher();
-        pompaChecker();
-        serialApply();
-    } */
 }

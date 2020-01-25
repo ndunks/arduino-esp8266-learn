@@ -145,7 +145,9 @@ export default class WidgetMeja extends Vue {
   }
 
   get statusColor() {
-    return this.status.valve[this.no] ? 'green' : 'gray'
+    if (this.status.valve[this.no]) {
+      return this.status.pompa ? 'success' : 'warning'
+    } else return 'gray'
   }
 
   submit() {

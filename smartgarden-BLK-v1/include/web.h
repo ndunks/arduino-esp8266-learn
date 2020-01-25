@@ -1,14 +1,10 @@
 #pragma once
-#include <Arduino.h>
+
+#include "header.h"
+#include "handlers.h"
 #include <ESP8266WebServer.h>
 #include <DNSServer.h>
 #include <FS.h>
-#include "controllers.h"
-#include "constant.h"
-
-// #define ledPin D4
-// //#define btnPin D8 // RX GPIO 03
-// #define btnPin 0 // GPIO 0 / FLASH BUTTON
 
 typedef void (*HandlerFunction)(String &response, HTTPMethod method);
 struct Controller
@@ -17,6 +13,7 @@ struct Controller
     HandlerFunction function;
     bool mustLogin;
 };
+
 
 //  server.cpp
 bool server_guard();
@@ -42,4 +39,3 @@ protected:
 
 // routes.cpp
 extern struct Controller routes[];
-extern Controller *routeEnd;

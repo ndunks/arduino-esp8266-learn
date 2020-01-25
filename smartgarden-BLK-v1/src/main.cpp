@@ -1,6 +1,5 @@
 #include "header.h"
 
-//uint32_t ti
 void setup()
 {
   Serial.begin(115200);

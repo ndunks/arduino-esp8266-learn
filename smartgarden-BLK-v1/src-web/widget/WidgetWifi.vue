@@ -24,11 +24,10 @@
         <v-list-item-action>
           <v-btn
             color="error"
-            v-if="status.isConnected"
             text
             @click="setStaMode(false)"
           >
-            Putuskan
+            {{ status.isConnected? 'Putuskan' : 'Non-Aktifkan' }}
           </v-btn>
         </v-list-item-action>
       </v-list-item>

@@ -8,6 +8,7 @@ const state: {
     popups: Popup[]
     status: Status
     settings: Settings
+    deviceOn: Date
 } = {
     bootComplete: false,
     login: false,
@@ -19,10 +20,11 @@ const state: {
         valve: [],
         sensorTanah: [],
         needWater: [],
-        laston: []
+        lastOn: []
     },
     ///@ts-ignore
-    settings: {}
+    settings: {},
+    deviceOn: null
 }
 
 export default state

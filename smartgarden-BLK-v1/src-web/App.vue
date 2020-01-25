@@ -107,6 +107,7 @@ export default class App extends Vue {
   // Typing helper
   status: Status
   login: boolean
+  bootComplete: boolean
   _timer = 0
 
   logout() {
@@ -115,8 +116,16 @@ export default class App extends Vue {
     this.$router.push('/')
   }
 
-@Watch('login')
-  loginChanged(newLogin, oldLogin) {
+  @Watch('login')
+  async loginChanged(newLogin, oldLogin) {
+    /* if (!this.bootComplete) {
+      console.log('Login changed waiting boot');
+      const waiters = this.$store.watch((s) => s.bootComplete,
+      (n, o) => {
+        // unwatch
+        waiters()
+      })
+    } */
     console.log('Login changed', this.login);
     if (this.login) {
       this.statusChecker();

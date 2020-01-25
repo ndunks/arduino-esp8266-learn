@@ -12,8 +12,13 @@ const mutations: {
     login(state, login: boolean) {
         state.login = login
     },
+    /*     deviceOn(state, deviceOn) {
+            state.deviceOn = deviceOn
+        }, */
     bootComplete(state) {
         state.bootComplete = true
+        state.deviceOn = new Date(Date.now() - (state.status.uptime * 1000));
+        // Update device on
         //Default loading is 1 on page load, hide it now
         this.commit('loading', false);
     },
@@ -47,7 +52,7 @@ const mutations: {
     },
     status(state, payload: string) {
         const raw = parseResponse<StatusRaw | ConfigRaw | SensorsRaw>(payload);
-        const newStatus = { ...state.status };
+        const newStatus = Object.assign({}, state.status);
 
         // status is always included
         if (isStatusRaw(raw)) {

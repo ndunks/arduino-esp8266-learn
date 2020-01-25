@@ -34,8 +34,9 @@ export function parseConfigRaw(raw: ConfigRaw, newStatus: Status) {
     newStatus.ap_ssid = raw.ap_ssid
     newStatus.ap_ip = raw.ap_ip
     newStatus.ap_psk = raw.ap_psk
-    newStatus.isApMode = !!(newStatus.mode & WifiMode["Access Point"])
-    newStatus.isStaMode = !!(newStatus.mode & WifiMode.Station)
+    let mode = parseInt(raw.mode)
+    newStatus.isApMode = !!(mode & WifiMode["Access Point"])
+    newStatus.isStaMode = !!(mode & WifiMode.Station)
 }
 
 export function parseStatusRaw(raw: StatusRaw, newStatus: Status) {
@@ -47,7 +48,7 @@ export function parseStatusRaw(raw: StatusRaw, newStatus: Status) {
         frag: parseInt(frag)
     }
     newStatus.mode = parseInt(raw.mode)
-    newStatus.modeStr = WifiMode[newStatus.mode]
+    newStatus.modeStr = WifiMode[newStatus.mode] || `Unknown ${raw.mode}`
     newStatus.status = parseInt(raw.status)
     newStatus.statusStr = WifiStatus[newStatus.status]
     newStatus.rssi = parseInt(raw.rssi)
@@ -55,6 +56,7 @@ export function parseStatusRaw(raw: StatusRaw, newStatus: Status) {
     newStatus.ap_clients = parseInt(raw.ap_clients)
     newStatus.uptime = parseInt(raw.uptime)
     newStatus.isConnected = newStatus.status == WifiStatus.Connected
+
 }
 
 export function parseSensorRaw(raw: SensorsRaw, newStatus: Status) {
@@ -84,7 +86,7 @@ export function parseSensorRaw(raw: SensorsRaw, newStatus: Status) {
         newStatus.needWater[i] = (state >> i & 1) > 0;
     }
     raw.laston.trim().split(' ').forEach(
-        (v, i) => newStatus.laston[i] = parseInt(v)
+        (v, i) => newStatus.lastOn[i] = parseInt(v)
     )
 }
 

@@ -8,10 +8,11 @@ import { Popup } from '@/interfaces';
 const actions: ActionTree<State, any> = {
     async boot(context) {
         // Validating password
+        let isLoginValid = false;
         if (Api.password) {
             await this.dispatch('settings').then(
                 () => {
-                    context.commit('login', true)
+                    isLoginValid = true;
                 }
             ).catch(
                 (e: AxiosError) => {
@@ -45,7 +46,10 @@ const actions: ActionTree<State, any> = {
                 }
             }
         } while (error)
-        if (!error) {
+        if (error) {
+            context.commit('popup', 'Koneksi ke perangkat GAGAL')
+        } else {
+            context.commit('login', isLoginValid)
             context.commit('bootComplete')
         }
     },

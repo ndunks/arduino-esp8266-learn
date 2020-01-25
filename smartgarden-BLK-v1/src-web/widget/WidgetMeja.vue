@@ -92,6 +92,14 @@
     </v-list-item>
     <v-list-item>
       <v-list-item-content>
+        <v-list-item-title>Terakhir disiram</v-list-item-title>
+        <v-list-item-subtitle>
+          {{ status.lastOn[no] | sinceToDate }}
+        </v-list-item-subtitle>
+      </v-list-item-content>
+    </v-list-item>
+    <v-list-item>
+      <v-list-item-content>
         <v-btn
           @click="$store.dispatch('valveOn', no)"
           color="success"

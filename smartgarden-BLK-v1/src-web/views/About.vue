@@ -6,14 +6,6 @@
         <v-card-subtitle>BLKP Klampok - Banjarnegara</v-card-subtitle>
         <v-list-item>
           <v-list-item-content>
-            <v-list-item-title>Uptime</v-list-item-title>
-            <v-list-item-subtitle>
-              {{ status.uptime }} detik
-            </v-list-item-subtitle>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item>
-          <v-list-item-content>
             <v-list-item-title>Versi</v-list-item-title>
             <v-list-item-subtitle>
               1.0
@@ -22,9 +14,17 @@
         </v-list-item>
         <v-list-item>
           <v-list-item-content>
-            <v-list-item-title>Build Date</v-list-item-title>
+            <v-list-item-title>Perangkat Nyala Sejak</v-list-item-title>
             <v-list-item-subtitle>
-              --
+              {{ $store.state.deviceOn.toLocaleString() }}
+            </v-list-item-subtitle>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item>
+          <v-list-item-content>
+            <v-list-item-title>Uptime</v-list-item-title>
+            <v-list-item-subtitle>
+              {{ status.uptime }} detik
             </v-list-item-subtitle>
           </v-list-item-content>
         </v-list-item>

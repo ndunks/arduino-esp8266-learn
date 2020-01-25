@@ -47,7 +47,7 @@ export function isConfigRaw(raw): raw is ConfigRaw {
     return (raw as ConfigRaw).hostname !== undefined;
 }
 export function isStatusRaw(raw): raw is StatusRaw {
-    return (raw as ConfigRaw).status !== undefined;
+    return (raw as ConfigRaw).temp !== undefined;
 }
 
 export function isSensorsRaw(raw): raw is SensorsRaw {
@@ -160,7 +160,7 @@ export interface Sensors extends Pick<SensorsRaw, 'in'> {
     /** store all valve conditions, true mean need water */
     needWater: boolean[]
     /** last valve on */
-    laston: number[]
+    lastOn: number[]
 }
 
 export interface Settings {

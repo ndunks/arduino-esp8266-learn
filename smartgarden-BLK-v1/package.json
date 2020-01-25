@@ -10,6 +10,7 @@
     "dump-flash": "./tool/esptool.py --chip esp8266 read_flash 0x0 4194304 flash-dump.bin",
     "flash-config": "./tool/esptool.py --chip esp8266 write_flash 0x3fb000 flash/config.bin",
     "erase-config": "./tool/esptool.py --chip esp8266 --after no_reset erase_region 0x003fb000 4096",
+    "erase-wifi-config": "./tool/esptool.py --chip esp8266 erase_region 0x003fc000 16384",
     "flash-id": "./tool/esptool.py --chip esp8266 --no-stub flash_id"
   },
   "dependencies": {

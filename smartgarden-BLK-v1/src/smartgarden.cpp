@@ -94,15 +94,15 @@ void valveOn(int8 no)
             pompa_mati_sampai = 0;
             setPompa(HIGH);
         }
+        status("%s ON %d dtk*", valveName(VALVE_CURRENT), config->valve_delay[no]);
     }
     else
     {
         setPompa(LOW);
         pompa_nyala_sejak = 0;
+        status(config->displayText);
     }
-
     VALVE_CURRENT = no;
-    status("%s ON %d dtk*", valveName(VALVE_CURRENT), config->valve_delay[no]);
     serialApply();
 }
 
@@ -122,7 +122,8 @@ void handle_ir_remote()
     }
     if (forcedValve >= 0)
     {
-        valveOn(VALVE_CURRENT);
+        P("Force on IR %d", forcedValve);
+        valveOn(forcedValve);
     }
 }
 
@@ -141,17 +142,15 @@ int8_t findValveThatNeedWater()
 {
     // reset state
     VALVE_STATE = 0;
-    // 1 111 111
+
     // All Analog sensors, except DHT22
     int8_t needWater = -1;
-    for (int i = 0; i < VALVE_COUNT - 1; i++)
+    for (int8_t i = 0; i < VALVE_COUNT - 1; i++)
     {
         // check if is not manual mode
         if (!isValveManual(i))
         {
             VALVE_STATE |= (ANALOG_SENSOR[i] <= config->humidity_minimal[i]) << i;
-        }else{
-            P("Manual %d\n", i);
         }
     }
     if (!isValveManual(SPRAYER_NO))
@@ -168,7 +167,7 @@ int8_t findValveThatNeedWater()
     if (VALVE_STATE > 0)
     {
         // Find that oldest start
-        for (int i = 0; i < VALVE_COUNT; i++)
+        for (int8_t i = 0; i < VALVE_COUNT; i++)
         {
             if (VALVE_STATE & 1 << i)
             {
@@ -181,12 +180,8 @@ int8_t findValveThatNeedWater()
             }
         }
         dumpValveState();
-        P("Should ON %s\n", PinSerialNames[VALVE_START + needWater]);
     }
-    else
-    {
-        P("Nothing that need water\n");
-    }
+
     return needWater;
 }
 
@@ -196,13 +191,6 @@ void forceTempOff(const char *reason)
     SERIAL_REG[PinSerial::Pompa] = LOW;
     serialApply();
     P(RED("forceTempOff: %s\n"), reason);
-}
-void forceTempOn(const char *reason)
-{
-    setValve(VALVE_CURRENT, HIGH);
-    SERIAL_REG[PinSerial::Pompa] = HIGH;
-    serialApply();
-    P(BLUE("forceTempOn: %s\n"), reason);
 }
 
 void smartgarden_loop()
@@ -241,9 +229,6 @@ void smartgarden_loop()
 
         pompa_nyala_sejak = 0;
         pompa_mati_sampai = 0;
-        /* else
-        {
-        } */
     }
 
     // have valve that still on
@@ -262,30 +247,32 @@ void smartgarden_loop()
         if (remain > 0)
         {
             status("%s ON %d detik", valveName(VALVE_CURRENT), remain);
-            P("%d\n", getValve(VALVE_CURRENT));
             return;
         }
     }
 
     int8_t needWater = findValveThatNeedWater();
-    if (needWater >= 0)
+    if (needWater < 0 && VALVE_CURRENT < 0)
     {
-        // same valve need water, check the gap period
-        if (needWater == VALVE_CURRENT && getPompa() == HIGH)
+        // Nothing todo
+        return;
+    }
+
+    // same valve need water, check the gap period
+    if (needWater == VALVE_CURRENT && getPompa() == HIGH)
+    {
+        int nextOn = VALVE_LAST_ON[VALVE_CURRENT] + config->valve_delay[VALVE_CURRENT] + config->valve_gap[VALVE_CURRENT];
+        int gap_remain = nextOn - DETIK;
+        if (gap_remain > 0)
         {
-            int nextOn = VALVE_LAST_ON[VALVE_CURRENT] + config->valve_delay[VALVE_CURRENT] + config->valve_gap[VALVE_CURRENT];
-            int gap_remain = nextOn - DETIK;
-            if (gap_remain > 0)
+            if (getValve(VALVE_CURRENT) == HIGH)
             {
-                if (getValve(VALVE_CURRENT) == HIGH)
-                {
-                    pompa_mati_sampai = DETIK + config->valve_gap[VALVE_CURRENT];
-                    // still high, need to turn it off
-                    forceTempOff("VALVE_GAP");
-                }
-                status("%s delay %d dtk", valveName(VALVE_CURRENT), gap_remain);
-                return;
+                pompa_mati_sampai = DETIK + config->valve_gap[VALVE_CURRENT];
+                // still high, need to turn it off
+                forceTempOff("VALVE_GAP");
             }
+            status("%s delay %d dtk", valveName(VALVE_CURRENT), gap_remain);
+            return;
         }
     }
 

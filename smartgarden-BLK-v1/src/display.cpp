@@ -36,7 +36,7 @@ void status(const char *txt, ...)
   va_end(args);
   if (len > 20)
   {
-    P("STATUS TERLALU PANJANG %d\n", len);
+    P("%s %d\n%s\n", RED("STATUS OVER"), len, statusBuffer);
   }
   else if (len < 20)
   {
@@ -48,7 +48,7 @@ void status(const char *txt, ...)
     lcd.setCursor(0, 3);
     lcd.print(statusBuffer);
   }
-  P("%s\n", GREEN(statusBuffer));
+  //P("%s\n", GREEN(statusBuffer));
 }
 
 void display_setup()

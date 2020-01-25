@@ -8,14 +8,11 @@ void handle_valve_patch(String &response, HTTPMethod method)
     if (server.arg("manual").equals("true"))
     {
         config->valve_manual |= (1 << no);
-        P("SET MANUAL\n");
     }
     else
     {
         config->valve_manual &= ~(1 << no);
-        P("CLR MANUAL\n");
     }
-    P("MANUAL %d\n", config->valve_manual);
 
     config->humidity_minimal[no] = static_cast<uint8>(humidity);
     config->valve_delay[no] = static_cast<uint8>(delay);

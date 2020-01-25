@@ -53,6 +53,7 @@ export function parseStatusRaw(raw: StatusRaw, newStatus: Status) {
     newStatus.rssi = parseInt(raw.rssi)
     newStatus.signal = 100 + parseInt(raw.rssi)
     newStatus.ap_clients = parseInt(raw.ap_clients)
+    newStatus.uptime = parseInt(raw.uptime)
     newStatus.isConnected = newStatus.status == WifiStatus.Connected
 }
 

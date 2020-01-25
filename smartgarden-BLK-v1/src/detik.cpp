@@ -3,6 +3,8 @@
  * this value will overflow/reset after 136.19251950152207 years
  * or it reset when power down :-D
  * 
+ * is use hardware timer1, make sure no other library use it!
+ * 
  * by: klampok.child@gmail.com
  */
 

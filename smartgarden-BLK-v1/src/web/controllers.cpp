@@ -2,6 +2,7 @@
 #include "controllers.h"
 #include "smartgarden.h"
 #include "config.h"
+#include "detik.h"
 #include <base64.h>
 
 void handle_valve_patch(String &response, HTTPMethod method)
@@ -170,6 +171,9 @@ void handle_status(String &response, HTTPMethod method)
         response += "\nap_clients\t";
         response += WiFi.softAPgetStationNum();
     }
+    //uptime second
+    response += "\nuptime\t";
+    response += DETIK;
     // show sensors too
     response += "\n";
     handle_sensor(response, method);
@@ -220,6 +224,9 @@ void handle_config_get(String &response, HTTPMethod method)
         response += "\nap_clients\t";
         response += WiFi.softAPgetStationNum();
     }
+    //uptime second
+    response += "\nuptime\t";
+    response += DETIK;
     response += "\n";
     // show sensors too
     handle_sensor(response, method);

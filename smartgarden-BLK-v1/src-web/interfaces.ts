@@ -37,9 +37,10 @@ export interface ConfigRaw extends SensorsRaw {
     status: string
     rssi: string
     ap_clients: string
+    uptime: string
 }
 
-export type StatusRaw = Pick<ConfigRaw, 'heap' | 'mode' | 'status' | 'rssi' | 'ap_clients'>
+export type StatusRaw = Pick<ConfigRaw, 'heap' | 'mode' | 'status' | 'rssi' | 'ap_clients' | 'uptime'>
 
 // Config/Status type guad
 export function isConfigRaw(raw): raw is ConfigRaw {
@@ -120,6 +121,7 @@ export interface Status extends Config, Sensors {
     statusStr?: string
     isApMode: boolean // bitwise check from mode
     isStaMode: boolean // bitwise check from mode
+    uptime: number
 }
 
 export interface SensorsRaw {

@@ -82,9 +82,9 @@ void valveOn(int8 no)
     // Turn off all except one
     for (int i = 0; i < VALVE_COUNT; i++)
     {
-        setValve(no, i == no);
+        SERIAL_REG[VALVE_START + i] = i == no;
     }
-    if (no >= 0)
+    if (no >= 0 && no <= SPRAYER_NO)
     {
         VALVE_LAST_ON[no] = DETIK;
         // if pompa off, save state off high now
@@ -94,7 +94,7 @@ void valveOn(int8 no)
             pompa_mati_sampai = 0;
             setPompa(HIGH);
         }
-        status("%s ON %d dtk*", valveName(VALVE_CURRENT), config->valve_delay[no]);
+        status("%s ON %d dtk*", valveName(no), config->valve_delay[no]);
     }
     else
     {
@@ -103,7 +103,9 @@ void valveOn(int8 no)
         status(config->displayText);
     }
     VALVE_CURRENT = no;
+
     serialApply();
+    dumpSerial(PinSerial::Valve_0, PinSerial::Sprayer);
 }
 
 void handle_ir_remote()
@@ -187,7 +189,7 @@ int8_t findValveThatNeedWater()
 
 void forceTempOff(const char *reason)
 {
-    setValve(VALVE_CURRENT, LOW);
+    SERIAL_REG[VALVE_START + VALVE_CURRENT] = LOW;
     SERIAL_REG[PinSerial::Pompa] = LOW;
     serialApply();
     P(RED("forceTempOff: %s\n"), reason);
@@ -204,6 +206,7 @@ void smartgarden_loop()
     // Masih di detik yg sama, abaikan
     if (DETIK - LAST_LOOP <= 0)
     {
+        yield();
         return;
     }
 

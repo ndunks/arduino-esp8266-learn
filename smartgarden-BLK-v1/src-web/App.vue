@@ -110,7 +110,7 @@ export default class App extends Vue {
     this.$router.push('/')
   }
   get hasCurrent() {
-    return this.status.cur
+    return this.status.cur >= 0
   }
   get currentColor() {
     if (this.hasCurrent) {

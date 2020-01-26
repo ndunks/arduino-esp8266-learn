@@ -104,6 +104,7 @@ void firstboot()
 #endif
     // Load default config
     P("\n--- FIRST BOOT ---\n");
+    ESP.eraseConfig();
     config_default();
     WiFi.persistent(true);
 
@@ -117,12 +118,15 @@ void firstboot()
         status("SoftAP SSID ERROR");
         delay(1000);
     }
+    WiFi.disconnect(true);
     WiFi.enableSTA(false);
     WiFi.mode(WIFI_AP);
     WiFi.setAutoConnect(false);
     WiFi.hostname(config->name);
     // Save config
     config_save();
+    delay(1000);
+    ESP.reset();
 }
 
 void config_reset()
@@ -181,11 +185,17 @@ void config_setup()
         firstboot();
         delay(1000);
     }
-
     if (wifi_get_opmode() & WIFI_STA && WiFi.getAutoConnect())
     {
         //wait connected
         status("%s...", WiFi.SSID().c_str());
+
+        WiFi.onStationModeGotIP([](const WiFiEventStationModeGotIP &ip) {
+            P("%s %s", RED("onStationModeGotIP"), ip.ip.toString().c_str());
+        });
+        WiFi.onStationModeDHCPTimeout([]() {
+            P("%s", RED("StationModeDHCPTimeout"));
+        });
         int8 wifiStatus = WiFi.waitForConnectResult(15000);
         if (wifiStatus == WL_CONNECTED)
         {
@@ -198,16 +208,20 @@ void config_setup()
         }
         else
         {
+            if (wifiStatus == -1)
+            {
+                status("Gagal, Timeout");
+                WiFi.setAutoReconnect(true);
+            }
+            else
+            {
+                status("Gagal Konek WiFi");
+            }
+            delay(1500);
             P("WiFi Fail %d\n", wifiStatus);
         }
     }
 
     dump_config();
+    status(config->displayText);
 }
-
-// Detect reset button
-/* void config_loop(){
-    if( currentButton ){
-
-    }
-} */

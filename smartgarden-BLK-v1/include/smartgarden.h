@@ -2,12 +2,6 @@
 #include <Arduino.h>
 #include "constant.h"
 
-#define setValve(no, state) SERIAL_REG[VALVE_START + no] = state
-#define getValve(no) SERIAL_REG[VALVE_START + no]
-#define setPompa(state) SERIAL_REG[PinSerial::Pompa] = state
-#define getPompa() SERIAL_REG[PinSerial::Pompa]
-#define valveName(no) PinSerialNames[VALVE_START + no]
-#define hasValveCurrent VALVE_CURRENT >= 0
 
 // OUTUT/LED PIN
 const uint8_t VALVE_START = PinSerial::Valve_0;
@@ -24,6 +18,7 @@ extern uint8_t HUMIDITY;
 extern int8_t TEMPERATURE;
 extern int8_t VALVE_CURRENT;
 
+
 /**
  * store all valve conditions, if bit set 1 mean need water
  * based on defined minimum on config
@@ -37,3 +32,10 @@ extern uint32_t pompa_mati_sampai;
 void smartgarden_setup();
 void smartgarden_loop();
 void valveOn(int8 no);
+
+//#define setValve(no, state) SERIAL_REG[VALVE_START + no] = state
+#define getValve(no) SERIAL_REG[VALVE_START + no]
+#define setPompa(state) SERIAL_REG[PinSerial::Pompa] = state
+#define getPompa() SERIAL_REG[PinSerial::Pompa]
+#define valveName(no) PinSerialNames[VALVE_START + no]
+#define hasValveCurrent (((VALVE_CURRENT >= 0) && (VALVE_CURRENT <= SPRAYER_NO)))

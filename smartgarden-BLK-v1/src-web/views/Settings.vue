@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-row>
-      <v-col>
+      <v-col cols="12" xs="12" sm="6">
         <v-form lazy-validation ref="password" @submit.prevent="submitPassword">
           <v-card>
             <v-card-title>Ubah Katasandi</v-card-title>
@@ -28,7 +28,7 @@
           </v-card>
         </v-form>
       </v-col>
-      <v-col>
+      <v-col cols="12" xs="12" sm="6">
         <v-card>
           <v-card-title>Nyalakan Ulang Perangkat</v-card-title>
           <v-list-item>

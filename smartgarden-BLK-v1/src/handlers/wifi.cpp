@@ -41,17 +41,19 @@ void handle_scan(String &response, HTTPMethod method)
     }
 }
 
+const char PROGMEM F_CONNECT[] = "connect";
+const char PROGMEM F_DISCONNECT[] = "disconnect";
+
 void handle_wifi(String &response, HTTPMethod method)
 {
-    const String F_CONNECT("connect");
-    const String F_DISCONNECT("disconnect");
-    P("Handle Wifi\n");
     if (server.hasArg(F_CONNECT))
     {
         int id = server.arg(F_CONNECT).toInt();
         String pass = server.arg(F("pass"));
         WiFi.begin(WiFi.SSID(id).c_str(), pass.c_str(), WiFi.channel(id));
+        yield();
         WiFi.setAutoConnect(true);
+        delay(1000);
         ESP.restart();
     }
     else if (server.hasArg(F_DISCONNECT))

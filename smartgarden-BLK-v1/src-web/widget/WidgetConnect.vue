@@ -121,7 +121,7 @@ export default class WidgetConnect extends Vue {
 
       ApiNoLoading.get('wifi', {
         params: {
-          connect: wifi.id,
+          connect: wifi.ssid,
           pass
         },
         timeout: 10000

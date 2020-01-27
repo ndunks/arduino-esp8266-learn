@@ -38,6 +38,7 @@ void dump_config()
     }
     P("Hostname: %s\nSSID: %s\nConnected: %d\n", WiFi.hostname().c_str(), WiFi.SSID().c_str(), WiFi.isConnected());
     P("MacAddr: %s\n", WiFi.macAddress().c_str());
+    P("Reboot Reason: %s\n", ESP.getResetReason().c_str());
     P("---------------\n");
 }
 
@@ -45,7 +46,7 @@ void config_default()
 {
     // get chip id as device id, leave first byte, is zero
     char device_id[7] = {};
-    String name("smart-");
+    String name("smart");
     uint32 num = system_get_chip_id();
 
     sprintf(device_id,
@@ -99,15 +100,9 @@ void config_default()
 }
 void firstboot()
 {
-#ifdef SMARTGARDEN_DEBUG
-    delay(1000);
-#endif
     // Load default config
     P("\n--- FIRST BOOT ---\n");
-    ESP.eraseConfig();
     config_default();
-    WiFi.persistent(true);
-
     if (!WiFi.softAPConfig(local_IP, local_IP, IPAddress(255, 255, 255, 0)))
     {
         status("SoftAP IP Error");
@@ -118,40 +113,30 @@ void firstboot()
         status("SoftAP SSID ERROR");
         delay(1000);
     }
-    WiFi.disconnect(true);
     WiFi.enableSTA(false);
-    WiFi.mode(WIFI_AP);
-    WiFi.setAutoConnect(false);
-    WiFi.hostname(config->name);
     // Save config
     config_save();
+    P("checkFlashConfig: %d\n", ESP.checkFlashConfig(true));
     delay(1000);
-    ESP.reset();
 }
 
 void config_reset()
 {
-    uint32 startSector = (0x405FB000 - 0x40200000) / SPI_FLASH_SEC_SIZE;
-    uint32 sector = 0x0;
+    size_t EEPROM_SECTOR = (0x405FB000 - 0x40200000) / SPI_FLASH_SEC_SIZE;
     status("MENGHAPUS DATA...");
-    delay(2000);
-    //DELETE 5 Sector (EEPROM 1 sector, rfcal 1 sector, WIFI 3 Sectors)
-    for (int i = 0; i < 5; i++)
+    delay(1000);
+    if (ESP.flashEraseSector(EEPROM_SECTOR))
     {
-        sector = startSector + i;
-        P("%08X ... ", sector);
-        if (ESP.flashEraseSector(sector))
-        {
-            status("OK, %d", i + 1);
-        }
-        else
-        {
-            status("Fail, %d", i + 1);
-        }
-        delay(200);
+        status("OK");
     }
+    else
+    {
+        status("Fail");
+    }
+    delay(1500);
     status("RESTARTING...");
     delay(1500);
+    ESP.eraseConfig();
     ESP.restart();
 }
 
@@ -173,52 +158,48 @@ bool config_save()
 }
 void config_setup()
 {
-
     // Setup EEPROM
     EEPROM.begin(sizeof(SmartGardenConfig));
     config = (SmartGardenConfig *)EEPROM.getDataPtr();
-    // After erase flash, whole flash contain 0xff
+
     if (config->flag != FLAG_IS_BOOTED)
     {
         status("Firstbooting...");
         delay(1000);
         firstboot();
-        delay(1000);
     }
-    if (wifi_get_opmode() & WIFI_STA && WiFi.getAutoConnect())
+    if (WiFi.SSID().length() > 0)
     {
-        //wait connected
         status("%s...", WiFi.SSID().c_str());
-
-        WiFi.onStationModeGotIP([](const WiFiEventStationModeGotIP &ip) {
-            P("%s %s", RED("onStationModeGotIP"), ip.ip.toString().c_str());
-        });
-        WiFi.onStationModeDHCPTimeout([]() {
-            P("%s", RED("StationModeDHCPTimeout"));
-        });
+        P("\nConnecting to %s\n", WiFi.SSID().c_str());
+        if (WiFi.psk().length() == 0)
+        {
+            WiFi.enableInsecureWEP(true);
+        }
+        WiFi.begin();
         int8 wifiStatus = WiFi.waitForConnectResult(15000);
         if (wifiStatus == WL_CONNECTED)
         {
             String str("Connected to ");
             str += WiFi.SSID();
             status(str.c_str());
-            P("IP %s\n", WiFi.localIP().toString().c_str());
+            P("OK, IP %s\n", WiFi.localIP().toString().c_str());
             str.clear();
-            delay(1500);
         }
         else
         {
+            WiFi.enableSTA(false);
+            // WiFi.enableAP(true);
             if (wifiStatus == -1)
             {
                 status("Gagal, Timeout");
-                WiFi.setAutoReconnect(true);
             }
             else
             {
                 status("Gagal Konek WiFi");
             }
-            delay(1500);
             P("WiFi Fail %d\n", wifiStatus);
+            delay(1000);
         }
     }
 

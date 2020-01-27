@@ -3,7 +3,7 @@
  * this value will overflow/reset after 136.19251950152207 years
  * or it reset when power down :-D
  * 
- * is use hardware timer1, make sure no other library use it!
+ * is use firmware timer1, make sure no other library use it!
  * 
  * by: klampok.child@gmail.com
  */
@@ -13,15 +13,16 @@
  */
 volatile uint32_t DETIK = 0;
 
+void ICACHE_RAM_ATTR detik_tick()
+{
+    DETIK++;
+}
+
 void detik_setup()
 {
-    timer1_disable();
-    timer1_isr_init();
-    timer1_attachInterrupt([]() ICACHE_RAM_ATTR {
-        DETIK++;
-    });
+    timer1_attachInterrupt(&detik_tick);
 
-   /*
+    /*
    * TIM_DIV1     80MHz (80 ticks/us - 104857.588 us max)
    *              Under 1 second loop/timer
    * 

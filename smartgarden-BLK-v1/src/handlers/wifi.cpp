@@ -48,19 +48,19 @@ void handle_wifi(String &response, HTTPMethod method)
 {
     if (server.hasArg(F_CONNECT))
     {
-        int id = server.arg(F_CONNECT).toInt();
-        String pass = server.arg(F("pass"));
-        WiFi.begin(WiFi.SSID(id).c_str(), pass.c_str(), WiFi.channel(id));
-        yield();
-        WiFi.setAutoConnect(true);
-        delay(1000);
-        ESP.restart();
+        if (server.hasArg(F("pass")))
+        {
+            WiFi.begin(server.arg(F_CONNECT).c_str(), server.arg(F("pass")).c_str());
+        }
+        else
+        {
+            WiFi.enableInsecureWEP(true);
+            WiFi.begin(server.arg(F_CONNECT).c_str());
+        }
     }
     else if (server.hasArg(F_DISCONNECT))
     {
-        WiFi.persistent(false);
         response = WiFi.disconnect(false);
-        WiFi.persistent(true);
     }
     else if (server.hasArg("ap"))
     {
@@ -69,14 +69,24 @@ void handle_wifi(String &response, HTTPMethod method)
     else if (server.hasArg("sta"))
     {
         P("SET STA MODE %s\n", server.arg("sta").c_str());
-        delay(100);
-        if (WiFi.disconnect(true))
+        bool enable = server.arg("sta").equals("true");
+        if (enable)
         {
-            response = "OK";
+            WiFi.enableSTA(true);
+        }
+        else
+        {
+            WiFi.disconnect(false);
+        }
+
+        /* if (WiFi.enableSTA(enable))
+        {
+            //WiFi.setAutoConnect(enable);
+            ESP.reset();
         }
         else
         {
             response = "Failed";
-        }
+        } */
     }
 }

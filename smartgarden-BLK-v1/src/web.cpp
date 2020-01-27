@@ -18,8 +18,6 @@ const Controller *routeEnd = routes + sizeof(routes) / sizeof(routes[0]);
 
 ESP8266WebServer server;
 WiFiClient client;
-char method[8] = {0};
-char path[100] = {0};
 DNSServer dnsServer;
 Handler handler;
 
@@ -35,7 +33,43 @@ bool server_guard()
     server.send(403, "text/plain", "Unauthorized");
     return false;
 }
+void web_on_notfound()
+{
+    String host = server.hostHeader();
+    bool isIpAddressLike = false;
+    for (uint i = 0; i < host.length(); i++)
+    {
+        isIpAddressLike = host.charAt(i) >= '.' && host.charAt(i) <= '9';
+        if (!isIpAddressLike)
+            break;
+    }
 
+#ifdef SMARTGARDEN_DEBUG
+    P("404: %s %s%s\n",
+      isIpAddressLike ? GREEN("IP") : BLUE("DOMAIN"),
+      host.c_str(),
+      server.uri().c_str());
+#endif
+
+    if (isIpAddressLike ||
+        host.equalsIgnoreCase(config->name) ||
+        host.equalsIgnoreCase(WiFi.hostname()))
+    {
+        P("SPA\n");
+        File f = SPIFFS.open("/index.html.gz", "r");
+        server.streamFile(f, mime::mimeTable[mime::html].mimeType);
+        f.close();
+    }
+    else
+    {
+        String redirect("http://");
+        redirect += config->name;
+        server.sendHeader("Location", redirect.c_str());
+        server.send(302);
+        P("%s\n", redirect.c_str());
+    }
+    host.clear();
+}
 void web_setup()
 {
 
@@ -44,37 +78,17 @@ void web_setup()
         server.addHandler(&handler);
         server.serveStatic("/", SPIFFS, "/", "public, max-age=86400");
 
-        server.onNotFound([]() {
-            String host = server.hostHeader();
-            P("Not found: %s %s\n", host.c_str(), server.uri().c_str());
-            if (host.length() && (host.equalsIgnoreCase(config->name) ||
-                                  host.equals(WiFi.hostname()) ||
-                                  host.equals(WiFi.localIP().toString()) ||
-                                  host.equals(WiFi.softAPIP().toString()) ||
-                                  server.uri().endsWith("generate_204")))
-            {
-                P("SPA\n");
-                handle_index(*((String *)&emptyString), server.method());
-            }
-            else
-            {
-                String redirect("http://");
-                redirect += config->name;
-                server.sendHeader("Location", redirect.c_str());
-                server.send(302);
-                P("Handled Captive Portal %s\n", redirect.c_str());
-            }
-        });
+        server.onNotFound(&web_on_notfound);
     }
     else
     {
-        status("[!] FileSystem ERROR");
+        status(String(F("[!] FileSystem ERROR")).c_str());
         server.onNotFound([]() {
-            server.send(200, "text/html", "<html><body><h1>FILE SYSTEM ERROR</h1></body></html>");
+            server.send(200, FPSTR(mime::mimeTable[mime::html].mimeType), String(F("<html><body><h1>FILE SYSTEM ERROR</h1></body></html>")));
         });
     }
     server.begin();
-    dnsServer.setErrorReplyCode(DNSReplyCode::Refused);
+    dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
     dnsServer.start(53, "*", local_IP);
 }
 
@@ -109,7 +123,7 @@ bool Handler::handle(ESP8266WebServer &server, HTTPMethod method, String path)
         server.sendHeader(F("Access-Control-Allow-Headers"), F("*"));
         // 60 * 60 * 60 * 30 = 6480000
         server.sendHeader(F("Access-Control-Max-Age"), F("6480000"));
-        server.send(200, "text/plain");
+        server.send(200, mime::mimeTable[mime::txt].mimeType);
         return true;
     }
     String response;
@@ -129,7 +143,7 @@ bool Handler::handle(ESP8266WebServer &server, HTTPMethod method, String path)
             matched->function(response, method);
             if (response.length())
             {
-                server.send(200, "text/plain", response);
+                server.send(200, mime::mimeTable[mime::txt].mimeType, response);
             } // no response mean handled directly
             response.clear();
             return true;

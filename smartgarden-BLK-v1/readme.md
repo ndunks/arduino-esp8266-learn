@@ -86,7 +86,7 @@ To get Sector Address: ``` FLASH Addres / SECTOR_SIZE ```
 # scratch/error-dump.txt
 
 ## xtensa
-python tool/decoder.py -e .pio/build/development/firmware.elf scratch/error-dump.txt
+python tool/decoder.py -e .pio/build/development/firmware.elf scratch/error-dump2.txt
 
 ```
 

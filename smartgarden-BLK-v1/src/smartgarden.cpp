@@ -63,8 +63,10 @@ void smartgarden_setup()
     pinMode(SERIAL_LOAD, OUTPUT);
     pinMode(SERIAL_CLOCK, OUTPUT);
     pinMode(SENSOR_SUHU_PIN, INPUT);
+    // turn off all
+    serialApply();
     // update initial sensors
-    sensorUpdate();
+    //sensorUpdate();
 }
 
 void dumpSerial(int start = 0, int end = 15)
@@ -105,7 +107,7 @@ void valveOn(int8 no)
     VALVE_CURRENT = no;
 
     serialApply();
-    dumpSerial(PinSerial::Valve_0, PinSerial::Sprayer);
+    //dumpSerial(PinSerial::Valve_0, PinSerial::Sprayer);
 }
 
 void handle_ir_remote()
@@ -181,7 +183,7 @@ int8_t findValveThatNeedWater()
                 }
             }
         }
-        dumpValveState();
+        //dumpValveState();
     }
 
     return needWater;

@@ -84,7 +84,6 @@ void web_loop()
     server.handleClient();
 }
 
-
 bool Handler::canHandle(HTTPMethod method, String path)
 {
     if (method == HTTP_OPTIONS)

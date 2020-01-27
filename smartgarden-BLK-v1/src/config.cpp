@@ -46,7 +46,7 @@ void config_default()
 {
     // get chip id as device id, leave first byte, is zero
     char device_id[7] = {};
-    String name("smart");
+    String name("SMART");
     uint32 num = system_get_chip_id();
 
     sprintf(device_id,
@@ -108,11 +108,6 @@ void firstboot()
         status("SoftAP IP Error");
         delay(1000);
     }
-    if (!WiFi.softAP(config->name))
-    {
-        status("SoftAP SSID ERROR");
-        delay(1000);
-    }
     WiFi.enableSTA(false);
     // Save config
     config_save();
@@ -167,6 +162,11 @@ void config_setup()
         status("Firstbooting...");
         delay(1000);
         firstboot();
+    }
+    if (!WiFi.softAP(config->name))
+    {
+        status("SoftAP SSID ERROR");
+        delay(1000);
     }
     if (WiFi.SSID().length() > 0)
     {

@@ -32,7 +32,7 @@ export interface ConfigRaw extends SensorsRaw {
     ap_ip: string
     ap_psk: string
     // in booth config & status response //
-    heap: string
+    free: string
     mode: string
     status: string
     rssi: string
@@ -40,7 +40,7 @@ export interface ConfigRaw extends SensorsRaw {
     uptime: string
 }
 
-export type StatusRaw = Pick<ConfigRaw, 'heap' | 'mode' | 'status' | 'rssi' | 'ap_clients' | 'uptime'>
+export type StatusRaw = Pick<ConfigRaw, 'free' | 'mode' | 'status' | 'rssi' | 'ap_clients' | 'uptime'>
 
 // Config/Status type guad
 export function isConfigRaw(raw): raw is ConfigRaw {
@@ -90,11 +90,8 @@ export enum WifiStatus {
     'No Shield' = 255,
 }
 export interface Config {
-    heap: {
-        free: number
-        max: number
-        frag: number
-    }
+    // Free heap
+    free: number
     mode: WifiMode
     hostname: string
     autoconnect: boolean

@@ -52,8 +52,33 @@
       </v-col>
     </v-row>
     <v-row>
-      <v-col>
+      <v-col cols="12" xs="12" sm="6">
         <widget-wifi />
+      </v-col>
+      <v-col cols="12" xs="12" sm="6">
+        <v-form lazy-validation ref="device" @submit.prevent="submitDevice">
+          <v-card>
+            <v-card-title>Perangkat</v-card-title>
+            <v-card-text>
+              <v-text-field
+                label="Nama Perangkat"
+                v-model="device.name"
+                :rules="[v => !!v || 'Harus diisi']"
+              />
+              <v-text-field
+                label="Text Display"
+                v-model="device.display"
+                :rules="[v => !!v || 'Harus diisi']"
+              />
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer />
+              <v-btn rounded color="success" type="submit">
+                Simpan
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-form>
       </v-col>
     </v-row>
     <DialogConfirm
@@ -81,6 +106,10 @@ export default class Dashboard extends Vue {
     current: '',
     new: ''
   }
+  device = {
+    name: '',
+    display: ''
+  }
   dialogMessage: string = null
   dialogTitle: string = null
   dialogActions: ActionDialog[] = null
@@ -88,8 +117,12 @@ export default class Dashboard extends Vue {
   settings: Settings
   $refs: {
     password: Vue & any
+    device: Vue & any
   }
-
+  mounted() {
+    this.device.name = this.settings.name
+    this.device.display = this.settings.displayText
+  }
   submitPassword() {
     if (!this.$refs.password.validate()) return
 
@@ -110,6 +143,19 @@ export default class Dashboard extends Vue {
           color: res.data.indexOf('OK') >= 0 ? 'success' : 'warning'
         } as Popup)
         setTimeout(() => location.reload(), 3000)
+      }
+    )
+  }
+
+  submitDevice() {
+    if (!this.$refs.device.validate()) return
+    Api.post('settings', null, { params: this.device }).then(
+      res => {
+        this.$store.commit('popup', {
+          message: res.data,
+          color: res.data.indexOf('OK') >= 0 ? 'success' : 'warning'
+        } as Popup)
+        this.$store.dispatch('settings');
       }
     )
   }

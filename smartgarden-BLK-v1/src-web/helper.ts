@@ -40,13 +40,8 @@ export function parseConfigRaw(raw: ConfigRaw, newStatus: Status) {
 }
 
 export function parseStatusRaw(raw: StatusRaw, newStatus: Status) {
-    if (raw.heap) {
-        const [free, max, frag] = raw.heap.split(' ', 3)
-        newStatus.heap = {
-            free: parseInt(free),
-            max: parseInt(max),
-            frag: parseInt(frag)
-        }
+    if (raw.free) {
+        newStatus.free = parseInt(raw.free)
     }
     newStatus.mode = parseInt(raw.mode)
     newStatus.modeStr = WifiMode[newStatus.mode] || `Unknown ${raw.mode}`

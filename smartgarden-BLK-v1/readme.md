@@ -80,6 +80,15 @@ To get Sector Address: ``` FLASH Addres / SECTOR_SIZE ```
 ** May usefull sometime**
 ```FREE_SPACE_AFTER_SKETCH=(ESP.getSketchSize() + FLASH_SECTOR_SIZE - 1) & (~(FLASH_SECTOR_SIZE - 1));```
 
+### STACK DUMP 2 Code Line
+```
+## Store dumpfile in
+# scratch/error-dump.txt
+
+## xtensa
+python tool/decoder.py -e .pio/build/development/firmware.elf scratch/error-dump.txt
+
+```
 
 ## WEB FRONTEND
 

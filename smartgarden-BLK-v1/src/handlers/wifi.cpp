@@ -46,19 +46,20 @@ const char PROGMEM F_DISCONNECT[] = "disconnect";
 
 void handle_wifi(String &response, HTTPMethod method)
 {
-    if (server.hasArg(F_CONNECT))
+    if (server.hasArg(FPSTR(F_CONNECT)))
     {
         if (server.hasArg(F("pass")))
         {
-            WiFi.begin(server.arg(F_CONNECT).c_str(), server.arg(F("pass")).c_str());
+            WiFi.begin(server.arg(FPSTR(F_CONNECT)).c_str(), server.arg(F("pass")).c_str());
         }
         else
         {
             WiFi.enableInsecureWEP(true);
-            WiFi.begin(server.arg(F_CONNECT).c_str());
+            WiFi.begin(server.arg(FPSTR(F_CONNECT)).c_str());
         }
+        response = "OK";
     }
-    else if (server.hasArg(F_DISCONNECT))
+    else if (server.hasArg(FPSTR(F_DISCONNECT)))
     {
         response = WiFi.disconnect(false);
     }
@@ -68,25 +69,7 @@ void handle_wifi(String &response, HTTPMethod method)
     }
     else if (server.hasArg("sta"))
     {
-        P("SET STA MODE %s\n", server.arg("sta").c_str());
         bool enable = server.arg("sta").equals("true");
-        if (enable)
-        {
-            WiFi.enableSTA(true);
-        }
-        else
-        {
-            WiFi.disconnect(false);
-        }
-
-        /* if (WiFi.enableSTA(enable))
-        {
-            //WiFi.setAutoConnect(enable);
-            ESP.reset();
-        }
-        else
-        {
-            response = "Failed";
-        } */
+        response = WiFi.enableSTA(enable);
     }
 }

@@ -180,6 +180,7 @@ void config_setup()
         int8 wifiStatus = WiFi.waitForConnectResult(15000);
         if (wifiStatus == WL_CONNECTED)
         {
+            WiFi.hostname(config->name);
             String str("Connected to ");
             str += WiFi.SSID();
             status(str.c_str());

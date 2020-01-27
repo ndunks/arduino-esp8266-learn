@@ -17,12 +17,10 @@ void setup()
   ir_remote_setup();
 }
 
-
 void loop()
 {
-  ir_remote_loop();
-  web_loop();
-  smartgarden_loop();
-  display_loop();
-  delay(100);
+    ir_remote_loop();
+    web_loop();
+    smartgarden_loop();
+    display_loop();
 }

@@ -128,7 +128,6 @@ bool Handler::handle(ESP8266WebServer &server, HTTPMethod method, String path)
     }
     String response;
     String subPath = path.substring(prefix.length());
-    //P("Api Check: %s\n", subPath.c_str());
     Controller *matched = routes;
 
     while (matched < routeEnd)
@@ -144,7 +143,12 @@ bool Handler::handle(ESP8266WebServer &server, HTTPMethod method, String path)
             if (response.length())
             {
                 server.send(200, mime::mimeTable[mime::txt].mimeType, response);
-            } // no response mean handled directly
+            }
+            else
+            {
+                // no response mean handled directly
+                P("WARN: Handler without response on %s\n", matched->path);
+            }
             response.clear();
             return true;
         }

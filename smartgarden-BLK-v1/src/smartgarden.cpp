@@ -194,7 +194,7 @@ void forceTempOff(const char *reason)
     SERIAL_REG[VALVE_START + VALVE_CURRENT] = LOW;
     SERIAL_REG[PinSerial::Pompa] = LOW;
     serialApply();
-    P(RED("forceTempOff: %s\n"), reason);
+    //P(RED("forceTempOff: %s\n"), reason);
 }
 
 void smartgarden_loop()

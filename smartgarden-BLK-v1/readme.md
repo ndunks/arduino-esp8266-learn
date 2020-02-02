@@ -8,8 +8,8 @@
 | D7             | IC 595: DS    |
 | D8             | IC 595: RCLK  |
 | D5             | IC 595: SRCLK |
-| D4             | IR Module: S  |
-| D3             | DHT22: OUT    |
+| D3             | IR Module: S  |
+| D4             | DHT22: OUT    |
 | D2/SDA         | I2C LCD: SDA  |
 | D1/SCL         | I2C LCD: SCL  |
 | VV/5V          | I2C LCD: VCC  |

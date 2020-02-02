@@ -27,8 +27,8 @@ static const PROGMEM char *const PinSerialNames[] = {
 #define SERIAL_CLOCK D5 //D5 --> SRCLK Generates the clock signal to control the transference of data
 
 // SENSOR SUHU
-#define SENSOR_SUHU_PIN D3
-#define SENSOR_IR D4
+#define SENSOR_SUHU_PIN D4
+#define SENSOR_IR D3
 
 enum PinSerial : uint8_t
 {

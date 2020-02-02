@@ -29,6 +29,16 @@ uint32_t LAST_LOOP = 0;
 
 uint32_t pompa_nyala_sejak = 0;
 uint32_t pompa_mati_sampai = 0;
+// Capacitive Soil Moisture Sensor v.12
+
+// Jika kurang dari ini, berarti tidak ada sensor dipasang
+uint16_t SOIL_CALIBRATE_LOWEST = 170u;
+// KERING = voltase tinggi = max 745
+uint16_t SOIL_CALIBRATE_MAX = 745u;
+// BASAH  = voltase rendah = min 270
+uint16_t SOIL_CALIBRATE_MIN = 270u;
+float_t SOIL_PERCENTAGE = 100.0f / static_cast<float_t>(SOIL_CALIBRATE_MAX - SOIL_CALIBRATE_MIN);
+
 /** Apply REG value to 2 chained IC 595 */
 void serialApply()
 {
@@ -41,6 +51,25 @@ void serialApply()
     }
     digitalWrite(SERIAL_LOAD, HIGH);
 }
+
+uint8_t soil_persentase(int value)
+{
+    if (value > SOIL_CALIBRATE_MAX)
+    {
+        value = SOIL_CALIBRATE_MAX;
+    }
+    else if (value <= SOIL_CALIBRATE_LOWEST)
+    {
+        // tidak ada sensor dipasang
+        value = SOIL_CALIBRATE_MAX;
+    }
+    else if (value < SOIL_CALIBRATE_MIN)
+    {
+        value = SOIL_CALIBRATE_MIN;
+    }
+    return static_cast<uint8_t>(100 - ((value - SOIL_CALIBRATE_MIN) * SOIL_PERCENTAGE));
+}
+
 void sensorUpdate()
 {
     // Sensor Suhu
@@ -54,7 +83,7 @@ void sensorUpdate()
         SERIAL_REG[PinSerial::IC4051_SB] = (i >> 1) & 0x1;
         SERIAL_REG[PinSerial::IC4051_SA] = (i >> 0) & 0x1;
         serialApply();
-        ANALOG_SENSOR[i] = static_cast<int>((system_adc_read() / 4) * (100.0f / 256.0f));
+        ANALOG_SENSOR[i] = soil_persentase(system_adc_read());
     }
 }
 void smartgarden_setup()

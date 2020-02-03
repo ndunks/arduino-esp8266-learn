@@ -117,7 +117,7 @@ void handle_settings(String &response, HTTPMethod method)
             response = "Gagal menyimpan data!";
             return;
         }
-        response = WiFi.hostname(config->name) ? "OK" : "GAGAL";
+        response = "OK, Restart untuk memberikan efek.";
     }
     else
     {

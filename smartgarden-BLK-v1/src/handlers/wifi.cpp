@@ -61,15 +61,15 @@ void handle_wifi(String &response, HTTPMethod method)
     }
     else if (server.hasArg(FPSTR(F_DISCONNECT)))
     {
-        response = WiFi.disconnect(false);
+        response = WiFi.disconnect(false) ? "OK" : "FAIL";
     }
     else if (server.hasArg("ap"))
     {
-        response = WiFi.enableAP(server.arg("ap").equals("true"));
+        response = WiFi.enableAP(server.arg("ap").equals("true")) ? "OK" : "FAIL";
     }
     else if (server.hasArg("sta"))
     {
         bool enable = server.arg("sta").equals("true");
-        response = WiFi.enableSTA(enable);
+        response = WiFi.enableSTA(enable) ? "OK" : "FAIL";
     }
 }

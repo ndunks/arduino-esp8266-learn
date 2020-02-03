@@ -22,6 +22,8 @@ int8_t VALVE_CURRENT = -1;
 int8_t VALVE_NEXT = -1;
 
 uint8_t VALVE_STATE = 0;
+// In seconds
+uint8_t DELAY_CLOSE_ALL_VALVE = 3;
 
 // Last valve turned on, in second
 uint32_t VALVE_LAST_ON[VALVE_COUNT] = {};
@@ -29,6 +31,8 @@ uint32_t LAST_LOOP = 0;
 
 uint32_t pompa_nyala_sejak = 0;
 uint32_t pompa_mati_sampai = 0;
+// time sejak pompa mati
+uint32_t timer_valve_delay_off = 0;
 // Capacitive Soil Moisture Sensor v.12
 
 // Jika kurang dari ini, berarti tidak ada sensor dipasang
@@ -123,6 +127,7 @@ void valveOn(int8 no)
         {
             pompa_nyala_sejak = DETIK;
             pompa_mati_sampai = 0;
+            timer_valve_delay_off = 0;
             setPompa(HIGH);
         }
         status("%s ON %d dtk*", valveName(no), config->valve_delay[no]);
@@ -131,6 +136,7 @@ void valveOn(int8 no)
     {
         setPompa(LOW);
         pompa_nyala_sejak = 0;
+        timer_valve_delay_off = DETIK;
         status(config->displayText);
     }
     VALVE_CURRENT = no;
@@ -170,6 +176,7 @@ void dumpValveState()
           (VALVE_STATE >> i) & 1);
     }
 }
+
 // Check valve that need to turn on
 int8_t findValveThatNeedWater()
 {
@@ -220,9 +227,10 @@ int8_t findValveThatNeedWater()
 
 void forceTempOff(const char *reason)
 {
-    SERIAL_REG[VALVE_START + VALVE_CURRENT] = LOW;
+    //SERIAL_REG[VALVE_START + VALVE_CURRENT] = LOW;
     SERIAL_REG[PinSerial::Pompa] = LOW;
     serialApply();
+    timer_valve_delay_off = DETIK;
     //P(RED("forceTempOff: %s\n"), reason);
 }
 
@@ -248,6 +256,7 @@ void smartgarden_loop()
     {
         sensorUpdate();
     }
+
     if (pompa_mati_sampai > 0)
     {
         remain = pompa_mati_sampai - DETIK;
@@ -282,6 +291,17 @@ void smartgarden_loop()
         {
             status("%s ON %d detik", valveName(VALVE_CURRENT), remain);
             return;
+        }
+    }
+
+    // Check delay off
+    if (getPompa() == LOW && timer_valve_delay_off > 0)
+    {
+        if (DETIK - timer_valve_delay_off >= DELAY_CLOSE_ALL_VALVE)
+        {
+            P("TURN OFF ALL VALVES");
+            valveOn(-1);
+            timer_valve_delay_off = 0;
         }
     }
 

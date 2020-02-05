@@ -19,11 +19,11 @@ int8_t TEMPERATURE = 0;
 
 // Valve yg saat ini sedang on
 int8_t VALVE_CURRENT = -1;
-int8_t VALVE_NEXT = -1;
+int8_t VALVE_OFF_AFTER_DELAY = -1;
 
 uint8_t VALVE_STATE = 0;
 // In seconds
-uint8_t DELAY_CLOSE_ALL_VALVE = 3;
+uint8_t DELAY_CLOSE_ALL_VALVE = 2;
 
 // Last valve turned on, in second
 uint32_t VALVE_LAST_ON[VALVE_COUNT] = {};
@@ -114,13 +114,16 @@ void dumpSerial(int start = 0, int end = 15)
 // no -1 mean turn off all
 void valveOn(int8 no)
 {
-    // Turn off all except one
+    // Turn off all
     for (int i = 0; i < VALVE_COUNT; i++)
     {
-        SERIAL_REG[VALVE_START + i] = i == no;
+        SERIAL_REG[VALVE_START + i] = LOW;
     }
+
+    // Check if turn on valve
     if (no >= 0 && no <= SPRAYER_NO)
     {
+        SERIAL_REG[VALVE_START + no] = HIGH;
         VALVE_LAST_ON[no] = DETIK;
         // if pompa off, save state off high now
         if (getPompa() == LOW)
@@ -132,17 +135,27 @@ void valveOn(int8 no)
         }
         status("%s ON %d dtk*", valveName(no), config->valve_delay[no]);
     }
-    else
+    else if (getPompa() == HIGH) // Turn off all
     {
         setPompa(LOW);
         pompa_nyala_sejak = 0;
-        timer_valve_delay_off = DETIK;
         status(config->displayText);
     }
+    if (VALVE_CURRENT >= 0 && VALVE_OFF_AFTER_DELAY != VALVE_CURRENT)
+    {
+        // Don't turn of now
+        VALVE_OFF_AFTER_DELAY = VALVE_CURRENT;
+        timer_valve_delay_off = DETIK;
+        SERIAL_REG[VALVE_START + VALVE_OFF_AFTER_DELAY] = HIGH;
+        P("%s OFF DELAYED\n", valveName(VALVE_OFF_AFTER_DELAY));
+    }
+    else
+    {
+        P("Turn off but no recent valve on!\n");
+    }
     VALVE_CURRENT = no;
-
     serialApply();
-    //dumpSerial(PinSerial::Valve_0, PinSerial::Sprayer);
+    dumpSerial(PinSerial::Valve_0, PinSerial::Sprayer);
 }
 
 void handle_ir_remote()
@@ -228,9 +241,18 @@ int8_t findValveThatNeedWater()
 void forceTempOff(const char *reason)
 {
     //SERIAL_REG[VALVE_START + VALVE_CURRENT] = LOW;
+    if (VALVE_CURRENT >= 0)
+    {
+        if (VALVE_OFF_AFTER_DELAY >= 0 && VALVE_CURRENT != VALVE_OFF_AFTER_DELAY)
+        {
+            SERIAL_REG[VALVE_START + VALVE_OFF_AFTER_DELAY] = LOW;
+        }
+        VALVE_OFF_AFTER_DELAY = VALVE_CURRENT;
+        SERIAL_REG[VALVE_START + VALVE_OFF_AFTER_DELAY] = HIGH;
+        timer_valve_delay_off = DETIK;
+    }
     SERIAL_REG[PinSerial::Pompa] = LOW;
     serialApply();
-    timer_valve_delay_off = DETIK;
     //P(RED("forceTempOff: %s\n"), reason);
 }
 
@@ -245,7 +267,6 @@ void smartgarden_loop()
     // Masih di detik yg sama, abaikan
     if (DETIK - LAST_LOOP <= 0)
     {
-        yield();
         return;
     }
 
@@ -255,6 +276,17 @@ void smartgarden_loop()
     if ((DETIK % config->sensor_delay) == 0)
     {
         sensorUpdate();
+    }
+    // Check delayed valve off
+    if (VALVE_OFF_AFTER_DELAY >= 0 && DETIK - timer_valve_delay_off >= DELAY_CLOSE_ALL_VALVE)
+    {
+        P("%s OFF\n", valveName(VALVE_OFF_AFTER_DELAY));
+        SERIAL_REG[VALVE_START + VALVE_OFF_AFTER_DELAY] = LOW;
+        serialApply();
+        VALVE_OFF_AFTER_DELAY = -1;
+        timer_valve_delay_off = 0;
+        dumpSerial(PinSerial::Valve_0, PinSerial::Sprayer);
+        return;
     }
 
     if (pompa_mati_sampai > 0)
@@ -294,18 +326,7 @@ void smartgarden_loop()
         }
     }
 
-    // Check delay off
-    if (getPompa() == LOW && timer_valve_delay_off > 0)
-    {
-        if (DETIK - timer_valve_delay_off >= DELAY_CLOSE_ALL_VALVE)
-        {
-            P("TURN OFF ALL VALVES");
-            valveOn(-1);
-            timer_valve_delay_off = 0;
-        }
-    }
-
-    int8_t needWater = findValveThatNeedWater();
+        int8_t needWater = findValveThatNeedWater();
     if (needWater < 0 && VALVE_CURRENT < 0)
     {
         // Nothing todo

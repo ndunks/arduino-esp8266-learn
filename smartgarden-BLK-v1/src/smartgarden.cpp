@@ -158,27 +158,6 @@ void valveOn(int8 no)
     dumpSerial(PinSerial::Valve_0, PinSerial::Sprayer);
 }
 
-void handle_ir_remote()
-{
-    RemoteButton pressed = currentButton->remoteButton;
-    int8_t forcedValve = -1;
-    // Valve button 1 - 6
-    if (pressed >= RemoteButton::BTN_1 && pressed <= RemoteButton::BTN_6)
-    {
-        forcedValve = pressed;
-    }
-    // TUrn on sprayer
-    else if (pressed >= RemoteButton::BTN_7 && pressed <= RemoteButton::BTN_9)
-    {
-        forcedValve = SPRAYER_NO;
-    }
-    if (forcedValve >= 0)
-    {
-        P("Force on IR %d", forcedValve);
-        valveOn(forcedValve);
-    }
-}
-
 void dumpValveState()
 {
     P(RED("VALVE STATE:\n"));
@@ -259,11 +238,18 @@ void forceTempOff(const char *reason)
 void smartgarden_loop()
 {
     int remain;
-    // check pressed button
-    if (currentButton)
+    // Check delayed valve off
+    if (VALVE_OFF_AFTER_DELAY >= 0 && DETIK - timer_valve_delay_off >= DELAY_CLOSE_ALL_VALVE)
     {
-        handle_ir_remote();
+        P("%s OFF\n", valveName(VALVE_OFF_AFTER_DELAY));
+        SERIAL_REG[VALVE_START + VALVE_OFF_AFTER_DELAY] = LOW;
+        serialApply();
+        VALVE_OFF_AFTER_DELAY = -1;
+        timer_valve_delay_off = 0;
+        dumpSerial(PinSerial::Valve_0, PinSerial::Sprayer);
+        return;
     }
+
     // Masih di detik yg sama, abaikan
     if (DETIK - LAST_LOOP <= 0)
     {
@@ -276,17 +262,6 @@ void smartgarden_loop()
     if ((DETIK % config->sensor_delay) == 0)
     {
         sensorUpdate();
-    }
-    // Check delayed valve off
-    if (VALVE_OFF_AFTER_DELAY >= 0 && DETIK - timer_valve_delay_off >= DELAY_CLOSE_ALL_VALVE)
-    {
-        P("%s OFF\n", valveName(VALVE_OFF_AFTER_DELAY));
-        SERIAL_REG[VALVE_START + VALVE_OFF_AFTER_DELAY] = LOW;
-        serialApply();
-        VALVE_OFF_AFTER_DELAY = -1;
-        timer_valve_delay_off = 0;
-        dumpSerial(PinSerial::Valve_0, PinSerial::Sprayer);
-        return;
     }
 
     if (pompa_mati_sampai > 0)
@@ -326,7 +301,7 @@ void smartgarden_loop()
         }
     }
 
-        int8_t needWater = findValveThatNeedWater();
+    int8_t needWater = findValveThatNeedWater();
     if (needWater < 0 && VALVE_CURRENT < 0)
     {
         // Nothing todo

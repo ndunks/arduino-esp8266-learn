@@ -33,16 +33,16 @@ void ir_remote_setup()
     irrecv.enableIRIn();
 }
 
-void readCode()
+Button *readCode()
 {
     currentButton = nullptr;
     if (!irrecv.decode(&results))
-        return;
+        return nullptr;
 
     irrecv.resume();
 
     if (results.bits <= 0)
-        return;
+        return nullptr;
 
     uint8_t index = 0U;
     do
@@ -51,11 +51,12 @@ void readCode()
         {
             currentButton = &codeMaps[index];
             P("Tombol %d: %s\n", currentButton->remoteButton, RemoteButtonName[currentButton->remoteButton]);
-            return;
+            return currentButton;
         }
     } while (codeMaps[++index].code != RemoteButton::BTN_UNKNOWN);
 
     P("IR Mbuh: %s %s\n", typeToString(results.decode_type).c_str(), resultToHexidecimal(&results).c_str());
+    return nullptr;
 }
 void do_confirm(const char *prompt, std::function<void(void)> callback)
 {
@@ -63,8 +64,7 @@ void do_confirm(const char *prompt, std::function<void(void)> callback)
     unsigned long until = millis() + 4000UL;
     do
     {
-        readCode();
-        if (currentButton)
+        if (readCode())
         {
             if (currentButton->remoteButton == RemoteButton::BTN_OK)
             {
@@ -154,9 +154,30 @@ void handle_special_command()
 
 void ir_remote_loop()
 {
-    readCode();
-    if (currentButton && currentButton->remoteButton == BTN_WILDCARD)
+    if (!readCode())
+        return;
+    RemoteButton pressed = currentButton->remoteButton;
+    int8_t forcedValve = -1;
+    if (pressed == BTN_WILDCARD)
     {
         handle_special_command();
+    }
+    else
+    {
+        // Valve button 1 - 6
+        if (pressed >= RemoteButton::BTN_1 && pressed <= RemoteButton::BTN_6)
+        {
+            forcedValve = pressed;
+        }
+        // TUrn on sprayer
+        else if (pressed >= RemoteButton::BTN_7 && pressed <= RemoteButton::BTN_9)
+        {
+            forcedValve = SPRAYER_NO;
+        }
+        if (forcedValve >= 0)
+        {
+            P("Force on IR %d", forcedValve);
+            valveOn(forcedValve);
+        }
     }
 }

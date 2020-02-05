@@ -8,7 +8,8 @@
 #include "IRutils.h"
 #include "constant.h"
 
-enum RemoteButton : int8_t {
+enum RemoteButton : int8_t
+{
     BTN_1, // This must be 0, because linked with valve index!
     BTN_2,
     BTN_3,
@@ -56,8 +57,6 @@ struct Button
     uint16 code;
 };
 
-// Jika mau nambah code dari remote merk lain, mappingkan disini
-
-extern Button *currentButton;
+//extern Button *currentButton;
 void ir_remote_setup();
 void ir_remote_loop();

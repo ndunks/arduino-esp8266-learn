@@ -18,6 +18,7 @@ void dump_config()
     P("maksimal_pompa_hidup: %u\n", config->maksimal_pompa_hidup);
     P("maksimal_pompa_mati: %u\n", config->maksimal_pompa_mati);
     P("sensor_delay: %d\n", config->sensor_delay);
+    P("delay_valve_off: %d\n", config->delay_valve_off);
     P("temperature_max: %d\n", config->temperature_max);
     P("displayText: %s\n", config->displayText);
     for (int no = 0; no < VALVE_COUNT; no++)
@@ -68,20 +69,16 @@ void config_default()
     // Default DHT sensor max heat
     config->temperature_max = 27;
     config->sensor_delay = 5;
+    config->delay_valve_off = 3u;
     // All valves manual
     config->valve_manual = 0;
     memcpy(config->displayText, "    BLKP KLAMPOK", 17);
-
-#ifdef SMARTGARDEN_DEBUG
-    config->maksimal_pompa_hidup = 30;
-    config->maksimal_pompa_mati = 10;
-#else
-    smartgarden_config->maksimal_pompa_hidup = 60 * 30; // 30 menit
-    smartgarden_config->maksimal_pompa_mati = 60;       // 1 menit
-#endif
+    config->maksimal_pompa_hidup = 60 * 5;
+    config->maksimal_pompa_mati = 15;
+    
     for (int no = 0; no < VALVE_COUNT; no++)
     {
-        config->valve_delay[no] = 5U;
+        config->valve_delay[no] = 15U;
         config->valve_gap[no] = 5U;
         config->humidity_minimal[no] = 70U;
     }

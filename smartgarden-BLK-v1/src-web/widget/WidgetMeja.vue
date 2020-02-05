@@ -75,34 +75,38 @@
         </v-form>
       </v-dialog>
     </v-toolbar>
-    <v-card-text class="text-center">
-      <v-progress-circular
-        class="mx-auto"
-        size="100"
-        width="10"
-        color="primary"
-        :value="status.sensorTanah[no]"
-      >
-        {{ status.sensorTanah[no] }}%
-      </v-progress-circular>
-    </v-card-text>
-    <v-list-item>
-      <v-list-item-content>
-        <v-list-item-title>Kelembaban Tanah</v-list-item-title>
-        <v-list-item-subtitle>
+    <v-row no-gutters>
+      <v-col style="width: 120px" class="text-center mb-1">
+        <v-progress-circular
+          class="mx-auto"
+          size="100"
+          width="10"
+          color="primary"
+          :value="status.sensorTanah[no]"
+        >
           {{ status.sensorTanah[no] }}%
-        </v-list-item-subtitle>
-      </v-list-item-content>
-    </v-list-item>
-    <v-list-item>
-      <v-list-item-content>
-        <v-list-item-title>Batas Minimum</v-list-item-title>
-        <v-list-item-subtitle>
-          {{ settings.humidity_minimal[no] }}%
-        </v-list-item-subtitle>
-      </v-list-item-content>
-    </v-list-item>
-    <v-list-item>
+        </v-progress-circular>
+      </v-col>
+      <v-col>
+        <v-list-item dense>
+          <v-list-item-content>
+            <v-list-item-title>Kelembaban Tanah</v-list-item-title>
+            <v-list-item-subtitle>
+              {{ status.sensorTanah[no] }}%
+            </v-list-item-subtitle>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item dense>
+          <v-list-item-content>
+            <v-list-item-title>Batas Minimum</v-list-item-title>
+            <v-list-item-subtitle>
+              {{ settings.humidity_minimal[no] }}%
+            </v-list-item-subtitle>
+          </v-list-item-content>
+        </v-list-item>
+      </v-col>
+    </v-row>
+    <v-list-item dense class="text-center">
       <v-list-item-content>
         <v-list-item-title>Terakhir disiram</v-list-item-title>
         <v-list-item-subtitle>
@@ -110,7 +114,7 @@
         </v-list-item-subtitle>
       </v-list-item-content>
     </v-list-item>
-    <v-list-item>
+    <v-list-item dense>
       <v-list-item-content>
         <v-btn
           @click="$store.dispatch('valveOn', no)"

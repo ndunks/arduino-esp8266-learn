@@ -31,6 +31,8 @@ struct SmartGardenConfig
     char password[9];
     // 8 bit manual mode flag valve
     uint8_t valve_manual;
+    // Delay valve off untuk menghilangkan tekanan dari pompa
+    uint8_t delay_valve_off;
 };
 
 // Default config will set on smartgarden_setup()

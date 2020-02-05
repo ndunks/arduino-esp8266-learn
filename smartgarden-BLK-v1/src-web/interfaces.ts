@@ -167,6 +167,8 @@ export interface Settings {
     sensor_delay: number
     // max temperatur to trigger sprayer in celcius
     temperature_max: number
+    // Delay valve off untuk menghilangkan tekanan dari pompa
+    delay_valve_off: number
     // Delay valve in second
     valve_delay: number[]
     // Delay space before next check

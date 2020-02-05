@@ -25,7 +25,7 @@ void handle_valve_patch(String &response, HTTPMethod method)
     if (config_save())
     {
         //send the current settings
-        handle_settings(response, method);
+        handle_settings(response, HTTPMethod::HTTP_GET);
     }
     else
     {
@@ -34,13 +34,15 @@ void handle_valve_patch(String &response, HTTPMethod method)
 }
 void handle_pump_patch(String &response, HTTPMethod method)
 {
+    P("HANDLE PUMP PATCH\n");
     config->maksimal_pompa_hidup = strtoul(server.arg("maxon").c_str(), NULL, 0);
     config->maksimal_pompa_mati = strtoul(server.arg("maxoff").c_str(), NULL, 0);
+    config->delay_valve_off = strtoul(server.arg("delay_valve_off").c_str(), NULL, 0);
 
     if (config_save())
     {
         //send the current settings
-        handle_settings(response, method);
+        handle_settings(response, HTTPMethod::HTTP_GET);
     }
     else
     {
@@ -73,4 +75,3 @@ void handle_valve(String &response, HTTPMethod method)
         }
     }
 }
-

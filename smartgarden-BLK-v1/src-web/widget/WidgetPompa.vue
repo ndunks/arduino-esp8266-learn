@@ -39,6 +39,18 @@
                   Detik
                 </template>
               </v-text-field>
+              <v-text-field
+                label="Delay Valve Off"
+                type="number"
+                v-model="edit.delay_valve_off"
+                filled
+                persistent-hint
+                hint="Tutup valve setelah delay habis untuk menghilangkan tekanan"
+              >
+                <template #append>
+                  Detik
+                </template>
+              </v-text-field>
             </v-card-text>
             <v-card-actions>
               <v-btn color="error" text @click="$refs.dialog.isActive = false">
@@ -127,7 +139,8 @@ import Api from '@/api';
 export default class WidgetPompa extends Vue {
   edit = {
     maxon: 0,
-    maxoff: 0
+    maxoff: 0,
+    delay_valve_off: 0
   }
   lamaMati = 20
   // Typing helper
@@ -143,6 +156,7 @@ export default class WidgetPompa extends Vue {
   mounted() {
     this.edit.maxon = this.settings.maksimal_pompa_hidup
     this.edit.maxoff = this.settings.maksimal_pompa_mati
+    this.edit.delay_valve_off = this.settings.delay_valve_off
   }
 
   get statusText() {

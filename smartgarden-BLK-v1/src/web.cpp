@@ -134,6 +134,7 @@ bool Handler::handle(ESP8266WebServer &server, HTTPMethod method, String path)
     {
         if (subPath.equals(matched->path))
         {
+            P("API %s\n", matched->path);
             if (matched->mustLogin && !server_guard())
             {
                 // blocked

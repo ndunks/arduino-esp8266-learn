@@ -22,8 +22,7 @@ int8_t VALVE_CURRENT = -1;
 int8_t VALVE_OFF_AFTER_DELAY = -1;
 
 uint8_t VALVE_STATE = 0;
-// In seconds
-uint8_t DELAY_CLOSE_ALL_VALVE = 2;
+
 
 // Last valve turned on, in second
 uint32_t VALVE_LAST_ON[VALVE_COUNT] = {};
@@ -239,7 +238,7 @@ void smartgarden_loop()
 {
     int remain;
     // Check delayed valve off
-    if (VALVE_OFF_AFTER_DELAY >= 0 && DETIK - timer_valve_delay_off >= DELAY_CLOSE_ALL_VALVE)
+    if (VALVE_OFF_AFTER_DELAY >= 0 && DETIK - timer_valve_delay_off >= config->delay_valve_off)
     {
         P("%s OFF\n", valveName(VALVE_OFF_AFTER_DELAY));
         SERIAL_REG[VALVE_START + VALVE_OFF_AFTER_DELAY] = LOW;

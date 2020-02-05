@@ -9,22 +9,22 @@
       </v-col>
     </v-row>
     <v-row>
-      <v-col>
+      <v-col cols="12" xs="12" sm="6" md="4">
         <widget-meja :no="0" />
       </v-col>
-      <v-col>
+      <v-col cols="12" xs="12" sm="6" md="4">
         <widget-meja :no="1" />
       </v-col>
-      <v-col>
+      <v-col cols="12" xs="12" sm="6" md="4">
         <widget-meja :no="2" />
       </v-col>
-      <v-col>
+      <v-col cols="12" xs="12" sm="6" md="4">
         <widget-meja :no="3" />
       </v-col>
-      <v-col>
+      <v-col cols="12" xs="12" sm="6" md="4">
         <widget-meja :no="4" />
       </v-col>
-      <v-col>
+      <v-col cols="12" xs="12" sm="6" md="4">
         <widget-meja :no="5" />
       </v-col>
     </v-row>

@@ -142,6 +142,7 @@ export function parseSmartGardenConfig(raw: string) {
     for (let i = 0; i < VALVE_COUNT; i++) {
         cfg.valve_manual[i] = ((manual >> i) & 1) > 0
     }
+    cfg.delay_valve_off = buffView[offset++]
 
     console.log(cfg)
 

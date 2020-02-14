@@ -1,3 +1,6 @@
 [submodule "webfrontend-vuetify"]
 	path = webfrontend-vuetify
 	url = https://github.com/ndunks/nodemcu-vuejs
+[submodule "TFT_35_RPi_Display/lib/TFT_eSPI"]
+	path = TFT_35_RPi_Display/lib/TFT_eSPI
+	url = https://github.com/Bodmer/TFT_eSPI.git

@@ -1,67 +1,83 @@
 #include <Arduino.h>
+#include <EEPROM.h>
 #include <SPI.h>
 #include <TFT_eSPI.h> // Hardware-specific library
+
 /**
  * See on readme.md for wiring
  */
 TFT_eSPI tft = TFT_eSPI(); // Invoke custom library
-// Landscape orientation
-uint16_t maxCursor = 0;
-uint16_t *lineBuffer;
-uint32_t counter = 0U;
-uint8_t maxLines = 0;
-uint8_t fontHeight = 0;
+uint32_t *BAUD_RATE;
+uint8_t TOUCH_STATE = analogRead(A0) / 255;
+char ch;
+uint16_t lastCursor = 0;
+
+void initSerial()
+{
+  Serial.begin(*BAUD_RATE);
+  tft.printf("BAUD RATE: %u, Screen %d x %d\n", *BAUD_RATE, tft.width(), tft.height());
+  lastCursor = tft.getCursorY();
+}
+
 void setup(void)
 {
+  EEPROM.begin(sizeof(uint32_t));
+  BAUD_RATE = (uint32_t *)EEPROM.getDataPtr();
+
+  if (*BAUD_RATE == 0 || *BAUD_RATE == 0xff)
+  {
+    *BAUD_RATE = 115200;
+    EEPROM.commit();
+  }
   tft.init();
   tft.setRotation(1);
   tft.setTextFont(2);
-  Serial.begin(115200);
-  fontHeight = tft.fontHeight();
-  maxCursor = tft.height() - fontHeight;
-  maxLines = tft.height() / fontHeight;
-  lineBuffer = (uint16_t *)calloc(tft.width() * fontHeight, sizeof(uint16_t));
   tft.fillScreen(TFT_BLACK);
+  initSerial();
 }
-void ICACHE_RAM_ATTR moveUp()
+void switch_baud_rate()
 {
-  for (int i = 1; i < maxLines; i++)
+  if (*BAUD_RATE == 115200)
   {
-    tft.readRect(0, i * fontHeight, tft.width(), fontHeight, lineBuffer);
-    tft.fillRect(0, (i - 1) * fontHeight,  tft.width(), fontHeight, TFT_BLUE);
-    tft.pushImage(0, (i - 1) * fontHeight, tft.width(), fontHeight, lineBuffer);
+    *((uint32_t *)EEPROM.getDataPtr()) = 9600;
   }
-  // clean last line?
+  else
+  {
+    *((uint32_t *)EEPROM.getDataPtr()) = 115200;
+  }
+  EEPROM.commit();
+  Serial.end();
+  delay(500);
+  initSerial();
 }
 
-/* void redirectSerial()
+void loop()
 {
-  char ch = 0;
+
+  if (TOUCH_STATE == LOW)
+  {
+    // Touchec switch baud rate
+    switch_baud_rate();
+  }
   while (Serial.available())
   {
     ch = Serial.read();
     tft.print(ch);
-    Serial.write(ch);
-    // TODO SCROLL
-  }
-} */
+    if (tft.getCursorY() != lastCursor)
+    {
+      Serial.printf("%d != %d\n", lastCursor, tft.getCursorY());
+      lastCursor = tft.getCursorY();
+      if (lastCursor >= tft.height())
+      {
+        lastCursor = 0;
+        tft.setCursor(0, lastCursor);
+        Serial.printf("%d >= %d\n", lastCursor, tft.height());
+      }
+      Serial.printf("Cursor %d\n", lastCursor);
+      tft.fillRect(0, lastCursor, tft.width(), tft.fontHeight(), TFT_BLACK);
+      tft.drawFastVLine(0, lastCursor, 16, TFT_GREEN);
+    }
 
-void loop()
-{
-  uint8_t TOUCH_STATE = analogRead(A0) / 255;
-  if (tft.getCursorY() >= tft.height())
-  {
-    // clear last line
-    moveUp();
-    tft.setCursor(0, maxCursor);
-    Serial.println("Move region");
-    //tft.readRect(0, 0, tft.width(), tft.height(), pixelBuff);
+    //Serial.write(ch);
   }
-  tft.printf("%d %d\t: ", ++counter, tft.getCursorY());
-  tft.println(String(analogRead(A0)).c_str());
-  Serial.printf("%d %d\t: ", counter, tft.getCursorY());
-  Serial.println(String(analogRead(A0)).c_str());
-  //tft.drawNumber(, 0, 0, 2); // plot value in font 2
-  delay(200);
-  //tft.scroll(0, 16);
 }

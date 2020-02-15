@@ -2,6 +2,15 @@
 
 RPi 3.5 Inch TFT Touch Display ILI9486/ILI9488 (KUMAN/WAVESHARE) 
 
+**Config:**
+
+``` CPP
+#define TFT_CS   PIN_D2  // Chip select control pin D2
+#define TFT_DC   PIN_D3  // Data Command control pin
+#define TFT_RST  PIN_D4  // Reset pin (could connect to NodeMCU RST, see next line)
+#define TOUCH_CS PIN_D1     // Chip select pin (T_CS) of touch screen
+```
+
 ## Wiring
 
 | NodeMCU    | Display | LCD PIN Name |
@@ -14,7 +23,6 @@ RPi 3.5 Inch TFT Touch Display ILI9486/ILI9488 (KUMAN/WAVESHARE)
 | D6 / HMISO | 21      | TP_SO        |
 | D7 / HMOSI | 19      | LCD_SI / TP_SI |
 | G          | 6       | GND          |
-| 3V         | 1       | 3.3V         |
 | VCC/5V     | 2       | 5V           |
 
 

@@ -1,28 +1,36 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 
-/**
- * this value will overflow/reset after 136.19251950152207 years
- * or it reset when power down :-D
- */
 const uint8_t tick_max = 8;
 volatile int32_t tick_snap[tick_max] = {};
 volatile uint8_t tick_counter = 0;
 volatile int8_t done = 0;
+const uint32_t tick_delay = 80; // tick
+
+// https://sub.nanona.fi/esp8266/timing-and-ticks.html
+static inline int32_t asm_ccount(void)
+{
+  int32_t r;
+  asm volatile("rsr %0, ccount"
+               : "=r"(r));
+  return r;
+}
 
 void ICACHE_RAM_ATTR timer_tick()
 {
-  // https://sub.nanona.fi/esp8266/timing-and-ticks.html
-  asm volatile("rsr %0, ccount"
-               : "=r"(tick_snap[tick_counter]));
-  if ((++tick_counter) >= tick_max)
+  do
   {
-    done++;
-    timer1_disable();
-    if(done > 1){
-      done = 1;
+    // difference casted as uint32_t.
+    // This magically compensates if etime overflows returning
+    // difference of value despite which is larger and which smaller.
+    // minus tick is over head, 23 overhead is based on code execution
+    while (((uint32_t)(asm_ccount() - tick_snap[tick_counter - 1])) < tick_delay - 23)
+    {
     }
-  }
+    // Exact 80 tick delay = 1 us
+    tick_snap[tick_counter] = asm_ccount();
+  } while ((++tick_counter) < tick_max);
+  done++;
 }
 void clear_tick()
 {
@@ -43,10 +51,9 @@ void start_tick(timercallback callback)
    * TIM_DIV256   312.5Khz (1 tick = 3.2us - 26843542.4 us max)
    *              1 second = 1000 * 1000 / 3.2 = 312500 tick
    */
-  timer1_write(80); //80 tick at 80MHz
-  asm volatile("rsr %0, ccount"
-               : "=r"(tick_snap[tick_counter++]));
-  timer1_enable(TIM_DIV1, TIM_EDGE, TIM_LOOP);
+  timer1_write(0); //80 tick at 80MHz
+  tick_snap[tick_counter++] = asm_ccount();
+  timer1_enable(TIM_DIV1, TIM_EDGE, TIM_SINGLE);
 }
 void dump_tick(const char *title)
 {
@@ -67,7 +74,6 @@ void dump_tick(const char *title)
 
 void setup()
 {
-  WiFi.forceSleepBegin();
   Serial.begin(115200);
   timer1_isr_init();
 }

@@ -7,10 +7,8 @@
 
 #define TX D1
 #define RX D2
-volatile ulong lastClocked = 0;
-volatile uint8_t bitPos = 0;
-volatile int8_t bitSent = -1;
-volatile uint8_t byteToSend = 0;
+
+volatile char *bytesToSend = 0;
 volatile uint64_t value = 0;
 volatile uint speeds[64] = {};
 volatile int8_t bitRead = -1;
@@ -82,12 +80,14 @@ readAgain:
   }
   Serial.printf("\n");
 }
-void sendBit()
+void ICACHE_RAM_ATTR sendByte(uint8_t bits)
 {
   int32_t now = esp_get_cycle_count();
+
   // START BIT, zero/LOW
   digitalWrite(TX, LOW);
-  bitSent++;
+  uint8_t bitSent = 0;
+
 sendAgain:
   while (((uint32_t)(esp_get_cycle_count() - now)) < tickDelay)
   {
@@ -95,49 +95,47 @@ sendAgain:
   }
   switch (bitSent)
   {
-  case 10:
+  case 9:
     // Idle
     bitSent = -1;
     return;
-  case 9:
+  case 8:
     // END BIT, HIGH
     digitalWrite(TX, HIGH);
-    delayMicroseconds(bitTime / 3);
+    delayMicroseconds(bitTime / 2);
     break;
-  case 0:
-
   default:
-    digitalWrite(TX, ((byteToSend >> (bitSent - 1)) & B1));
+    digitalWrite(TX, ((bits >> bitSent) & B1));
     break;
   }
   now = esp_get_cycle_count();
   bitSent++;
   goto sendAgain;
 }
-void sendByte(uint8_t byte)
+void ICACHE_RAM_ATTR send()
 {
-  while (bitSent >= 0)
+  uint8_t sent = 0;
+  while (*(bytesToSend + sent))
   {
-    __asm__("nop");
-  }
-  byteToSend = byte;
-  bitSent = 0;
-  timer1_write(0);
-}
-
-int sendString(const char *message)
-{
-  uint16_t sent = 0;
-  while (*(message + sent))
-  {
-    sendByte(*(message + (sent++)));
-    if (sent >= 100)
+    sendByte(*(bytesToSend + (sent++)));
+    if (sent >= 254)
     {
       // overflow
-      return -1;
+      break;
     }
   }
-  return sent;
+  bytesToSend = 0;
+}
+
+void sendString(const char *message)
+{
+  while (bytesToSend)
+  {
+    // Waiting another jobs to done
+    yield();
+  }
+  bytesToSend = (char *)message;
+  timer1_write(1);
 }
 void setup()
 {
@@ -152,9 +150,10 @@ void setup()
   Serial.printf("bitTime %d tickDelay %d\n", bitTime, tickDelay);
   //attachInterrupt(digitalPinToInterrupt(RX), uart_rx_down, FALLING);
   timer1_isr_init();
-  timer1_attachInterrupt(sendBit);
+  timer1_attachInterrupt(send);
   timer1_enable(TIM_DIV1, TIM_EDGE, TIM_SINGLE);
   sendString("Hello World\nYes I'm\n");
+  sendString("Other string\n");
 }
 void dump()
 {
@@ -171,7 +170,7 @@ void dump()
 void loop()
 {
 
-  if (bitPos >= 30)
+  /* if (bitPos >= 30)
   {
     if (bitPos == 127)
     {
@@ -182,5 +181,5 @@ void loop()
     detachInterrupt(digitalPinToInterrupt(RX));
     dump();
     bitPos = 127;
-  }
+  } */
 }

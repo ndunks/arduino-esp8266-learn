@@ -1,18 +1,21 @@
 #include <Arduino.h>
 #include <gpio.h>
 #include <ESP8266WiFi.h>
+//#include <Esp.h>
 #include <user_interface.h>
 //#include <PolledTimeout.h>
 
 #define TX D1
 #define RX D2
 volatile ulong lastClocked = 0;
-volatile ulong now = 0;
 volatile uint8_t bitPos = 0;
 volatile int8_t bitSent = -1;
 volatile uint8_t byteToSend = 0;
 volatile uint64_t value = 0;
 volatile uint speeds[64] = {};
+volatile int8_t bitRead = -1;
+volatile uint8_t byteRead = 0;
+
 static uint32_t uart_baud_rate = 9600;
 /*
   80MHz (80 ticks/us)
@@ -21,7 +24,7 @@ static uint32_t uart_baud_rate = 9600;
   1 microsecond = 1000 nanosecond  (ns)
 */
 // in micro second
-float_t bitTime = 1000000.0f / uart_baud_rate;
+uint8_t bitTime = 1000000 / uart_baud_rate;
 /**
  * TIM_DIV1     80MHz (80 ticks/us - 104857.588 us max)
  *              Under 1 second loop/timer
@@ -37,57 +40,89 @@ float_t bitTime = 1000000.0f / uart_baud_rate;
  * --
  * 1 / 9600 * 1000 * 1000 / (1/5) = 520.8333333333334
  */
-const uint32_t tickDelay = bitTime / (1.0f / 5.0f);
+const uint32_t tickDelay = bitTime / (1.0f / 80.0f);
 
 void ICACHE_RAM_ATTR uart_rx_down()
 {
-  now = system_get_time();
-  printf("DOWN\n");
-  switch (lastClocked)
+  uint32_t now = esp_get_cycle_count();
+  if (bitRead >= 0)
   {
-  case 0:
-    lastClocked = now;
-    return;
-  default:
-    speeds[bitPos++] = now - lastClocked;
-    lastClocked = now;
+    Serial.printf("UART DOWN BUT STILL READING");
     return;
   }
+  ETS_GPIO_INTR_DISABLE();
+  uint16_t gaps[10] = {};
+  uint8_t bits[10] = {};
+  bitRead = 0;
+readAgain:
+  bits[bitRead] = digitalRead(RX);
+  gaps[bitRead] = now;
+  while (((uint32_t)(esp_get_cycle_count() - now)) < tickDelay)
+  {
+    __asm__("nop");
+  }
+  if (bitRead++ < 8)
+  {
+    now = esp_get_cycle_count();
+    goto readAgain;
+  }
+  ETS_GPIO_INTR_ENABLE();
+  /// DUMP
+  Serial.printf("\nREAD %d:\n  ", bitRead);
+  uint32_t gap = 0;
+  float_t gap_us = 0.0f;
+  for (int i = 0; i < bitRead; i++)
+  {
+    if (i > 0)
+    {
+      gap = gaps[i] - gaps[i - 1];
+      gap_us = gap / 80.0f;
+    }
+    Serial.printf("%2d %3u %0.2f us\n", bits[i], gap, gap_us);
+  }
+  Serial.printf("\n");
 }
 void sendBit()
 {
+  int32_t now = esp_get_cycle_count();
+  // START BIT, zero/LOW
+  digitalWrite(TX, LOW);
+  bitSent++;
+sendAgain:
+  while (((uint32_t)(esp_get_cycle_count() - now)) < tickDelay)
+  {
+    __asm__("nop");
+  }
   switch (bitSent)
   {
   case 10:
     // Idle
     bitSent = -1;
-    return timer1_disable();
+    return;
   case 9:
     // END BIT, HIGH
-    return digitalWrite(TX, bitSent++ & B1);
+    digitalWrite(TX, HIGH);
+    delayMicroseconds(bitTime / 3);
+    break;
   case 0:
-    // START BIT, zero/LOW
-    bitSent++;
-    return digitalWrite(TX, 0);
+
   default:
     digitalWrite(TX, ((byteToSend >> (bitSent - 1)) & B1));
-    bitSent++;
-    return;
+    break;
   }
+  now = esp_get_cycle_count();
+  bitSent++;
+  goto sendAgain;
 }
 void sendByte(uint8_t byte)
 {
   while (bitSent >= 0)
   {
-    Serial.printf("Wait %d\n", bitSent);
-    delay(1);
+    __asm__("nop");
   }
-
   byteToSend = byte;
   bitSent = 0;
-
-  timer1_enable(TIM_DIV16, TIM_EDGE, TIM_LOOP);
-  timer1_write(tickDelay); //
+  timer1_write(0);
 }
 
 int sendString(const char *message)
@@ -113,11 +148,13 @@ void setup()
   pinMode(RX, INPUT);
   pinMode(TX, OUTPUT);
   digitalWrite(TX, HIGH);
-  delay(100);
+  delay(1000);
+  Serial.printf("bitTime %d tickDelay %d\n", bitTime, tickDelay);
+  //attachInterrupt(digitalPinToInterrupt(RX), uart_rx_down, FALLING);
   timer1_isr_init();
   timer1_attachInterrupt(sendBit);
-  sendString("Hello World\n");
-  sendString("Yes I'm\n");
+  timer1_enable(TIM_DIV1, TIM_EDGE, TIM_SINGLE);
+  sendString("Hello World\nYes I'm\n");
 }
 void dump()
 {
@@ -141,7 +178,7 @@ void loop()
       delay(1000);
       return;
     }
-    printf("UART DISABLED\n");
+    printf("UART DISABLED %u\n", tickDelay);
     detachInterrupt(digitalPinToInterrupt(RX));
     dump();
     bitPos = 127;

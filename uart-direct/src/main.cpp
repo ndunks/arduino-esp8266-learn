@@ -1,20 +1,21 @@
+/**
+ * UART Software Serial ESP8266 NodeMCU/WemosD1Mini
+ * TX with digital output D1, RX with ANALOG input (A0).
+ * 
+ * TXd on USBTTL CH340g has LOW 0.1v, and HIGH 2.0v
+ * impossible to use digital PIN (will always detected as low ~ undefined) without step up.
+ * so I decided to use RX with Analog input instead
+ */
 #include <Arduino.h>
 #include <gpio.h>
 #include <ESP8266WiFi.h>
-//#include <Esp.h>
 #include <user_interface.h>
-//#include <PolledTimeout.h>
-
 #define TX D1
-#define RX D2
+#define RX_LOW (system_adc_read() < 320)
+#define RX_HIGH (system_adc_read() > 420)
 
 volatile char *bytesToSend = 0;
-volatile uint64_t value = 0;
-volatile uint speeds[64] = {};
-volatile int8_t bitRead = -1;
-volatile uint8_t byteRead = 0;
-
-static uint32_t uart_baud_rate = 9600;
+const uint32_t uart_baud_rate = 9600;
 /*
   80MHz (80 ticks/us)
   1 second = 1000 millisecond      (ms)
@@ -22,7 +23,7 @@ static uint32_t uart_baud_rate = 9600;
   1 microsecond = 1000 nanosecond  (ns)
 */
 // in micro second
-uint8_t bitTime = 1000000 / uart_baud_rate;
+const uint8_t bitTime = 1000000 / uart_baud_rate;
 /**
  * TIM_DIV1     80MHz (80 ticks/us - 104857.588 us max)
  *              Under 1 second loop/timer
@@ -40,46 +41,6 @@ uint8_t bitTime = 1000000 / uart_baud_rate;
  */
 const uint32_t tickDelay = bitTime / (1.0f / 80.0f);
 
-void ICACHE_RAM_ATTR uart_rx_down()
-{
-  uint32_t now = esp_get_cycle_count();
-  if (bitRead >= 0)
-  {
-    Serial.printf("UART DOWN BUT STILL READING");
-    return;
-  }
-  ETS_GPIO_INTR_DISABLE();
-  uint16_t gaps[10] = {};
-  uint8_t bits[10] = {};
-  bitRead = 0;
-readAgain:
-  bits[bitRead] = digitalRead(RX);
-  gaps[bitRead] = now;
-  while (((uint32_t)(esp_get_cycle_count() - now)) < tickDelay)
-  {
-    __asm__("nop");
-  }
-  if (bitRead++ < 8)
-  {
-    now = esp_get_cycle_count();
-    goto readAgain;
-  }
-  ETS_GPIO_INTR_ENABLE();
-  /// DUMP
-  Serial.printf("\nREAD %d:\n  ", bitRead);
-  uint32_t gap = 0;
-  float_t gap_us = 0.0f;
-  for (int i = 0; i < bitRead; i++)
-  {
-    if (i > 0)
-    {
-      gap = gaps[i] - gaps[i - 1];
-      gap_us = gap / 80.0f;
-    }
-    Serial.printf("%2d %3u %0.2f us\n", bits[i], gap, gap_us);
-  }
-  Serial.printf("\n");
-}
 void ICACHE_RAM_ATTR sendByte(uint8_t bits)
 {
   int32_t now = esp_get_cycle_count();
@@ -126,6 +87,37 @@ void ICACHE_RAM_ATTR send()
   }
   bytesToSend = 0;
 }
+void ICACHE_RAM_ATTR read()
+{
+  uint32_t now = esp_get_cycle_count();
+  uint8_t value = 0;
+  uint8_t bitRead = 0;
+readAgain:
+  // Ignore start bit
+  if (bitRead > 0)
+  {
+    value |= (RX_HIGH ? 1 : 0) << (bitRead - 1);
+  }
+  while (((uint32_t)(esp_get_cycle_count() - now)) < tickDelay)
+  {
+    __asm__("nop");
+  }
+  if (bitRead++ < 8)
+  {
+    now = esp_get_cycle_count();
+    goto readAgain;
+  }
+  // echo back, no Carriage return
+  if (value == 13)
+  {
+    sendByte('\n');
+  }
+  else
+  {
+    sendByte(value);
+  }
+  Serial.printf("%d ", value);
+}
 
 void sendString(const char *message)
 {
@@ -135,51 +127,30 @@ void sendString(const char *message)
     yield();
   }
   bytesToSend = (char *)message;
-  timer1_write(1);
+  Serial.printf("SEND: %s", bytesToSend);
+  timer1_write(0);
 }
 void setup()
 {
   // turn off ESP8266 RF
   WiFi.forceSleepBegin();
-  delay(1);
   Serial.begin(115200);
-  pinMode(RX, INPUT);
   pinMode(TX, OUTPUT);
   digitalWrite(TX, HIGH);
   delay(1000);
-  Serial.printf("bitTime %d tickDelay %d\n", bitTime, tickDelay);
-  //attachInterrupt(digitalPinToInterrupt(RX), uart_rx_down, FALLING);
+
+  Serial.printf("Baud %u, bitTime %d tickDelay %d\n", uart_baud_rate, bitTime, tickDelay);
   timer1_isr_init();
   timer1_attachInterrupt(send);
   timer1_enable(TIM_DIV1, TIM_EDGE, TIM_SINGLE);
-  sendString("Hello World\nYes I'm\n");
+  sendString("Hello World\nYes I'm");
   sendString("Other string\n");
 }
-void dump()
-{
-  for (int i = 0; i < 64; i++)
-  {
-    if (!speeds[i])
-      break;
 
-    Serial.printf("\n\t%d: %d", i, speeds[i]);
-    Serial.printf(" = %d", (int)((value >> (63 - i)) & B1));
-  }
-  printf("\n");
-}
 void loop()
 {
-
-  /* if (bitPos >= 30)
+  if (RX_LOW)
   {
-    if (bitPos == 127)
-    {
-      delay(1000);
-      return;
-    }
-    printf("UART DISABLED %u\n", tickDelay);
-    detachInterrupt(digitalPinToInterrupt(RX));
-    dump();
-    bitPos = 127;
-  } */
+    read();
+  }
 }

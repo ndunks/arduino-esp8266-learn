@@ -144,14 +144,35 @@ void enumIndex()
     int no = Colors::_END;
     printf("ENUM %d bytes ~ %d \n", Colors::_END, Colors::BLACK);
     // loop
-    for( char i = 0U; i < Colors::_END; i++){
-        printf("\t%d @ %x \n", (Colors) i, &Colors::GREEN);
+    for (char i = 0U; i < Colors::_END; i++)
+    {
+        printf("\t%d @ %x \n", (Colors)i, Colors::GREEN);
     }
+}
+//#define MY_WCHAR L"A"
+void wcharLearn()
+{
+    const wchar_t * MY_WCHAR = L"ABCD";
+    printf("\033c");
+    printf("CHAR  SIZE %d\n", sizeof(MY_WCHAR[0]));
+    printf("WCHAR SIZE %d\n", sizeof(MY_WCHAR));
+    printf("\n");
+    for (int i = 0; i < sizeof(MY_WCHAR); i++)
+    {
+        printf("%C\t%02x\n", *(MY_WCHAR + i), MY_WCHAR[i]);
+    }
+    printf("STR:\t");
+    for (int i = 0; i < sizeof(MY_WCHAR); i++)
+    {
+        printf("%C", *(MY_WCHAR + i), MY_WCHAR[i]);
+    }
+    printf("\n----\n");
 }
 int main(int argc, char const *argv[])
 {
     printf("MAIN RUN\n\n");
-    enumIndex();
+    wcharLearn();
+    //enumIndex();
     //constStructAccess();
     //globalBuffered();
     //constStruct();
